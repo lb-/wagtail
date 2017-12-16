@@ -24,7 +24,8 @@ youtube = {
         "^http(?:s)?://m\\.youtube\\.com/index.+$",
         "^http(?:s)?://(?:[-\\w]+\\.)?youtube\\.com/profile.+$",
         "^http(?:s)?://(?:[-\\w]+\\.)?youtube\\.com/view_play_list.+$",
-        "^http(?:s)?://(?:[-\\w]+\\.)?youtube\\.com/playlist.+$"
+        "^http(?:s)?://(?:[-\\w]+\\.)?youtube\\.com/playlist.+$",
+        "^http(?:s)?://(?:[-\\w]+\\.)?youtube\\.com/embed.+$",
     ],
 }
 

@@ -372,6 +372,14 @@ class TestOembed(TestCase):
         request = urlopen.call_args[0][0]
         self.assertEqual(request.get_full_url().split('?')[0], "http://www.vimeo.com/api/oembed.json")
 
+    def test_youtube_endpoints(self):
+        """ Test expected YouTube URL formats are accepted. """
+        finder = OEmbedFinder()
+        self.assertEqual(finder.accept('https://youtube.com/embed/abc123'), True)
+        self.assertEqual(finder.accept('https://youtube.com/watch/abc123'), True)
+        self.assertEqual(finder.accept('https://www.youtube.com/watch?v=abc123'), True)
+        self.assertEqual(finder.accept('https://youtube.com/not-a-format/abc123'), False)
+
 
 class TestEmbedTag(TestCase):
     @patch('wagtail.embeds.embeds.get_embed')
