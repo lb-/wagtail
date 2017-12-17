@@ -21,30 +21,40 @@ class OEmbedFinder(EmbedFinder):
 
         for provider in providers or all_providers:
             patterns = []
+            templates = []
 
             endpoint = provider['endpoint'].replace('{format}', 'json')
 
             for url in provider['urls']:
                 patterns.append(re.compile(url))
 
-            self._endpoints[endpoint] = patterns
+            for template in provider.get('templates', []):
+                templates.append((re.compile(template[0]), template[1]))
+
+            self._endpoints[endpoint] = (patterns, templates)
 
         if options:
             self.options = self.options.copy()
             self.options.update(options)
 
     def _get_endpoint(self, url):
-        for endpoint, patterns in self._endpoints.items():
+        for endpoint, (patterns, templates) in self._endpoints.items():
             for pattern in patterns:
                 if re.match(pattern, url):
-                    return endpoint
+                    return endpoint, url
+            for template in templates:
+                match = re.match(template[0], url)
+                if match:
+                    return endpoint, match.expand(template[1])
+        return None, None
 
-    def accept(self, url):
-        return self._get_endpoint(url) is not None
+    def accept(self, original_url):
+        endpoint, url = self._get_endpoint(original_url)
+        return endpoint is not None
 
-    def find_embed(self, url, max_width=None):
+    def find_embed(self, original_url, max_width=None):
         # Find provider
-        endpoint = self._get_endpoint(url)
+        endpoint, url = self._get_endpoint(original_url)
         if endpoint is None:
             raise EmbedNotFoundException
 
