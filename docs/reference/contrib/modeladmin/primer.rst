@@ -295,6 +295,7 @@ so:
                 return MyURLHelper
             return AdminURLHelper
 
+You can also use the url_helper to easily reverse URLs for any ModelAdmin see see :ref:`modeladmin_reversing_urls`.
 
 .. _modeladmin_permission_helper_class:
 
