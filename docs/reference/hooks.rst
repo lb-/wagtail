@@ -370,6 +370,44 @@ Hooks for customising the editing interface for pages and snippets.
         )
 
 
+  Override how the title is set when uploading a document or image.
+  ``wagtail.utils.getTitleFromFilename`` can be overridden with a custom function,
+  the first argument is the filename and the second is an object with:
+  ``currentTitle``, ``maxLength``, ``model``, ``widget``.
+
+  .. code-block:: python
+
+    from django.utils.html import format_html, format_html_join
+    from django.templatetags.static import static
+
+    from wagtail.core import hooks
+
+    @hooks.register('insert_editor_js')
+    def editor_js():
+        # remember to use double '{{' so they are not parsed as template placeholders
+        return format_html(
+          """
+          <script>
+              $(function () {{
+                  function getTitleFromFilename (filename, {{ currentTitle, model }}) {{
+                      if (currentTitle) {{
+                          return; // return nothing if there is a title already entered
+                      }}
+                      // model can be 'DOCUMENT' or 'IMAGE'
+                      if (model === 'DOCUMENT') {{
+                          return '[DOC] ' + filename;
+                      }}
+                      filenameParts = filename.split('.');
+                      filenameParts.pop(); // remove the last element
+                      return filenameParts.join('');
+                  }}
+                  window.wagtail.utils.getTitleFromFilename = getTitleFromFilename;
+              }});
+          </script>
+          """
+        )
+
+
 .. _insert_global_admin_js:
 
 ``insert_global_admin_js``
