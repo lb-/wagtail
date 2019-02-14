@@ -543,11 +543,11 @@ wagtail = (function(document, window, wagtail) {
      * the value is not meant to be updated at all.
      * @param {string=} filename 
      * @param {Object} data 
-     * @param {string=} data.currentTitle - current value if available
-     * @param {Number=} data.maxLength - maximum title length (if available)
-     * @param {string} data.model - 'DOCUMENT' or 'IMAGE'
-     * @param {string} data.widget - ''ADD_MULTIPLE', 'ADD' or 'CHOOSER_MODAL'
-     * @returns {string=}
+     * @param {string=} data.currentTitle - current entered value (if available), will be undefined for `ADD_MULTIPLE`
+     * @param {Number=} data.maxLength - maximum title length (if available), will be undefined for `ADD_MULTIPLE`
+     * @param {string} data.model - `DOCUMENT` or `IMAGE`
+     * @param {string} data.widget - `CHOOSER_MODAL`, `ADD` or `ADD_MULTIPLE`
+     * @returns {string=} if a string is not returned the title field will not be updated
      */
     function getTitleFromFilename (filename, { currentTitle }) {
         if (currentTitle) {
@@ -561,8 +561,8 @@ wagtail = (function(document, window, wagtail) {
     /**
      * Returns a function to handle the change of a file (single or multiple) upload
      * so that the context's title field can be updated based on the filename.
-     * @param {string} model - 'DOCUMENT' or 'IMAGE'
-     * @param {string} widget - ''ADD_MULTIPLE', 'ADD' or 'CHOOSER_MODAL'
+     * @param {string} model - `DOCUMENT` or `IMAGE`
+     * @param {string} widget - `CHOOSER_MODAL`, `ADD` or `ADD_MULTIPLE`
      * @returns {Function}
      */
     function getPopulateTitleHandler (model, widget) {
