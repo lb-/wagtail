@@ -40,7 +40,7 @@ def add(request):
 
         # Build a form for validation
         form = DocumentForm({
-            'title': request.FILES['files[]'].name,
+            'title': request.POST['title'],
             'collection': request.POST.get('collection'),
         }, {
             'file': request.FILES['files[]']
