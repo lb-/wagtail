@@ -349,7 +349,8 @@ wagtail = (function(document, window, wagtail) {
     // Module pattern
     if (!wagtail) {
         wagtail = {
-            ui: {}
+            ui: {},
+            utils: {},
         };
     }
 
@@ -536,6 +537,70 @@ wagtail = (function(document, window, wagtail) {
     $(document).ready(initDropDowns);
 
     wagtail.ui.DropDownController = DropDownController;
+
+    /**
+     * getTitleFromFilename expects a string as a result or any null/undefined if
+     * the value is not meant to be updated at all.
+     * @param {string=} filename 
+     * @param {Object} data 
+     * @param {string=} data.currentTitle - current value if available
+     * @param {Number=} data.maxLength - maximum title length (if available)
+     * @param {string} data.model - 'DOCUMENT' or 'IMAGE'
+     * @param {string} data.widget - ''ADD_MULTIPLE', 'ADD' or 'CHOOSER_MODAL'
+     * @returns {string=}
+     */
+    function getTitleFromFilename (filename, { currentTitle }) {
+        if (currentTitle) {
+            return;
+        }
+        return filename;
+    }
+
+    wagtail.utils.getTitleFromFilename = getTitleFromFilename;
+
+    /**
+     * Returns a function to handle the change of a file (single or multiple) upload
+     * so that the context's title field can be updated based on the filename.
+     * @param {string} model - 'DOCUMENT' or 'IMAGE'
+     * @param {string} widget - ''ADD_MULTIPLE', 'ADD' or 'CHOOSER_MODAL'
+     * @returns {Function}
+     */
+    function getPopulateTitleHandler (model, widget) {
+        return function onChangeHandler (event, data) {
+
+            var $titleField;
+            var currentTitle;
+            var filename;
+
+            if (widget === 'ADD_MULTIPLE') {
+                var files = data.files[0] || {};
+                $titleField = data.$titleField;
+                filename = files.name;
+                // intentionally not setting currentTitle as it is not applicable for multiple upload
+            } else {
+                var $fileField = $(this);
+                $titleField = event.data.$titleField;
+                filename = $fileField.val().split('\\').slice(-1)[0];
+                currenTitle = $titleField.val();
+            }
+
+            var newTitle = window.wagtail.utils.getTitleFromFilename(filename, {
+                currentTitle: currentTitle,
+                maxLength: $titleField.attr('maxLength'),
+                model: model,
+                widget: widget
+            });
+
+            if (typeof newTitle === 'string') {
+                $titleField.val(newTitle);
+            } else if (widget === 'ADD_MULTIPLE') {
+                $titleField.val(''); // must clear any existing value for next upload
+            }
+        }
+    }
+
+    wagtail.utils.getPopulateTitleHandler = getPopulateTitleHandler;
+
     return wagtail;
 
 })(document, window, wagtail);
