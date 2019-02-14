@@ -93,6 +93,13 @@ DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS = {
 
         $('#collection_chooser_collection_id').on('change', search);
 
+        /* Note: There are two inputs with `#id_title` on the page, must modal.body in selector context */
+        $('#id_file', modal.body).on(
+            'change',
+            { $titleField: $('#id_title', modal.body) },
+            window.wagtail.utils.getPopulateTitleHandler('DOCUMENT', 'CHOOSER_MODAL')
+        );
+
         $('#id_tags', modal.body).tagit({
             autocomplete: {source: jsonData['tag_autocomplete_url']}
         });
