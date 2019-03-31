@@ -77,7 +77,9 @@ def index(request):
     if not is_searching:
         users = User.objects.all()
 
+    names_exist = False
     if 'last_name' in model_fields and 'first_name' in model_fields:
+        names_exist = True
         users = users.order_by('last_name', 'first_name')
 
     if 'ordering' in request.GET:
@@ -86,7 +88,17 @@ def index(request):
         if ordering == 'username':
             users = users.order_by(User.USERNAME_FIELD)
     else:
+        # set default ordering
         ordering = 'name'
+    
+    if ordering == 'name':
+        if names_exist:
+            users = users.order_by('last_name', 'first_name')
+    elif ordering == '-name':
+        if names_exist:
+            users = users.order_by('-last_name', '-first_name')
+    else:
+        users = users.order_by(ordering)
 
     paginator = Paginator(users, per_page=20)
     users = paginator.get_page(request.GET.get('p'))

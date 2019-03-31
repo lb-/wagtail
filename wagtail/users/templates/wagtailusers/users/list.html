@@ -4,16 +4,16 @@
         <tr>
             <th class="name">
                 {% trans "Name" %}
-                {% if ordering == "name" %}
-                    <a href="{% url 'wagtailusers_users:index' %}" class="icon icon-arrow-down-after teal"></a>
+                {% if ordering == "name" or ordering == "-name" %}
+                    <a href="{% url 'wagtailusers_users:index' %}?ordering={% if "-" not in ordering %}-{% endif %}name" class="icon icon-arrow-{% if "-" in ordering %}down{% else %}up{% endif %}-after teal"></a>
                 {% else %}
                     <a href="{% url 'wagtailusers_users:index' %}?ordering=name" class="icon icon-arrow-down-after"></a>
                 {% endif %}
             </th>
             <th class="username">
                 {% trans "Username" %}
-                {% if ordering == "username" %}
-                    <a href="{% url 'wagtailusers_users:index' %}" class="icon icon-arrow-down-after teal"></a>
+                {% if ordering == "username" or ordering == "-username" %}
+                    <a href="{% url 'wagtailusers_users:index' %}?ordering={% if "-" not in ordering %}-{% endif %}username" class="icon icon-arrow-{% if "-" in ordering %}down{% else %}up{% endif %}-after teal"></a>
                 {% else %}
                     <a href="{% url 'wagtailusers_users:index' %}?ordering=username" class="icon icon-arrow-down-after"></a>
                 {% endif %}
