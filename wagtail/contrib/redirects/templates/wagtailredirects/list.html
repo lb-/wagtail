@@ -8,7 +8,7 @@
         <tr>
             <th class="title">
                 {% if not is_searching %}
-                    <a href="{% url 'wagtailredirects:index' %}{% if not ordering == "old_path" %}?ordering=old_path{% endif %}" class="icon icon-arrow-down-after {% if ordering == "old_path" %}teal{% endif %}">
+                    <a href="{% url 'wagtailredirects:index' %}?ordering={% if ordering == "old_path" %}-{% endif %}old_path" class="icon icon-arrow-{% if ordering == "old_path" %}down-after{% elif ordering == "-old_path" %}up-after{% else %}down-after{% endif %} {% if "old_path" in ordering %}teal{% endif %}">
                         {% trans "From" %}
                     </a>
                 {% else %}
