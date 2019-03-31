@@ -9,10 +9,10 @@
                     <tr>
                         <th class="hostname">
                             {% trans "Site" %}
-                            {% if ordering == "site" %}
-                                <a href="{% url 'wagtailsites:index' %}" class="icon icon-arrow-down-after teal"></a>
+                            {% if ordering == "hostname" or ordering == "-hostname" %}
+                                <a href="{% url 'wagtailsites:index' %}?ordering={% if "-" not in ordering %}-{% endif %}hostname" class="icon icon-arrow-{% if "-" in ordering %}down{% else %}up{% endif %}-after teal"></a>
                             {% else %}
-                                <a href="{% url 'wagtailsites:index' %}?ordering=name" class="icon icon-arrow-down-after"></a>
+                                <a href="{% url 'wagtailsites:index' %}?ordering=hostname" class="icon"></a>
                             {% endif %}
                         </th>
                         <th class="port">{% trans "Port" %}</th>
