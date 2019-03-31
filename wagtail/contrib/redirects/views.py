@@ -30,7 +30,7 @@ def index(request):
                                      | Q(redirect_link__icontains=query_string))
 
     # Ordering (A bit useless at the moment as only 'old_path' is allowed)
-    if ordering not in ['old_path']:
+    if ordering not in ['old_path', '-old_path']:
         ordering = 'old_path'
 
     redirects = redirects.order_by(ordering)
