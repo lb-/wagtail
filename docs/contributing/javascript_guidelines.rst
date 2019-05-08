@@ -13,7 +13,7 @@ Write JavaScript according to the `Airbnb Styleguide <http://github.com/airbnb/j
 Linting and formatting code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wagtail uses the `eslint <https://eslint.org/>`_ linter to help check your code meets the
+Wagtail uses the `ESlint <https://eslint.org/>`_ linter to help check your code meets the
 styleguide. You'll need node.js and npm on your development machine.
 Ensure project dependencies are installed by running ``npm install --no-save``
 
@@ -47,9 +47,7 @@ you need to make to the codebase.
 Changing the linter configuration
 ---------------------------------
 
-To edit ignored files, add an entry to the ``.eslintignore`` file.
-
-To the configuration for the linting rules is managed in an external
+The configuration for the linting rules is managed in an external
 repository so that it can be easily shared across other Wagtail projects
 or plugins. This configuration can be found at
 `eslint-config-wagtail <https://github.com/wagtail/eslint-config-wagtail>`_.
