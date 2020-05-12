@@ -4,11 +4,11 @@ from wagtail.admin.views import page_privacy, pages
 
 app_name = 'wagtailadmin_pages'
 urlpatterns = [
-    path('add/<slug:content_type_app_name>/<slug:content_type_model_name>/<int:parent_page_id>/', pages.create, name='add'),
+    path('add/<slug:content_type_app_name>/<slug:content_type_model_name>/<int:parent_page_id>/', pages.CreatePageView.as_view(), name='add'),
     path('add/<slug:content_type_app_name>/<slug:content_type_model_name>/<int:parent_page_id>/preview/', pages.PreviewOnCreate.as_view(), name='preview_on_add'),
     path('usage/<slug:content_type_app_name>/<slug:content_type_model_name>/', pages.content_type_use, name='type_use'),
 
-    path('<int:page_id>/edit/', pages.edit, name='edit'),
+    path('<int:page_id>/edit/', pages.EditPageView.as_view(), name='edit'),
     path('<int:page_id>/edit/preview/', pages.PreviewOnEdit.as_view(), name='preview_on_edit'),
 
     path('<int:page_id>/view_draft/', pages.view_draft, name='view_draft'),

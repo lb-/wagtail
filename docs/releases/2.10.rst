@@ -70,6 +70,8 @@ Other features
  * Deprecate use of unidecode within form builder field names (Michael van Tellingen, LB (Ben Johnston))
  * Improve error feedback when editing a page with a missing model class (Andy Babic)
  * Change Wagtail tabs implementation to only allow slug-formatted tab identifiers, reducing false positives from security audits (Matt Westcott)
+ * Rework Page add and create views into class based views with overridable methods leveraging Django's ``TemplateView`` (Matt Westcott, Kate Edmundson)
+ * Support custom add/edit page views on a per-page-type basis via ``register_create_page_view`` and ``register_edit_page_view`` (Matt Westcott, Kate Edmundson)
 
 
 Bug fixes

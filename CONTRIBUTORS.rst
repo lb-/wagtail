@@ -471,6 +471,7 @@ Contributors
 * Pascal Widdershoven
 * Max Gabrielsson
 * Steven Wood
+* Kate Edmundson
 
 Translators
 ===========
