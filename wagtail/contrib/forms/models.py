@@ -9,14 +9,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.template.response import TemplateResponse
 from django.utils.formats import date_format
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.admin.mail import send_mail
 from wagtail.core.models import Orderable, Page
-from wagtail.core.utils import safe_snake_case, string_to_ascii
+from wagtail.contrib.forms.utils import get_field_clean_name
 
 from .forms import FormBuilder, WagtailAdminFormPageForm
 
@@ -123,12 +122,12 @@ class AbstractFormField(Orderable):
         """
         When new fields are created, generate a template safe ascii name to use as the
         JSON storage reference for this field. Previously created fields will be updated
-        to use the result of the get_legacy_clean_name method.
+        to use the legacy unidecide method via _migrate_legacy_clean_name & checks.
         """
 
         is_new = self.pk is None
         if is_new:
-            clean_name = safe_snake_case(self.label)
+            clean_name = get_field_clean_name(self.label)
             self.clean_name = clean_name
 
         super().save(*args, **kwargs)
@@ -137,8 +136,8 @@ class AbstractFormField(Orderable):
     @classmethod
     def _migrate_legacy_clean_name(cls):
         """
-        While moving to deprecate unidecode, ensure that all existing sub-classes
-        of AbstractFormField will have a `clean_nam` value that reflects the unidecode
+        While preparing to deprecate unidecode, ensure that all existing sub-classes
+        of AbstractFormField will have a `clean_name` value that reflects the unidecode
         slugified values from < 2.10.
         """
 
@@ -146,7 +145,7 @@ class AbstractFormField(Orderable):
             objects = cls.objects.filter(clean_name__exact='')
 
             for obj in objects:
-                legacy_clean_name = str(slugify(string_to_ascii(obj.label)))
+                legacy_clean_name = get_field_clean_name(obj.label, legacy=True)
                 obj.clean_name = legacy_clean_name
                 obj.save()
 

@@ -1,9 +1,23 @@
 from django.contrib.contenttypes.models import ContentType
+from django.utils.text import slugify
 
 from wagtail.core import hooks
 from wagtail.core.models import UserPagePermissionsProxy, get_page_models
+from wagtail.core.utils import safe_snake_case, string_to_ascii
 
 _FORM_CONTENT_TYPES = None
+
+
+def get_field_clean_name(label, legacy=False):
+    """
+    Converts a user entered field label to a template and JSON safe ascii value to be used
+    as the internal key (clean name) for the field.
+    Note: Legacy conversion relies on unidecode, to be deprecated in a future release.
+    """
+
+    if legacy:
+        return str(slugify(string_to_ascii(label)))
+    return safe_snake_case(label)
 
 
 def get_form_types():
