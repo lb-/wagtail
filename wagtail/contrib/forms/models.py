@@ -3,17 +3,20 @@ import json
 import os
 
 from django.conf import settings
+from django.core.checks import Info
+from django.core.exceptions import FieldError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.template.response import TemplateResponse
 from django.utils.formats import date_format
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from unidecode import unidecode
+
 
 from wagtail.admin.edit_handlers import FieldPanel
 from wagtail.admin.mail import send_mail
 from wagtail.core.models import Orderable, Page
+from wagtail.core.utils import safe_snake_case, string_to_ascii
 
 from .forms import FormBuilder, WagtailAdminFormPageForm
 
@@ -79,6 +82,13 @@ class AbstractFormField(Orderable):
     Database Fields required for building a Django Form field.
     """
 
+    clean_name = models.CharField(
+        verbose_name=_('name'),
+        max_length=255,
+        blank=True,
+        default='',
+        help_text=_('Safe name of the form field, the label converted to ascii_snake_case')
+    )
     label = models.CharField(
         verbose_name=_('label'),
         max_length=255,
@@ -99,13 +109,6 @@ class AbstractFormField(Orderable):
     )
     help_text = models.CharField(verbose_name=_('help text'), max_length=255, blank=True)
 
-    @property
-    def clean_name(self):
-        # unidecode will return an ascii string while slugify wants a
-        # unicode string on the other hand, slugify returns a safe-string
-        # which will be converted to a normal str
-        return str(slugify(str(unidecode(self.label))))
-
     panels = [
         FieldPanel('label'),
         FieldPanel('help_text'),
@@ -114,6 +117,62 @@ class AbstractFormField(Orderable):
         FieldPanel('choices', classname="formbuilder-choices"),
         FieldPanel('default_value', classname="formbuilder-default"),
     ]
+
+
+    def save(self, *args, **kwargs):
+        """
+        When new fields are created, generate a template safe ascii name to use as the
+        JSON storage reference for this field. Previously created fields will be updated
+        to use the result of the get_legacy_clean_name method.
+        """
+
+        is_new = self.pk is None
+        if is_new:
+            clean_name = safe_snake_case(self.label)
+            self.clean_name = clean_name
+
+        super().save(*args, **kwargs)
+
+
+    @classmethod
+    def _migrate_legacy_clean_name(cls):
+        """
+        While moving to deprecate unidecode, ensure that all existing sub-classes
+        of AbstractFormField will have a `clean_nam` value that reflects the unidecode
+        slugified values from < 2.10.
+        """
+
+        try:
+            objects = cls.objects.filter(clean_name__exact='')
+
+            for obj in objects:
+                legacy_clean_name = str(slugify(string_to_ascii(obj.label)))
+                obj.clean_name = legacy_clean_name
+                obj.save()
+
+            if objects.count() > 0:
+                return Info(
+                    'Migrated clean_name on form field %s' % objects.count(),
+                    obj=cls
+                )
+
+        except FieldError:
+            # attempting to query on clean_name before field has been added
+            pass
+
+
+        return None
+
+
+    @classmethod
+    def check(cls, **kwargs):
+        errors = super().check(**kwargs)
+
+        messages = cls._migrate_legacy_clean_name()
+        if messages:
+            errors.append(messages)
+
+        return errors
 
     class Meta:
         abstract = True
