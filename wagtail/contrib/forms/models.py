@@ -122,7 +122,7 @@ class AbstractFormField(Orderable):
         """
         When new fields are created, generate a template safe ascii name to use as the
         JSON storage reference for this field. Previously created fields will be updated
-        to use the legacy unidecide method via _migrate_legacy_clean_name & checks.
+        to use the legacy unidecode method via checks & _migrate_legacy_clean_name.
         """
 
         is_new = self.pk is None
@@ -136,9 +136,8 @@ class AbstractFormField(Orderable):
     @classmethod
     def _migrate_legacy_clean_name(cls):
         """
-        While preparing to deprecate unidecode, ensure that all existing sub-classes
-        of AbstractFormField will have a `clean_name` value that reflects the unidecode
-        slugified values from < 2.10.
+        Ensure that existing data stored will be accessible via the legacy clean_name.
+        On checks run, replace any blank clean_name values with the unidecode conversion.
         """
 
         try:
@@ -151,7 +150,7 @@ class AbstractFormField(Orderable):
 
             if objects.count() > 0:
                 return Info(
-                    'Migrated clean_name on form field %s' % objects.count(),
+                    'Added `clean_name` on %s form field(s)' % objects.count(),
                     obj=cls
                 )
 
