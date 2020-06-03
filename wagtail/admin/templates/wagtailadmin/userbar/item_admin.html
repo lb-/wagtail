@@ -3,6 +3,8 @@
 
 {% block item_content %}
     <div class="wagtail-action wagtail-icon wagtail-icon-wagtail">
-        <a href="{% url 'wagtailadmin_home' %}" target="_parent" class="">{% trans 'Go to Wagtail admin' %}</a>
+        <a href="{% url 'wagtailadmin_home' %}" target="_parent" class="wagtail-userbar-link" role="menuitem">
+            {% trans 'Go to Wagtail admin' %}
+        </a>
     </div>
 {% endblock %}

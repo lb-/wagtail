@@ -120,6 +120,7 @@ $positions: (
     margin: 0 !important;
     overflow: hidden;
     background-color: $color-white;
+    border: 2px solid transparent;
     border-radius: 50%;
     color: $color-black;
     padding: 0 !important;
@@ -147,15 +148,19 @@ $positions: (
         width: auto;
         margin: 0;
     }
+
+    &:focus {
+        border-color: $color-black;
+        outline: none;
+    }
 }
 
 .#{$namespace}-userbar-items {
-    display: block;
+    display: none;
     list-style: none;
     position: absolute;
     margin: 0;
     min-width: 210px;
-    visibility: hidden;
     font-family: 'Open Sans', sans-serif;
     font-size: 14px;
     box-sizing: border-box;
@@ -163,7 +168,7 @@ $positions: (
     text-decoration: none;
 
     .#{$namespace}-userbar.is-active & {
-        visibility: visible;
+        display: block;
     }
 }
 
@@ -234,13 +239,17 @@ $positions: (
         transform: none !important;
         transition: none !important;
         margin: 0 !important;
+        outline-offset: -4px;
         font-size: 14px !important;
 
         &:hover,
         &:focus {
-            outline: none;
             color: $color-white;
             background-color: rgba(100, 100, 100, 0.15);
+        }
+
+        &:focus {
+            outline: $color-white 2px solid;
         }
     }
 

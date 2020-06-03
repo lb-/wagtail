@@ -1,6 +1,7 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', function userBar(e) {
+    // maybe the issue is the trigger is not the correct element, it seems to trigger on the i not the button
     var userbar = document.querySelector('[data-wagtail-userbar]');
     var trigger = userbar.querySelector('[data-wagtail-userbar-trigger]');
     var list = userbar.querySelector('.wagtail-userbar-items');
@@ -29,12 +30,22 @@ document.addEventListener('DOMContentLoaded', function userBar(e) {
 
     function showUserbar(e) {
         userbar.classList.add(className);
+        trigger.setAttribute('aria-expanded', 'true');
         list.addEventListener(clickEvent, sandboxClick, false);
         window.addEventListener(clickEvent, clickOutside, false);
+        // not working??
+        console.log('first link', {e, a:list.querySelector('a')});
+
+        // setTimeout(() => {
+        list.querySelector('a').focus();
+        //     console.log('active element AFTER', document.activeElement);
+        // }, 100); // focus on first menu item on popup
+        console.log('active element AFTER', document.activeElement);
     }
 
     function hideUserbar(e) {
         userbar.classList.remove(className);
+        trigger.removeAttribute('aria-expanded', 'true');
         list.addEventListener(clickEvent, sandboxClick, false);
         window.removeEventListener(clickEvent, clickOutside, false);
     }
@@ -42,9 +53,9 @@ document.addEventListener('DOMContentLoaded', function userBar(e) {
     function toggleUserbar(e) {
         e.stopPropagation();
         if (userbar.classList.contains(className)) {
-            hideUserbar();
+            hideUserbar(e);
         } else {
-            showUserbar();
+            showUserbar(e);
         }
     }
 
@@ -53,6 +64,6 @@ document.addEventListener('DOMContentLoaded', function userBar(e) {
     }
 
     function clickOutside(e) {
-        hideUserbar();
+        hideUserbar(e);
     }
 });

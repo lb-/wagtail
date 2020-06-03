@@ -681,7 +681,7 @@ Hooks for customising the way users are directed through the process of creating
     class UserbarPuppyLinkItem:
         def render(self, request):
             return '<li><a href="http://cuteoverload.com/tag/puppehs/" ' \
-                + 'target="_parent" class="action icon icon-wagtail">Puppies!</a></li>'
+                + 'target="_parent" class="action icon icon-wagtail" role="menuitem">Puppies!</a></li>'
 
     @hooks.register('construct_wagtail_userbar')
     def add_puppy_link_item(request, items):
