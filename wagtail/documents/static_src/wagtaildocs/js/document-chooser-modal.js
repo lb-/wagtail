@@ -96,8 +96,12 @@ DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS = {
         /* set up pre-filling of title based on selected file */
         $('form.document-upload', modal.body).find('[type="file"]').on(
             'change',
-            { $titleField: $('#id_document-chooser-upload-title', modal.body) },
-            wagtail.utils.getPopulateTitleHandler('DOCUMENT', 'CHOOSER_MODAL')
+            {
+                $titleField: $('#id_document-chooser-upload-title', modal.body),
+                getTitleUtil: wagtail.utils.getTitleFromFilename,
+                widget: 'CHOOSER_MODAL',
+            },
+            wagtail.utils.onSingleFileUploadPopulateTitle
         );
 
         $('form.document-search', modal.body).on('submit', search);

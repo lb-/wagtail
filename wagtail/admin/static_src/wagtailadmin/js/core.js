@@ -575,70 +575,78 @@ wagtail = (function(document, window, wagtail) {
      * any existing value in the title field.
      *
      * @param {string=} filename 
+     * @param {string=} currentTitle - current entered value (if available), will be null for `ADD_MULTIPLE`
      * @param {Object} options 
-     * @param {string=} options.currentTitle - current entered value (if available), will be null for `ADD_MULTIPLE`
      * @param {Number=} options.maxLength - maximum title length (if available), may be null
-     * @param {string} options.model - `DOCUMENT` or `IMAGE`
-     * @param {string} options.widget - `CHOOSER_MODAL`, `ADD` or `ADD_MULTIPLE`
+     * @param {string=} options.widget - `'CHOOSER_MODAL'`, `'ADD_SINGLE'` or `'ADD_MULTIPLE'`
      * @returns {string=} if a string is not returned the title field will not be updated
      */
-    function getTitleFromFilename (filename, options) {
-        if (options.currentTitle) return null; // do not overwrite an existing entered title value
-        return filename.replace(/\.[^\.]+$/, ''); // return filename with the file extension removed
+    function getTitleFromFilename (filename, currentTitle, options) {
+        if (currentTitle) return null; // do not overwrite an existing entered title value
+        const title = filename.replace(/\.[^\.]+$/, ''); // prepare a title based on the filename with the file extension removed
+        return (typeof options.maxLength === 'number') ? title.substring(0, options.maxLength) : title; // return the title capped at maxLength if supplied
     }
 
     wagtail.utils.getTitleFromFilename = getTitleFromFilename;
 
+    // /**
+    //  * Returns a potential value to be pre-filled on the title field associated with the file upload.
+    //  * If the returned a non-string value is returned, any existing value in the title field will
+    //  * be left unchanged. Note that if an empty string is returned, this empty value will replace
+    //  * any existing value in the title field.
+    //  *
+    //  * @param {string=} filename 
+    //  * @param {Object} options 
+    //  * @param {string=} options.currentTitle - current entered value (if available), will be null for `ADD_MULTIPLE`
+    //  * @param {Number=} options.maxLength - maximum title length (if available), may be null
+    //  * @param {string} options.model - `DOCUMENT` or `IMAGE`
+    //  * @param {string} options.widget - `CHOOSER_MODAL`, `ADD` or `ADD_MULTIPLE`
+    //  * @returns {string=} if a string is not returned the title field will not be updated
+    //  */
+    // function getImageTitleFromFilename (filename, currentTitle, options) {
+    //     return 
+    //     if (options.currentTitle) return null; // do not overwrite an existing entered title value
+    //     return filename.replace(/\.[^\.]+$/, ''); // return filename with the file extension removed
+    // }
+
+    
+
     /**
-     * Returns a function to handle the change of a file (single or multiple) upload
-     * so that the context's title field can be updated based on the filename.
+     * On change handler for single file upload widgets which will be used
+     * to update the title field which is passed in via the event.data where bound
+     * to the field.
      * 
-     * @param {string} model - `DOCUMENT` or `IMAGE`
-     * @param {string} widget - `CHOOSER_MODAL`, `ADD` or `ADD_MULTIPLE`
+     * @param {object} event
+     * @param {object} event.data
+     * @param {Function} event.data.$titleField - jQuery reference to the specific title field
+     * @param {Function} event.data.getTitleUtil - specific title util to be used to generate a title from the filename
+     * @param {string=} event.data.widget - `'CHOOSER_MODAL'`, `'ADD_SINGLE'` or `'ADD_MULTIPLE'`
+     * 
      * @returns {Function}
      */
-    function getPopulateTitleHandler (model, widget) {
+    function onSingleFileUploadPopulateTitle (event) {
+        // file widget value example: `C:\fakepath\image.jpg` - convert to just the filename part
+        var filename = $(this).val().split('\\').slice(-1)[0];
 
-        /**
-         * Generic on change handler for the multiple file upload widget and single file upload widget.
-         */
-        return function onChangeHandler (event, data) {
+        var $titleField = event.data.$titleField;
 
-            var $titleField;
-            var currentTitle;
-            var filename;
+        var currentTitle = $titleField.val();
+        var maxLength = $titleField.attr('maxLength') || null; // must handle scenarios where maxLength is not available
 
-            if (widget === 'ADD_MULTIPLE') {
-                $titleField = data.$titleField;
-                currentTitle = null; // not applicable for multiple upload
-                // when adding multiple, onChangeHandler will be called for each file individually
-                var files = data.files[0] || {};
-                filename = files.name;
-            } else {
-                $titleField = event.data.$titleField;
-                currentTitle = $titleField.val();
-                // file widget value example: `C:\fakepath\image.jpg` - convert to just the filename part
-                filename = $(this).val().split('\\').slice(-1)[0];                
-            }
+        var newTitle = event.data.getTitleUtil(
+            filename,
+            currentTitle,
+            { maxLength: maxLength ? parseInt(maxLength) : null, widget: event.data.widget }
+        );
 
-            var maxLength = $titleField.attr('maxLength') || null; // must handle scenarios where maxLength is not available
-
-            var newTitle = wagtail.utils.getTitleFromFilename(filename, {
-                currentTitle: currentTitle,
-                maxLength: maxLength && parseInt(maxLength),
-                model: model,
-                widget: widget
-            });
-
-            if (typeof newTitle === 'string') {
-                $titleField.val(newTitle);
-            } else if (widget === 'ADD_MULTIPLE') {
-                $titleField.val(''); // must clear any existing value for next upload
-            }
+        if (typeof newTitle === 'string') {
+            $titleField.val(newTitle);
         }
+
+        return;
     }
 
-    wagtail.utils.getPopulateTitleHandler = getPopulateTitleHandler;
+    wagtail.utils.onSingleFileUploadPopulateTitle = onSingleFileUploadPopulateTitle;
 
     return wagtail;
 

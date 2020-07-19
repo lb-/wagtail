@@ -128,11 +128,35 @@ $(function() {
         }
     });
 
+    /**
+     * On submit handler for the multiple file upload widget which will be used
+     * to update the title field (a hidden input field) which is submitted with
+     * the POST request for each individual file uploaded.
+     * 
+     * See also onDocumentUploadSubmitHandler in wagtaildocs/js/add-multiple.js
+     */
+    function onImageUploadSubmitHandler (event, data) {
+        var $titleField = data.$titleField;
+        var files = data.files[0] || {};
+        var maxLength = $titleField.attr('maxLength') || null; // handle scenarios where maxLength is not available
+
+        var newTitle = wagtail.utils.getTitleFromFilename(
+            files.name,
+            null, // currentTitle not applicable for multiple upload as each file will have a cleared title
+            { maxLength: maxLength && parseInt(maxLength, 10), widget: 'ADD_MULTIPLE' }
+        );
+
+        if (typeof newTitle === 'string') {
+            $titleField.val(newTitle);
+        } else {
+            $titleField.val(''); // must clear any existing value for next upload
+        }
+
+        return;
+    }
+
     /* update the #title input within the form before each file upload to add custom titles */
-    $('#fileupload').bind(
-        'fileuploadsubmit',
-        wagtail.utils.getPopulateTitleHandler('IMAGE', 'ADD_MULTIPLE')
-    );
+    $('#fileupload').bind('fileuploadsubmit', onImageUploadSubmitHandler);
 
     // ajax-enhance forms added on done()
     $('#upload-list').on('submit', 'form', function(e) {
