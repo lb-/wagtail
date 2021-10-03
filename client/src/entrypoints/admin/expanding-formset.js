@@ -1,5 +1,18 @@
 import $ from 'jquery';
 
+/**
+ * Prefix supplied will be used to determine the id of the ADD button, FORMS container
+ * and TOTAL_FORMS hidden input.
+ *
+ * For each existing count range, opts.onInit will be called with that id (zero indexed).
+ * The found templated will be copied and the `__prefix__` value updated with the incremented
+ * id value. The total forms input's value will also be incremented.
+ *
+ * If the found add button is disabled, no template will be copied.
+ *
+ * @param {string} prefix
+ * @param {{onInit: function, onAdd: function}} opts
+ */
 function buildExpandingFormset(prefix, opts = {}) {
   const addButton = $('#' + prefix + '-ADD');
   const formContainer = $('#' + prefix + '-FORMS');
@@ -19,9 +32,8 @@ function buildExpandingFormset(prefix, opts = {}) {
     emptyFormTemplate = emptyFormTemplate.textContent;
   }
 
-  // eslint-disable-next-line consistent-return
   addButton.on('click', () => {
-    if (addButton.hasClass('disabled')) return false;
+    if (addButton.hasClass('disabled')) return;
     const newFormHtml = emptyFormTemplate
       .replace(/__prefix__/g, formCount)
       .replace(/<-(-*)\/script>/g, '<$1/script>');

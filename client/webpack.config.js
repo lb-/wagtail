@@ -31,7 +31,7 @@ module.exports = function exports() {
       'core',
       'date-time-chooser',
       'draftail',
-      'expanding_formset',
+      'expanding-formset',
       'filtered-select',
       'hallo-bootstrap',
       'hallo-plugins/hallo-hr',
