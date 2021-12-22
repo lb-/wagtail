@@ -7,6 +7,7 @@ public/
 coverage/
 **/vendor/
 static
+_build
 wagtail/admin/templates/wagtailadmin/edit_handlers/inline_panel.js
 wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/includes/searchpromotions_formset.js
 wagtail/users/templates/wagtailusers/groups/includes/page_permissions_formset.js
