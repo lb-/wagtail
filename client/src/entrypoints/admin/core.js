@@ -1,6 +1,10 @@
 import $ from 'jquery';
 import { initTooltips } from '../../includes/initTooltips';
 
+import { initStimulus } from '../../includes/stimulus';
+
+initStimulus();
+
 /* generic function for adding a message to message area through JS alone */
 function addMessage(status, text) {
   $('.messages')
