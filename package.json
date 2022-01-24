@@ -99,6 +99,7 @@
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
+    "@hotwired/stimulus": "^3.0.1",
     "core-js": "^2.5.3",
     "draft-js": "^0.10.5",
     "draftail": "^1.4.1",
