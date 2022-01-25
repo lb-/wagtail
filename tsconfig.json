@@ -1,18 +1,15 @@
 {
-    "compilerOptions": {
-        "jsx": "react",
-        "lib": ["es2015", "dom"],
-        "target": "ES2015",
-        "noImplicitAny": false,  // TODO: Enable once all existing code is typed
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "strictNullChecks": true,
-        "esModuleInterop": true,
-        "allowJs": true,
-        "downlevelIteration": true
-    },
-    "files": [
-        "client/src/index.ts",
-        "client/src/custom.d.ts"
-    ]
+  "compilerOptions": {
+    "allowJs": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "moduleResolution": "Node",
+    "noImplicitAny": false, // TODO: Enable once all existing code is typed
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "target": "ES2015"
+  },
+  "files": ["client/src/index.ts", "client/src/custom.d.ts"]
 }
