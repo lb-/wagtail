@@ -32,7 +32,6 @@ class UpgradeController extends Controller {
           data.version &&
           versionOutOfDate(data.version, currentVersion)
         ) {
-          console.log('add warning?', data);
           this.addWarning(data);
         }
       })
