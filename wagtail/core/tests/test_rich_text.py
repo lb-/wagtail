@@ -127,11 +127,11 @@ class TestRichTextValue(TestCase):
 
 class TestFeatureRegistry(TestCase):
     def test_register_rich_text_features_hook(self):
-        # testapp/wagtail_hooks.py defines a 'blockquote' rich text feature with a hallo.js
+        # testapp/wagtail_hooks.py defines a 'blockquote' rich text feature with a draft.js
         # plugin, via the register_rich_text_features hook; test that we can retrieve it here
         features = FeatureRegistry()
-        quotation = features.get_editor_plugin('hallo', 'quotation')
-        self.assertEqual(quotation.name, 'halloquotation')
+        quotation = features.get_editor_plugin('draftail', 'quotation')
+        self.assertEqual(quotation.js, ['testapp/js/draftail-quotation.js'])
 
     def test_missing_editor_plugin_returns_none(self):
         features = FeatureRegistry()
@@ -139,7 +139,7 @@ class TestFeatureRegistry(TestCase):
             features.get_editor_plugin('made_up_editor', 'blockquote')
         )
         self.assertIsNone(
-            features.get_editor_plugin('hallo', 'made_up_feature')
+            features.get_editor_plugin('draftail', 'made_up_feature')
         )
 
 
