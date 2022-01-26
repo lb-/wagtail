@@ -4,7 +4,7 @@ from wagtail.admin.rich_text.converters import editor_html
 from wagtail.documents import get_document_model
 
 
-# hallo.js / editor-html conversion
+# draftail.js / editor-html conversion
 
 
 class DocumentLinkHandler:

@@ -32,7 +32,6 @@ frontend
 Github
 Gravatar
 Gunicorn
-Hallo
 Handsontable
 Heroku
 hostname

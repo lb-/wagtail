@@ -3,7 +3,7 @@ from wagtail.embeds import format
 from wagtail.embeds.exceptions import EmbedException
 
 
-# hallo.js / editor-html conversion
+# draftail.js / editor-html conversion
 
 class MediaEmbedHandler:
     """

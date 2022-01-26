@@ -3,7 +3,7 @@ from wagtail.images import get_image_model
 from wagtail.images.formats import get_image_format
 
 
-# hallo.js / editor-html conversion
+# draftail.js / editor-html conversion
 
 class ImageEmbedHandler:
     """
