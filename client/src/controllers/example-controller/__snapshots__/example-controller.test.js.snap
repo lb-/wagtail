@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExampleController should update the content of the controlled element 1`] = `
+<h1
+  data-controller="example"
+  data-example-name-value="Mr. Rabbit"
+  id="example"
+>
+  Hello, Mr. Rabbit!
+</h1>
+`;

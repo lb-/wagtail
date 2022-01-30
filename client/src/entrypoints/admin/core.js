@@ -1,4 +1,10 @@
+
 import $ from 'jquery';
+import { Application } from '@hotwired/stimulus';
+import { ExampleController } from '../../controllers';
+
+window.Stimulus = Application.start();
+Stimulus.register('example', ExampleController);
 
 /* generic function for adding a message to message area through JS alone */
 function addMessage(status, text) {
