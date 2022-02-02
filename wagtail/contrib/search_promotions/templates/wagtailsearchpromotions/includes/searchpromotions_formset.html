@@ -1,6 +1,14 @@
 {% load i18n wagtailadmin_tags %}
 {{ formset.management_form }}
-<ul class="multiple" id="id_{{ formset.prefix }}-FORMS">
+<ul
+    class="multiple"
+    id="id_{{ formset.prefix }}-FORMS"
+    data-formset-prefix="id_{{ self.formset.prefix }}"
+    data-empty-child-form-prefix="{{ self.empty_child.form.prefix }}"
+    {% if self.formset.can_order %}data-can-order="true"{% endif %}
+    data-max-forms="{{ self.formset.max_num|unlocalize }}"
+    data-child-controls="{% for child in self.children %}{{ child.form.prefix }} {% endfor %}"
+>
     {% for form in formset.forms %}
         {% include "wagtailsearchpromotions/includes/searchpromotion_form.html" with form=form only %}
     {% endfor %}

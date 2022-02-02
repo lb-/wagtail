@@ -1,13 +1,19 @@
 $(function() {
+    var formset = document.querySelector("[data-formset-prefix='id_{{ formset.prefix }}'");
+
+    var data = formset.dataset;
     var panel = InlinePanel({
-        formsetPrefix: "id_{{ formset.prefix }}",
-        emptyChildFormPrefix: "{{ formset.empty_form.prefix }}",
-        canOrder: true
+        formsetPrefix: data.formsetPrefix,
+        emptyChildFormPrefix: data.emptyChildFormPrefix,
+        canOrder: true,
     });
 
-    {% for form in formset.forms %}
-        panel.initChildControls('{{ formset.prefix }}-{{ forloop.counter0 }}');
-    {% endfor %}
+    console.log('search_promotions initFormset', { data, formset, panel });
+
+    data.childControls.split(' ').forEach(function(childPrefix) {
+        console.log('init child', { childPrefix });
+        panel.initChildControls(childPrefix);
+    });
 
     panel.updateMoveButtonDisabledStates();
 });

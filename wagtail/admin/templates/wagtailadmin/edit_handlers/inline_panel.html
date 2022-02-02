@@ -1,9 +1,18 @@
 {% load i18n %}
+{% load l10n %}
 {% load wagtailadmin_tags  %}
 
 {{ self.formset.management_form }}
 
-<ul class="multiple" id="id_{{ self.formset.prefix }}-FORMS">
+<ul
+    class="multiple"
+    id="id_{{ self.formset.prefix }}-FORMS"
+    data-formset-prefix="id_{{ self.formset.prefix }}"
+    data-empty-child-form-prefix="{{ self.empty_child.form.prefix }}"
+    {% if self.formset.can_order %}data-can-order="true"{% endif %}
+    data-max-forms="{{ self.formset.max_num|unlocalize }}"
+    data-child-controls="{% for child in self.children %}{{ child.form.prefix }} {% endfor %}"
+>
     {% if self.formset.non_form_errors %}
         <li class="error-message">
             {% for error in self.formset.non_form_errors %}
