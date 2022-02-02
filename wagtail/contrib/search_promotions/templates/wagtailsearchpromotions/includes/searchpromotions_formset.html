@@ -1,6 +1,13 @@
-{% load i18n wagtailadmin_tags %}
+{% load l10n i18n wagtailadmin_tags %}
 {{ formset.management_form }}
-<ul class="multiple" id="id_{{ formset.prefix }}-FORMS">
+<ul
+    class="multiple"
+    id="id_{{ formset.prefix }}-FORMS"
+    data-formset-prefix="id_{{ formset.prefix }}"
+    data-empty-child-form-prefix="{{ formset.empty_form.prefix }}"
+    data-can-order="true"
+    data-child-controls="{% for form in formset.forms %}{{ formset.prefix }}-{{ forloop.counter0 }} {% endfor %}"
+>
     {% for form in formset.forms %}
         {% include "wagtailsearchpromotions/includes/searchpromotion_form.html" with form=form only %}
     {% endfor %}

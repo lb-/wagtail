@@ -1,13 +1,19 @@
-$(function() {
-    var panel = InlinePanel({
-        formsetPrefix: "id_{{ formset.prefix }}",
-        emptyChildFormPrefix: "{{ formset.empty_form.prefix }}",
-        canOrder: true
-    });
+/* global InlinePanel */
+$(function () {
+  var formset = document.querySelector(
+    "[data-formset-prefix='id_{{ formset.prefix }}'",
+  );
 
-    {% for form in formset.forms %}
-        panel.initChildControls('{{ formset.prefix }}-{{ forloop.counter0 }}');
-    {% endfor %}
+  var data = formset.dataset;
+  var panel = InlinePanel({
+    formsetPrefix: data.formsetPrefix,
+    emptyChildFormPrefix: data.emptyChildFormPrefix,
+    canOrder: !!data.canOrder,
+  });
 
-    panel.updateMoveButtonDisabledStates();
+  data.childControls.split(' ').forEach(function (childPrefix) {
+    panel.initChildControls(childPrefix);
+  });
+
+  panel.updateMoveButtonDisabledStates();
 });

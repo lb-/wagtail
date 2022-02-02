@@ -1,17 +1,23 @@
-{% load l10n %}
-{% load wagtailadmin_tags %}
-(function() {
-    var panel = InlinePanel({
-        formsetPrefix: "id_{{ self.formset.prefix }}",
-        emptyChildFormPrefix: "{{ self.empty_child.form.prefix }}",
-        canOrder: {% if can_order %}true{% else %}false{% endif %},
-        maxForms: {{ self.formset.max_num|unlocalize }}
-    });
+/* global InlinePanel */
+document.addEventListener('DOMContentLoaded', function () {
+  var formset = document.querySelector(
+    "[data-formset-prefix='id_{{ self.formset.prefix }}'",
+  );
 
-    {% for child in self.children %}
-        panel.initChildControls("{{ child.form.prefix }}");
-    {% endfor %}
-    panel.setHasContent();
-    panel.updateMoveButtonDisabledStates();
-    panel.updateAddButtonState();
-})();
+  var data = formset.dataset;
+  var opts = {
+    formsetPrefix: data.formsetPrefix,
+    emptyChildFormPrefix: data.emptyChildFormPrefix,
+    canOrder: !!data.canOrder,
+    maxForms: Number(data.maxForms || 1000),
+  };
+  var panel = InlinePanel(opts);
+
+  (data.childControls || '').split(' ').forEach(function (childPrefix) {
+    if (childPrefix) panel.initChildControls(childPrefix);
+  });
+
+  panel.setHasContent();
+  panel.updateMoveButtonDisabledStates();
+  panel.updateAddButtonState();
+});
