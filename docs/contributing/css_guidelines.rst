@@ -3,39 +3,11 @@ CSS coding guidelines
 
 Our CSS is written in `Sass <https://sass-lang.com/>`_, using the SCSS syntax.
 
-Compiling
-~~~~~~~~~
-
-The SCSS source files are compiled to CSS using the
-`gulp <https://gulpjs.com/>`_ build system.
-This requires `Node.js <https://nodejs.org>`_ to run.
-To install the libraries required for compiling the SCSS,
-run the following from the Wagtail repository root:
-
-.. code-block:: console
-
-    $ npm install --no-save
-
-
-To compile the assets, run:
-
-.. code-block:: console
-
-    $ npm run build
-
-
-Alternatively, the SCSS files can be monitored,
-automatically recompiling when any changes are observed, by running:
-
-.. code-block:: console
-
-    $ npm start
-
-
 Linting and formatting SCSS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Wagtail uses the `stylelint <https://stylelint.io/>`_ linter.
+Wagtail uses `stylelint <https://stylelint.io/>`_ for linting,
+and `Prettier <https://prettier.io/>`_ for formatting.
 You'll need Node.js and npm on your development machine.
 Ensure project dependencies are installed by running ``npm install --no-save``
 
@@ -55,7 +27,13 @@ below, plus a little more.
 Formatting code
 ---------------
 
-If you want to autofix errors, you can run that command directly with:
+For Prettier auto-formatting, run:
+
+.. code-block:: console
+
+    $ npm run format
+
+If you want to autofix linting errors:
 
 .. code-block:: console
 

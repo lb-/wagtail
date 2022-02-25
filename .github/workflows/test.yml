@@ -3,11 +3,10 @@ name: Wagtail CI
 on:
   push:
     paths-ignore:
-    - 'docs/**'
+      - 'docs/**'
   pull_request:
     paths-ignore:
-    - 'docs/**'
-
+      - 'docs/**'
 
 # Our test suite should cover:
 # - all supported databases against current Python and Django
@@ -19,16 +18,16 @@ on:
 # Current configuration:
 # - django 3.2, python 3.7, postgres
 # - django 3.2, python 3.8, mysql
-# - django 3.2, python 3.9, sqlite
-# - django 4.0, python 3.9, mysql (allow failures)
-# - django 3.2, python 3.10, postgres, USE_EMAIL_USER_MODEL=yes
-# - django 3.2, python 3.10, postgres, DISABLE_TIMEZONE=yes
+# - django 4.0, python 3.9, sqlite
+# - django 4.0, python 3.9, mysql
+# - django 4.0, python 3.10, postgres, USE_EMAIL_USER_MODEL=yes
+# - django 4.0, python 3.10, postgres, DISABLE_TIMEZONE=yes
 # - django stable/4.0.x, python 3.10, postgres (allow failures)
 # - django main, python 3.10, postgres (allow failures)
 # - elasticsearch 5, django 3.2, python 3.7, sqlite
 # - elasticsearch 6, django 3.2, python 3.7, postgres
-# - elasticsearch 7, django 4.0, python 3.8, postgres (allow failures)
-# - elasticsearch 7, django 3.2, python 3.9, sqlite, USE_EMAIL_USER_MODEL=yes
+# - elasticsearch 7, django 4.0, python 3.8, postgres
+# - elasticsearch 7, django 4.0, python 3.9, sqlite, USE_EMAIL_USER_MODEL=yes
 
 jobs:
   test-sqlite:
@@ -36,8 +35,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.9"
-            django: "Django>=3.2,<3.3"
+          - python: '3.9'
+            django: 'Django>=4.0,<4.1'
 
     steps:
       - uses: actions/checkout@v2
@@ -62,23 +61,24 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.7"
-            django: "Django>=3.2,<3.3"
+          - python: '3.7'
+            django: 'Django>=3.2,<3.3'
             experimental: false
-          - python: "3.10"
-            django: "Django>=3.2,<3.3"
+          - python: '3.10'
+            django: 'Django>=4.0,<4.1'
             notz: notz
             experimental: false
-          - python: "3.10"
-            django: "Django>=3.2,<3.3"
+          - python: '3.10'
+            django: 'Django>=4.0,<4.1'
             experimental: false
             emailuser: emailuser
-          - python: "3.10"
-            django: "git+https://github.com/django/django.git@stable/4.0.x#egg=Django"
+          - python: '3.10'
+            django: 'git+https://github.com/django/django.git@stable/4.0.x#egg=Django'
             experimental: true
-          - python: "3.10"
-            django: "git+https://github.com/django/django.git@main#egg=Django"
+          - python: '3.10'
+            django: 'git+https://github.com/django/django.git@main#egg=Django'
             experimental: true
+            install_extras: 'pip uninstall -y django-modelcluster ; pip uninstall -y django-taggit ; pip install git+https://github.com/gasman/django-modelcluster.git@fix/unsaved-instance-live-queryset#egg=django-modelcluster git+https://github.com/gasman/django-taggit.git@fix/cached-pathinfo#egg=django-taggit'
 
     services:
       postgres:
@@ -99,6 +99,7 @@ jobs:
           pip install "psycopg2>=2.6"
           pip install -e .[testing]
           pip install "${{ matrix.django }}"
+          ${{ matrix.install_extras }}
       - name: Test
         run: |
           ./runtests.py
@@ -116,12 +117,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.8"
-            django: "Django>=3.2,<3.3"
+          - python: '3.8'
+            django: 'Django>=3.2,<3.3'
             experimental: false
-          - python: "3.9"
-            django: "Django>=4.0,<4.1"
-            experimental: true
+          - python: '3.9'
+            django: 'Django>=4.0,<4.1'
+            experimental: false
 
     services:
       mysql:
@@ -150,7 +151,7 @@ jobs:
           ./runtests.py
         env:
           DATABASE_ENGINE: django.db.backends.mysql
-          DATABASE_HOST: "127.0.0.1"
+          DATABASE_HOST: '127.0.0.1'
           DATABASE_USER: root
 
   # https://github.com/elastic/elastic-github-actions doesn't work for Elasticsearch 5,
@@ -160,8 +161,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.7"
-            django: "Django>=3.2,<3.3"
+          - python: '3.7'
+            django: 'Django>=3.2,<3.3'
     steps:
       - name: Configure sysctl limits
         run: |
@@ -200,8 +201,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.9"
-            django: "Django>=3.2,<3.3"
+          - python: '3.9'
+            django: 'Django>=4.0,<4.1'
             emailuser: emailuser
     steps:
       - name: Configure sysctl limits
@@ -244,8 +245,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.7"
-            django: "Django>=3.2,<3.3"
+          - python: '3.7'
+            django: 'Django>=3.2,<3.3'
 
     services:
       postgres:
@@ -293,9 +294,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - python: "3.8"
-            django: "Django>=4.0,<4.1"
-            experimental: true
+          - python: '3.8'
+            django: 'Django>=4.0,<4.1'
+            experimental: false
 
     services:
       postgres:

@@ -15,7 +15,7 @@ If you'd prefer to set up all the components manually, read on. These instructio
 Setting up the Wagtail codebase
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install `Node.js <https://nodejs.org/>`_, version 14.
+Install `Node.js <https://nodejs.org/>`_, version 16.
 You can also use Node version manager (nvm) since Wagtail supplies a ``.nvmrc`` file in the root of the project with the minimum required Node version - see nvm's `installation instructions <https://github.com/creationix/nvm>`_.
 
 You will also need to install the **libjpeg** and **zlib** libraries, if you haven't done so already - see Pillow's `platform-specific installation instructions <https://pillow.readthedocs.org/en/latest/installation.html#external-libraries>`_.
@@ -268,7 +268,7 @@ The audit also states which parts of Wagtail have and haven’t been tested, how
 Compiling static assets
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-All static assets such as JavaScript, CSS, images, and fonts for the Wagtail admin are compiled from their respective sources by ``gulp``. The compiled assets are not committed to the repository, and are compiled before packaging each new release. Compiled assets should not be submitted as part of a pull request.
+All static assets such as JavaScript, CSS, images, and fonts for the Wagtail admin are compiled from their respective sources by ``webpack``. The compiled assets are not committed to the repository, and are compiled before packaging each new release. Compiled assets should not be submitted as part of a pull request.
 
 To compile the assets, run:
 
@@ -281,6 +281,23 @@ This must be done after every change to the source files. To watch the source fi
 .. code-block:: console
 
     $ npm start
+
+Using the pattern library
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wagtail’s UI component library is built with `Storybook <https://storybook.js.org/>`_ and `django-pattern-library <https://github.com/torchbox/django-pattern-library>`_. To run it locally,
+
+.. code-block:: console
+
+    $ export DJANGO_SETTINGS_MODULE=wagtail.tests.settings_ui
+    $ # Assumes the current environment contains a valid installation of Wagtail for local development.
+    $ ./wagtail/tests/manage.py migrate
+    $ ./wagtail/tests/manage.py createcachetable
+    $ ./wagtail/tests/manage.py runserver 0:8000
+    $ # In a separate terminal:
+    $ npm run storybook
+
+The last command will start Storybook at ``http://localhost:6006/``. It will proxy specific requests to Django at ``http://localhost:8000`` by default. Use the ``TEST_ORIGIN`` environment variable to use a different port for Django: ``TEST_ORIGIN=http://localhost:9000 npm run storybook``.
 
 Compiling the documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -331,3 +348,15 @@ To do this, you can run the following command to see the changes automatically a
 
 .. _Databases documentation: https://docs.djangoproject.com/en/stable/ref/databases/
 .. _DATABASES: https://docs.djangoproject.com/en/stable/ref/settings/#databases
+
+
+Automatically lint and code format on commits
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`pre-commit <https://pre-commit.com/>`_ is configured to automatically run code linting and formatting checks with every commit. To install pre-commit into your git hooks run:
+
+.. code-block:: console
+
+    $ pre-commit install
+
+pre-commit should now run on every commit you make.

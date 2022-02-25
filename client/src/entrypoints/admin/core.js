@@ -8,7 +8,9 @@ window.Stimulus.load(controllers);
 
 /* generic function for adding a message to message area through JS alone */
 function addMessage(status, text) {
-  $('.messages').addClass('new').empty()
+  $('.messages')
+    .addClass('new')
+    .empty()
     .append('<ul><li class="' + status + '">' + text + '</li></ul>');
   const addMsgTimeout = setTimeout(() => {
     $('.messages').addClass('appear');
@@ -23,7 +25,7 @@ function escapeHtml(text) {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    '\'': '&#039;'
+    "'": '&#039;',
   };
 
   return text.replace(/[&<>"']/g, (char) => map[char]);
@@ -31,18 +33,21 @@ function escapeHtml(text) {
 window.escapeHtml = escapeHtml;
 
 function initTagField(id, autocompleteUrl, options) {
-  const finalOptions = Object.assign({
-    autocomplete: { source: autocompleteUrl },
-    preprocessTag(val) {
-      // Double quote a tag if it contains a space
-      // and if it isn't already quoted.
-      if (val && val[0] !== '"' && val.indexOf(' ') > -1) {
-        return '"' + val + '"';
-      }
+  const finalOptions = Object.assign(
+    {
+      autocomplete: { source: autocompleteUrl },
+      preprocessTag(val) {
+        // Double quote a tag if it contains a space
+        // and if it isn't already quoted.
+        if (val && val[0] !== '"' && val.indexOf(' ') > -1) {
+          return '"' + val + '"';
+        }
 
-      return val;
+        return val;
+      },
     },
-  }, options);
+    options,
+  );
 
   $('#' + id).tagit(finalOptions);
 }
@@ -65,7 +70,7 @@ window.initTagField = initTagField;
  *    should include comments
  *  - callback - A function to be run when the dirty status of the form, or the comments
  *    system (if using) changes, taking formDirty, commentsDirty as arguments
-*/
+ */
 
 function enableDirtyFormCheck(formSelector, options) {
   const $form = $(formSelector);
@@ -91,17 +96,24 @@ function enableDirtyFormCheck(formSelector, options) {
 
   let updateIsCommentsDirtyTimeout = -1;
   if (commentApp) {
-    isCommentsDirty = commentApp.selectors.selectIsDirty(commentApp.store.getState());
+    isCommentsDirty = commentApp.selectors.selectIsDirty(
+      commentApp.store.getState(),
+    );
     commentApp.store.subscribe(() => {
       // Update on a timeout to match the timings for responding to page form changes
       clearTimeout(updateIsCommentsDirtyTimeout);
-      updateIsCommentsDirtyTimeout = setTimeout(() => {
-        const newIsCommentsDirty = commentApp.selectors.selectIsDirty(commentApp.store.getState());
-        if (newIsCommentsDirty !== isCommentsDirty) {
-          isCommentsDirty = newIsCommentsDirty;
-          updateCallback(isDirty, isCommentsDirty);
-        }
-      }, isCommentsDirty ? 3000 : 300);
+      updateIsCommentsDirtyTimeout = setTimeout(
+        () => {
+          const newIsCommentsDirty = commentApp.selectors.selectIsDirty(
+            commentApp.store.getState(),
+          );
+          if (newIsCommentsDirty !== isCommentsDirty) {
+            isCommentsDirty = newIsCommentsDirty;
+            updateCallback(isDirty, isCommentsDirty);
+          }
+        },
+        isCommentsDirty ? 3000 : 300,
+      );
     });
   }
 
@@ -117,7 +129,9 @@ function enableDirtyFormCheck(formSelector, options) {
     }
 
     const formData = new FormData($form[0]);
-    const keys = Array.from(formData.keys()).filter((key) => !key.startsWith('comments-'));
+    const keys = Array.from(formData.keys()).filter(
+      (key) => !key.startsWith('comments-'),
+    );
     if (keys.length !== initialData.size) {
       return true;
     }
@@ -128,7 +142,10 @@ function enableDirtyFormCheck(formSelector, options) {
       if (newValue === oldValue) {
         return false;
       } else if (Array.isArray(newValue) && Array.isArray(oldValue)) {
-        return newValue.length !== oldValue.length || newValue.some((value, index) => value !== oldValue[index]);
+        return (
+          newValue.length !== oldValue.length ||
+          newValue.some((value, index) => value !== oldValue[index])
+        );
       }
       return false;
     });
@@ -149,8 +166,8 @@ function enableDirtyFormCheck(formSelector, options) {
       const initialFormData = new FormData($form[0]);
       initialData = new Map();
       Array.from(initialFormData.keys())
-        .filter(key => !key.startsWith('comments-'))
-        .forEach(key => initialData.set(key, initialFormData.getAll(key)));
+        .filter((key) => !key.startsWith('comments-'))
+        .forEach((key) => initialData.set(key, initialFormData.getAll(key)));
 
       const updateDirtyCheck = () => {
         clearTimeout(updateIsDirtyTimeout);
@@ -165,7 +182,10 @@ function enableDirtyFormCheck(formSelector, options) {
 
       const validInputNodeInList = (nodeList) => {
         for (const node of nodeList) {
-          if (node.nodeType === node.ELEMENT_NODE && ['INPUT', 'TEXTAREA', 'SELECT'].includes(node.tagName)) {
+          if (
+            node.nodeType === node.ELEMENT_NODE &&
+            ['INPUT', 'TEXTAREA', 'SELECT'].includes(node.tagName)
+          ) {
             return true;
           }
         }
@@ -174,7 +194,10 @@ function enableDirtyFormCheck(formSelector, options) {
 
       const observer = new MutationObserver((mutationList) => {
         for (const mutation of mutationList) {
-          if (validInputNodeInList(mutation.addedNodes) || validInputNodeInList(mutation.removedNodes)) {
+          if (
+            validInputNodeInList(mutation.addedNodes) ||
+            validInputNodeInList(mutation.removedNodes)
+          ) {
             updateDirtyCheck();
             return;
           }
@@ -183,7 +206,7 @@ function enableDirtyFormCheck(formSelector, options) {
       observer.observe($form[0], {
         childList: true,
         attributes: false,
-        subtree: true
+        subtree: true,
       });
     }, 1000 * 10);
   }
@@ -192,9 +215,7 @@ function enableDirtyFormCheck(formSelector, options) {
   window.addEventListener('beforeunload', (event) => {
     clearTimeout(updateIsDirtyTimeout);
     updateIsDirty();
-    const displayConfirmation = (
-      !formSubmitted && (isDirty || isCommentsDirty)
-    );
+    const displayConfirmation = !formSubmitted && (isDirty || isCommentsDirty);
 
     if (displayConfirmation) {
       // eslint-disable-next-line no-param-reassign
@@ -320,13 +341,17 @@ $(() => {
     tabNavElem.dataset.currentTab = tabButtonElem.dataset.tab;
 
     // Trigger switch event
-    tabNavElem.dispatchEvent(new CustomEvent('switch', { detail: { tab: tabButtonElem.dataset.tab } }));
+    tabNavElem.dispatchEvent(
+      new CustomEvent('switch', { detail: { tab: tabButtonElem.dataset.tab } }),
+    );
   };
 
   if (window.location.hash) {
     /* look for a tab matching the URL hash and activate it if found */
     const cleanedHash = window.location.hash.replace(/[^\w\-#]/g, '');
-    const tab = document.querySelector('a[href="' + cleanedHash + '"][data-tab]');
+    const tab = document.querySelector(
+      'a[href="' + cleanedHash + '"][data-tab]',
+    );
     if (tab) showTab(tab);
   }
 
@@ -369,13 +394,13 @@ $(() => {
   });
 
   /* Dropzones */
-  // eslint-disable-next-line func-names
-  $('.drop-zone').on('dragover', function () {
-    $(this).addClass('hovered');
-  // eslint-disable-next-line func-names
-  }).on('dragleave dragend drop', function () {
-    $(this).removeClass('hovered');
-  });
+  $('.drop-zone')
+    .on('dragover', function onDragOver() {
+      $(this).addClass('hovered');
+    })
+    .on('dragleave dragend drop', function onDragLeave() {
+      $(this).removeClass('hovered');
+    });
 
   /* Header search behaviour */
   if (window.headerSearch) {
@@ -421,14 +446,16 @@ $(() => {
           complete() {
             window.wagtail.ui.initDropDowns();
             $inputContainer.removeClass(workingClasses);
-          }
+          },
         });
       }
     };
 
     // eslint-disable-next-line func-names
     const getURLParam = function (name) {
-      const results = new RegExp('[\\?&]' + name + '=([^]*)').exec(window.location.search);
+      const results = new RegExp('[\\?&]' + name + '=([^]*)').exec(
+        window.location.search,
+      );
       if (results) {
         return results[1];
       }
@@ -446,7 +473,10 @@ $(() => {
 
     // eslint-disable-next-line func-names
     window.cancelSpinner = function () {
-      $self.prop('disabled', '').removeData(dataName).removeClass('button-longrunning-active');
+      $self
+        .prop('disabled', '')
+        .removeData(dataName)
+        .removeClass('button-longrunning-active');
 
       if ($self.data('clicked-text')) {
         $replacementElem.text($self.data('original-text'));
@@ -456,7 +486,12 @@ $(() => {
     // If client-side validation is active on this form, and is going to block submission of the
     // form, don't activate the spinner
     const form = $self.closest('form').get(0);
-    if (form && form.checkValidity && !form.noValidate && (!form.checkValidity())) {
+    if (
+      form &&
+      form.checkValidity &&
+      !form.noValidate &&
+      !form.checkValidity()
+    ) {
       return;
     }
 
@@ -467,12 +502,15 @@ $(() => {
       if (!$self.data(dataName)) {
         // Button re-enables after a timeout to prevent button becoming
         // permanently un-usable
-        $self.data(dataName, setTimeout(() => {
-          clearTimeout($self.data(dataName));
+        $self.data(
+          dataName,
+          setTimeout(() => {
+            clearTimeout($self.data(dataName));
 
-          // eslint-disable-next-line no-undef
-          cancelSpinner();
-        }, reEnableAfter * 1000));
+            // eslint-disable-next-line no-undef
+            cancelSpinner();
+          }, reEnableAfter * 1000),
+        );
 
         if ($self.data('clicked-text') && $replacementElem.length) {
           // Save current button text
@@ -517,9 +555,8 @@ const ARIA = 'aria-hidden';
 const keys = {
   ESC: 27,
   ENTER: 13,
-  SPACE: 32
+  SPACE: 32,
 };
-
 
 /**
  * Singleton controller and registry for DropDown components.
@@ -562,9 +599,8 @@ const DropDownController = {
     });
 
     return needle;
-  }
+  },
 };
-
 
 /**
  * DropDown component
@@ -577,8 +613,10 @@ const DropDownController = {
 function DropDown(el, registry) {
   if (!el || !registry) {
     if ('error' in console) {
-      // eslint-disable-next-line max-len, no-console
-      console.error('A dropdown was created without an element or the DropDownController.\nMake sure to pass both to your component.');
+      // eslint-disable-next-line no-console
+      console.error(
+        'A dropdown was created without an element or the DropDownController.\nMake sure to pass both to your component.',
+      );
       return;
     }
   }
@@ -587,7 +625,7 @@ function DropDown(el, registry) {
   this.$parent = $(el).parents(LISTING_TITLE_SELECTOR);
 
   this.state = {
-    isOpen: false
+    isOpen: false,
   };
 
   this.registry = registry;
@@ -660,7 +698,7 @@ DropDown.prototype = {
     if (!$(relTarget).parents().is(el)) {
       this.closeDropDown();
     }
-  }
+  },
 };
 
 function initDropDown() {
@@ -686,27 +724,29 @@ $(document).ready(initDropDowns);
 wagtail.ui.initDropDowns = initDropDowns;
 wagtail.ui.DropDownController = DropDownController;
 
-// provide a workaround for NodeList#forEach not being available in IE 11
-function qsa(element, selector) {
-  return [].slice.call(element.querySelectorAll(selector));
-}
-
 // Initialise button selectors
 function initButtonSelects() {
-  qsa(document, '.button-select').forEach((element) => {
+  document.querySelectorAll('.button-select').forEach((element) => {
     const inputElement = element.querySelector('input[type="hidden"]');
-    qsa(element, '.button-select__option').forEach((buttonElement) => {
-      buttonElement.addEventListener('click', (e) => {
-        e.preventDefault();
-        inputElement.value = buttonElement.value;
 
-        qsa(element, '.button-select__option--selected').forEach((selectedButtonElement) => {
-          selectedButtonElement.classList.remove('button-select__option--selected');
+    element
+      .querySelectorAll('.button-select__option')
+      .forEach((buttonElement) => {
+        buttonElement.addEventListener('click', (e) => {
+          e.preventDefault();
+          inputElement.value = buttonElement.value;
+
+          element
+            .querySelectorAll('.button-select__option--selected')
+            .forEach((selectedButtonElement) => {
+              selectedButtonElement.classList.remove(
+                'button-select__option--selected',
+              );
+            });
+
+          buttonElement.classList.add('button-select__option--selected');
         });
-
-        buttonElement.classList.add('button-select__option--selected');
       });
-    });
   });
 }
 

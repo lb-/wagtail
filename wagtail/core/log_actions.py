@@ -1,12 +1,9 @@
 import uuid
 
-from warnings import warn
-
 from asgiref.local import Local
 from django.utils.functional import LazyObject
 
 from wagtail.core import hooks
-from wagtail.utils.deprecation import RemovedInWagtail217Warning
 
 
 class LogFormatter:
@@ -17,19 +14,13 @@ class LogFormatter:
 
     To be registered with log_registry.register_action.
     """
-    label = ''
-    message = ''
-    comment = ''
+
+    label = ""
+    message = ""
+    comment = ""
 
     def format_message(self, log_entry):
-        if callable(self.message):
-            # RemovedInWagtail217Warning - support for callable messages will be dropped.
-            # For Wagtail <2.15, a callable passed as 'message' will be called with the log entry's 'data' property.
-            # (In 2.14 there was also a takes_log_entry attribute on the callable to specify passing the whole
-            # log entry object rather than just data, but this was undocumented)
-            return self.message(log_entry.data)
-        else:
-            return self.message
+        return self.message
 
     def format_comment(self, log_entry):
         return self.comment
@@ -43,6 +34,7 @@ class LogContext:
     Stores data about the environment in which a logged action happens -
     e.g. the active user - to be stored in the log entry for that action.
     """
+
     def __init__(self, user=None, generate_uuid=True):
         self.user = user
         if generate_uuid:
@@ -51,7 +43,7 @@ class LogContext:
             self.uuid = None
 
     def __enter__(self):
-        self._old_log_context = getattr(_active, 'value', None)
+        self._old_log_context = getattr(_active, "value", None)
         activate(self)
         return self
 
@@ -74,7 +66,7 @@ def deactivate():
 
 
 def get_active_log_context():
-    return getattr(_active, 'value', empty_log_context)
+    return getattr(_active, "value", empty_log_context)
 
 
 class LogActionRegistry:
@@ -82,6 +74,7 @@ class LogActionRegistry:
     A central store for log actions.
     The expected format for registered log actions: Namespaced action, Action label, Action message (or callable)
     """
+
     def __init__(self):
         # Has the register_log_actions hook been run for this registry?
         self.has_scanned_for_actions = False
@@ -100,7 +93,7 @@ class LogActionRegistry:
 
     def scan_for_actions(self):
         if not self.has_scanned_for_actions:
-            for fn in hooks.get_hooks('register_log_actions'):
+            for fn in hooks.get_hooks("register_log_actions"):
                 fn(self)
 
             self.has_scanned_for_actions = True
@@ -110,7 +103,6 @@ class LogActionRegistry:
         self.log_entry_models.add(log_entry_model)
 
     def register_action(self, action, *args):
-
         def register_formatter_class(formatter_cls):
             formatter = formatter_cls()
             self.formatters[action] = formatter
@@ -120,14 +112,9 @@ class LogActionRegistry:
             # register_action has been invoked as register_action(action, label, message); create a LogFormatter
             # subclass and register that
             label, message = args
-
-            if callable(message):
-                warn(
-                    "Passing a callable message to register_action is deprecated; create a LogFormatter subclass instead.",
-                    category=RemovedInWagtail217Warning
-                )
-
-            formatter_cls = type('_LogFormatter', (LogFormatter, ), {'label': label, 'message': message})
+            formatter_cls = type(
+                "_LogFormatter", (LogFormatter,), {"label": label, "message": message}
+            )
             register_formatter_class(formatter_cls)
         else:
             # register_action has been invoked as a @register_action(action) decorator; return the function that
@@ -179,13 +166,16 @@ class LogActionRegistry:
 
         user = user or get_active_log_context().user
         uuid = uuid or get_active_log_context().uuid
-        return log_entry_model.objects.log_action(instance, action, user=user, uuid=uuid, **kwargs)
+        return log_entry_model.objects.log_action(
+            instance, action, user=user, uuid=uuid, **kwargs
+        )
 
     def get_logs_for_instance(self, instance):
         log_entry_model = self.get_log_model_for_instance(instance)
         if log_entry_model is None:
             # this model has no logs; return an empty queryset of the basic log model
             from wagtail.core.models import ModelLogEntry
+
             return ModelLogEntry.objects.none()
 
         return log_entry_model.objects.for_instance(instance)

@@ -9,9 +9,10 @@ import { LinkMenuItemDefinition } from './menu/LinkMenuItem';
 import { SubMenuItemDefinition } from './menu/SubMenuItem';
 import { initFocusOutline } from '../../utils/focus';
 
-import '../../../../wagtail/admin/static/wagtailadmin/css/sidebar.css';
-
-export default { title: 'Sidebar/Sidebar', parameters: { layout: 'fullscreen' } };
+export default {
+  title: 'Sidebar/Sidebar',
+  parameters: { layout: 'fullscreen' },
+};
 
 const STRINGS: Strings = {
   DASHBOARD: 'Dashboard',
@@ -21,11 +22,16 @@ const STRINGS: Strings = {
 
 function wagtailBrandingModule(): WagtailBrandingModuleDefinition {
   return new WagtailBrandingModuleDefinition('/admin/', {
-    mobileLogo: 'https://wagtail.org/static/wagtailadmin/images/wagtail-logo.svg',
-    desktopLogoBody: 'https://wagtail.org/static/wagtailadmin/images/logo-body.svg',
-    desktopLogoTail: 'https://wagtail.org/static/wagtailadmin/images/logo-tail.svg',
-    desktopLogoEyeOpen: 'https://wagtail.org/static/wagtailadmin/images/logo-eyeopen.svg',
-    desktopLogoEyeClosed: 'https://wagtail.org/static/wagtailadmin/images/logo-eyeclosed.svg'
+    mobileLogo:
+      'https://wagtail.org/static/wagtailadmin/images/wagtail-logo.svg',
+    desktopLogoBody:
+      'https://wagtail.org/static/wagtailadmin/images/logo-body.svg',
+    desktopLogoTail:
+      'https://wagtail.org/static/wagtailadmin/images/logo-tail.svg',
+    desktopLogoEyeOpen:
+      'https://wagtail.org/static/wagtailadmin/images/logo-eyeopen.svg',
+    desktopLogoEyeClosed:
+      'https://wagtail.org/static/wagtailadmin/images/logo-eyeclosed.svg',
   });
 }
 
@@ -36,13 +42,16 @@ function searchModule(): SearchModuleDefinition {
 function bogStandardMenuModule(): MainMenuModuleDefinition {
   return new MainMenuModuleDefinition(
     [
-      new PageExplorerMenuItemDefinition({
-        name: 'explorer',
-        label: 'Pages',
-        url: '/admin/pages',
-        icon_name: 'folder-open-inverse',
-        classnames: '',
-      }, 1),
+      new PageExplorerMenuItemDefinition(
+        {
+          name: 'explorer',
+          label: 'Pages',
+          url: '/admin/pages',
+          icon_name: 'folder-open-inverse',
+          classnames: '',
+        },
+        1,
+      ),
       new LinkMenuItemDefinition({
         name: 'images',
         label: 'Images',
@@ -107,7 +116,7 @@ function bogStandardMenuModule(): MainMenuModuleDefinition {
             icon_name: 'history',
             classnames: '',
           }),
-        ]
+        ],
       ),
       new SubMenuItemDefinition(
         {
@@ -167,7 +176,7 @@ function bogStandardMenuModule(): MainMenuModuleDefinition {
             icon_name: 'redirect',
             classnames: '',
           }),
-        ]
+        ],
       ),
     ],
     [
@@ -188,8 +197,9 @@ function bogStandardMenuModule(): MainMenuModuleDefinition {
     ],
     {
       name: 'Admin',
-      avatarUrl: 'https://gravatar.com/avatar/e31ec811942afbf7b9ce0ac5affe426f?s=200&d=robohash&r=x',
-    }
+      avatarUrl:
+        'https://gravatar.com/avatar/e31ec811942afbf7b9ce0ac5affe426f?s=200&d=robohash&r=x',
+    },
   );
 }
 
@@ -199,7 +209,8 @@ interface RenderSidebarStoryOptions {
 }
 
 function renderSidebarStory(
-  modules: ModuleDefinition[], { rtl = false, strings = null }: RenderSidebarStoryOptions = {}
+  modules: ModuleDefinition[],
+  { rtl = false, strings = null }: RenderSidebarStoryOptions = {},
 ) {
   // Enable focus outlines so we can test them
   React.useEffect(() => {
@@ -309,7 +320,7 @@ export function withNestedSubmenu() {
                   icon_name: 'user',
                   classnames: '',
                 }),
-              ]
+              ],
             ),
             new SubMenuItemDefinition(
               {
@@ -326,12 +337,12 @@ export function withNestedSubmenu() {
                   icon_name: 'user',
                   classnames: '',
                 }),
-              ]
-            )
-          ]
-        )
-      ]
-    )
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
   );
 
   return renderSidebarStory([
@@ -340,7 +351,6 @@ export function withNestedSubmenu() {
     menuModule,
   ]);
 }
-
 
 export function withLargeSubmenu() {
   const menuModule = bogStandardMenuModule();
@@ -367,8 +377,8 @@ export function withLargeSubmenu() {
         classnames: '',
         footer_text: 'Footer text',
       },
-      menuItems
-    )
+      menuItems,
+    ),
   );
 
   return renderSidebarStory([
@@ -379,10 +389,7 @@ export function withLargeSubmenu() {
 }
 
 export function withoutSearch() {
-  return renderSidebarStory([
-    wagtailBrandingModule(),
-    bogStandardMenuModule(),
-  ]);
+  return renderSidebarStory([wagtailBrandingModule(), bogStandardMenuModule()]);
 }
 
 // Translations taken from actual translation files at the time the code was written
@@ -469,7 +476,7 @@ function arabicMenuModule(): MainMenuModuleDefinition {
             icon_name: 'history',
             classnames: '',
           }),
-        ]
+        ],
       ),
       new SubMenuItemDefinition(
         {
@@ -528,7 +535,7 @@ function arabicMenuModule(): MainMenuModuleDefinition {
             icon_name: 'redirect',
             classnames: '',
           }),
-        ]
+        ],
       ),
     ],
     [
@@ -549,15 +556,15 @@ function arabicMenuModule(): MainMenuModuleDefinition {
     ],
     {
       name: 'Admin',
-      avatarUrl: 'https://gravatar.com/avatar/e31ec811942afbf7b9ce0ac5affe426f?s=200&d=robohash&r=x',
-    }
+      avatarUrl:
+        'https://gravatar.com/avatar/e31ec811942afbf7b9ce0ac5affe426f?s=200&d=robohash&r=x',
+    },
   );
 }
 
 export function rightToLeft() {
-  return renderSidebarStory([
-    wagtailBrandingModule(),
-    searchModule(),
-    arabicMenuModule(),
-  ], { rtl: true, strings: STRINGS_AR });
+  return renderSidebarStory(
+    [wagtailBrandingModule(), searchModule(), arabicMenuModule()],
+    { rtl: true, strings: STRINGS_AR },
+  );
 }

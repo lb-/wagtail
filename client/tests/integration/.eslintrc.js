@@ -12,15 +12,10 @@ module.exports = {
   env: {
     jest: true,
     browser: true,
-    node: true
+    node: true,
   },
   globals: {
     page: 'readonly',
-    TEST_ORIGIN: 'readonly'
-  },
-  settings: {
-    'import/resolver': {
-      webpack: null,
-    }
+    TEST_ORIGIN: 'readonly',
   },
 };

@@ -5,7 +5,7 @@
 
 Wagtail provides the `wagtail start` command and project template to get you started with a new Wagtail project as quickly as possible, but it's easy to integrate Wagtail into an existing Django project too.
 
-Wagtail is currently compatible with Django 3.2. First, install the `wagtail` package from PyPI:
+Wagtail is currently compatible with Django 3.2 and 4.0. First, install the `wagtail` package from PyPI:
 
 ```sh
 $ pip install wagtail
@@ -57,18 +57,6 @@ Add a `WAGTAIL_SITE_NAME` - this will be displayed on the main dashboard of the 
 
 ```python
 WAGTAIL_SITE_NAME = 'My Example Site'
-```
-
-<!--- RemovedInWagtail217Warning (wagtail.search.backends.database will be made the default and will not need to be added explicitly here) -->
-
-Add the `WAGTAILSEARCH_BACKENDS` setting to enable full-text searching:
-
-```python
-WAGTAILSEARCH_BACKENDS = {
-    'default': {
-        'BACKEND': 'wagtail.search.backends.database',
-    }
-}
 ```
 
 Various other settings are available to configure Wagtail's behaviour - see [Settings](/reference/settings).

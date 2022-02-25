@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar';
 export const SIDEBAR_COLLAPSED_COOKIE_NAME = 'wagtail_sidebar_collapsed';
 
 export function initSidebar() {
+  const cookieOptions = { sameSite: 'lax' };
   const element = document.getElementById('wagtail-sidebar');
   const rawProps = document.getElementById('wagtail-sidebar-props');
 
@@ -26,15 +27,17 @@ export function initSidebar() {
 
     const collapsedCookie: any = Cookies.get(SIDEBAR_COLLAPSED_COOKIE_NAME);
     // Cast to boolean
-    const collapsed = !((collapsedCookie === undefined || collapsedCookie === '0'));
+    const collapsed = !(
+      collapsedCookie === undefined || collapsedCookie === '0'
+    );
 
     const onExpandCollapse = (_collapsed: boolean) => {
       if (_collapsed) {
         document.body.classList.add('sidebar-collapsed');
-        Cookies.set(SIDEBAR_COLLAPSED_COOKIE_NAME, 1);
+        Cookies.set(SIDEBAR_COLLAPSED_COOKIE_NAME, 1, cookieOptions);
       } else {
         document.body.classList.remove('sidebar-collapsed');
-        Cookies.set(SIDEBAR_COLLAPSED_COOKIE_NAME, 0);
+        Cookies.set(SIDEBAR_COLLAPSED_COOKIE_NAME, 0, cookieOptions);
       }
     };
 
@@ -50,7 +53,7 @@ export function initSidebar() {
       element,
       () => {
         document.body.classList.add('ready');
-      }
+      },
     );
   }
 }
