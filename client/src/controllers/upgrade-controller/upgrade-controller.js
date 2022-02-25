@@ -1,7 +1,5 @@
-
 import { versionOutOfDate } from '../../utils/version';
 import { Controller } from '@hotwired/stimulus';
-
 
 class UpgradeController extends Controller {
   static identifier = 'upgrade'; // note: this is not a Stimulus thing but could be a convention we set
