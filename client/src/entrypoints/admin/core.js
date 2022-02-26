@@ -1,11 +1,5 @@
 import $ from 'jquery';
 
-import { Application } from '@hotwired/stimulus';
-import { controllers } from '../../controllers';
-
-window.Stimulus = Application.start();
-window.Stimulus.load(controllers);
-
 /* generic function for adding a message to message area through JS alone */
 function addMessage(status, text) {
   $('.messages')

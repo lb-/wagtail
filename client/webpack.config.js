@@ -33,6 +33,7 @@ module.exports = function exports(env, argv) {
     'admin': [
       'collapsible',
       'comments',
+      'controllers',
       'core',
       'date-time-chooser',
       'draftail',

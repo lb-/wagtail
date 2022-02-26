@@ -1,8 +1,7 @@
-import { versionOutOfDate } from '../../utils/version';
-import { Controller } from '@hotwired/stimulus';
+import { versionOutOfDate } from '../utils/version';
+import { BaseController } from './base-controller';
 
-class UpgradeController extends Controller {
-  static identifier = 'upgrade'; // note: this is not a Stimulus thing but could be a convention we set
+class UpgradeController extends BaseController {
   static values = { version: String, url: String };
   static targets = ['link', 'version'];
 

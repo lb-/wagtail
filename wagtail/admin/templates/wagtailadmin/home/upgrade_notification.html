@@ -1,5 +1,11 @@
 {% load wagtailcore_tags %}
 
-<div data-controller="wg-upgrade" data-wg-upgrade-version-value="{% wagtail_version %}"  data-wg-upgrade-url-value="https://releases.wagtail.org/latest.txt" class="panel nice-padding panel-upgrade-notification" style="display:none">
+<div
+    data-controller="w-upgrade"
+    data-w-upgrade-version-value="{% wagtail_version %}"
+    data-w-upgrade-url-value="https://releases.wagtail.org/latest.txt"
+    class="panel nice-padding panel-upgrade-notification"
+    style="display:none"
+>
     <div class="help-block help-warning">Wagtail upgrade available. Your version: <strong>{% wagtail_version %}</strong>. New version: <strong data-wg-upgrade-target="version"></strong>. <a data-wg-upgrade-target="link" href="">Read the release notes.</a></div>
 </div>
