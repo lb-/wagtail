@@ -6,7 +6,7 @@
     <template data-wagtail-sidebar-branding-logo>{% block branding_logo %}{% endblock %}</template>
     {% if slim_sidebar_enabled %}
         {% sidebar_props %}
-        <aside id="wagtail-sidebar" data-wagtail-sidebar></aside>
+        <aside id="wagtail-sidebar" data-controller="w-main-menu"></aside>
     {% else %}
         <aside id="wagtail-sidebar" class="nav-wrapper" data-nav-primary>
             <div class="inner">

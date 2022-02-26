@@ -1,4 +1,4 @@
-import { initSidebar } from '../../components/Sidebar';
+import { MainMenuController } from '../../components/Sidebar';
 import { LinkMenuItemDefinition } from '../../components/Sidebar/menu/LinkMenuItem';
 import { SubMenuItemDefinition } from '../../components/Sidebar/menu/SubMenuItem';
 import { PageExplorerMenuItemDefinition } from '../../components/Sidebar/menu/PageExplorerMenuItem';
@@ -30,6 +30,4 @@ window.telepath.register(
   MainMenuModuleDefinition,
 );
 
-document.addEventListener('DOMContentLoaded', () => {
-  initSidebar();
-});
+window.stimulus.register('w-main-menu', MainMenuController);
