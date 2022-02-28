@@ -410,7 +410,7 @@ module.exports = function exports(env, argv) {
               loader: 'postcss-loader',
               options: {
                 postcssOptions: {
-                  plugins: ['autoprefixer', 'cssnano'],
+                  plugins: ['tailwindcss', 'autoprefixer', 'cssnano'],
                 },
               },
             },
