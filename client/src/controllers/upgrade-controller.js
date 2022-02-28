@@ -1,7 +1,7 @@
 import { versionOutOfDate } from '../utils/version';
 import { BaseController } from './base-controller';
 
-class UpgradeController extends BaseController {
+export class UpgradeController extends BaseController {
   static values = { version: String, url: String };
   static targets = ['link', 'version'];
 
@@ -42,5 +42,3 @@ class UpgradeController extends BaseController {
     this.checkVersion();
   }
 }
-
-export default UpgradeController;

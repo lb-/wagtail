@@ -1,22 +1,11 @@
-import UpgradeController from './upgrade-controller';
+/**
+ * Any named exports from this file will be automatically imported
+ * and registered by the class' static `initRegister` method.
+ * The export name will be used to generate the Controller's identifier
+ * e.g. `UpgradeController` -> `w-upgrade`
+ * e.g. `SomeOtherSuperController` -> `w-some-other-super`
+ */
 
-/** Official 'core' controllers
- * - add entries here to expose by default in the core js bundle
- * */
-const CONTROLLERS = [UpgradeController];
+import { UpgradeController } from './upgrade-controller';
 
-const getIdentifier = (controllerConstructor, { prefix } = {}) => {
-  const name = controllerConstructor.name.replace(/[cC]ontroller$/, '');
-  if (name) {
-    const kebabCaseName = name
-      .replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2')
-      .toLowerCase();
-    return prefix ? [prefix, kebabCaseName].join('') : kebabCaseName;
-  }
-  return null;
-};
-
-export const controllers = CONTROLLERS.map((controllerConstructor) => ({
-  identifier: getIdentifier(controllerConstructor),
-  controllerConstructor,
-}));
+export { UpgradeController };

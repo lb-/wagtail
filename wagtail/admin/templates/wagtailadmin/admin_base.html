@@ -60,4 +60,7 @@
     {% hook_output 'insert_global_admin_js' %}
 
     {% block extra_js %}{% endblock %}
+    
+    {% comment %} Added last so that any controllers can register before Stimulus loads {% endcomment %}
+    <script src="{% versioned_static 'wagtailadmin/js/stimulus.js' %}"></script>
 {% endblock %}

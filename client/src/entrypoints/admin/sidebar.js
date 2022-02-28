@@ -30,4 +30,4 @@ window.telepath.register(
   MainMenuModuleDefinition,
 );
 
-window.stimulus.register('w-main-menu', MainMenuController);
+MainMenuController.initRegister();

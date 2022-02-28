@@ -51,6 +51,7 @@ module.exports = function exports(env, argv) {
       'privacy-switch',
       'sidebar',
       'sidebar-legacy',
+      'stimulus',
       'task-chooser-modal',
       'task-chooser',
       'telepath/blocks',
