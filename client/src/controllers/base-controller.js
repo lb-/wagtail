@@ -32,7 +32,7 @@ export class BaseController extends Controller {
    * @param {string?} name
    * @returns
    */
-  static initRegister = function initRegister(controller = this, name = null) {
+  static initRegister = function initRegister(name = null, controller = this) {
     if (typeof controller !== 'function') return;
     const identifier = getIdentifier(name || controller.name);
     if (registry.includes(identifier)) return;
@@ -43,7 +43,7 @@ export class BaseController extends Controller {
       ({ detail: { register } }) => {
         register(identifier, controller);
       },
-      { capture: true },
+      { capture: true, once: true, passive: true },
     );
   };
 }
