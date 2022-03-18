@@ -1,50 +1,71 @@
-from django.core.management.base import BaseCommand, CommandError
-from wagtail.images.models import Rendition, Image
+from django.core.management.base import BaseCommand
+
+from wagtail.images import get_image_model
+
 
 class Command(BaseCommand):
-    help = 'Updates image renditions'
+    """Command to remove all generated image renditions."""
+
+    help = "This command will update all image renditions, with an option to purge existing renditions first."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--purge', 
-            action='store_true', 
-            help='Purge and regenerate all image renditions'
+            "--purge",
+            action="store_true",
+            help="Purge and regenerate all image renditions",
         )
-
         parser.add_argument(
-            '--purge-only',
-            action='store_true',
-            help='Only purge all image renditions'
+            "--purge-only",
+            action="store_true",
+            help="Purge all image renditions without regenerating them",
         )
-
 
     def handle(self, *args, **options):
-        renditions = Rendition.objects.all()
-
-        
-        if options['purge']:
+        renditions = get_image_model().get_rendition_model().objects.all()
+        success_count = len(renditions)
+        if options["purge"]:
             for rendition in renditions:
                 try:
                     rendition_filter = rendition.filter
                     rendition_image = rendition.image
                     rendition.delete()
                     rendition_image.get_rendition(rendition_filter)
-                except:
-                    self.stdout.write(self.style.ERROR('Could not purge and regenerate rendition for %s', rendition_image.title))
-            self.stdout.write(self.style.SUCCESS('Successfully purged and regenerated image renditions!'))
-        elif options['purge_only'] :
+                except Exception:
+                    success_count = success_count - 1
+                    self.stderr.write(
+                        f"Could not purge and regenerate rendition for {rendition_image.title}"
+                    )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Successfully purged and regenerated {success_count} image renditions!"
+                )
+            )
+        elif options["purge_only"]:
             for rendition in renditions:
                 try:
                     rendition_image = rendition.image
                     rendition.delete()
-                except:
-                    self.stdout.write(self.style.ERROR('Could not purge rendition for %s', rendition_image.title))
-            self.stdout.write(self.style.SUCCESS('Successfully purged image renditions!'))
+                except Exception:
+                    success_count = success_count - 1
+                    self.stderr.write(
+                        f"Could not purge rendition for {rendition_image.title}"
+                    )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Successfully purged {success_count} image renditions!"
+                )
+            )
         else:
             for rendition in renditions:
                 try:
                     rendition.image.get_rendition(rendition.filter)
-                except:
-                    self.stdout.write(self.style.ERROR('Could not regenerate rendition for %s', rendition.image.title))
-            self.stdout.write(self.style.SUCCESS('Succesfully regenerated image renditions!'))
-                
+                except Exception:
+                    success_count = success_count - 1
+                    self.stderr.write(
+                        f"Could not regenerate rendition for {rendition.image.title}"
+                    )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Succesfully regenerated {success_count} image renditions!"
+                )
+            )
