@@ -22,7 +22,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         renditions = get_image_model().get_rendition_model().objects.all()
-        success_count = len(renditions)
+        if len(renditions) == 0:
+            self.stdout.write("No image renditions found!")
+            return
+        success_count = 0
         if options["purge"]:
             for rendition in renditions:
                 try:
@@ -30,8 +33,8 @@ class Command(BaseCommand):
                     rendition_image = rendition.image
                     rendition.delete()
                     rendition_image.get_rendition(rendition_filter)
+                    success_count = success_count + 1
                 except Exception:
-                    success_count = success_count - 1
                     self.stderr.write(
                         f"Could not purge and regenerate rendition for {rendition_image.title}"
                     )
@@ -45,8 +48,8 @@ class Command(BaseCommand):
                 try:
                     rendition_image = rendition.image
                     rendition.delete()
+                    success_count = success_count + 1
                 except Exception:
-                    success_count = success_count - 1
                     self.stderr.write(
                         f"Could not purge rendition for {rendition_image.title}"
                     )
@@ -59,8 +62,8 @@ class Command(BaseCommand):
             for rendition in renditions:
                 try:
                     rendition.image.get_rendition(rendition.filter)
+                    success_count = success_count + 1
                 except Exception:
-                    success_count = success_count - 1
                     self.stderr.write(
                         f"Could not regenerate rendition for {rendition.image.title}"
                     )
