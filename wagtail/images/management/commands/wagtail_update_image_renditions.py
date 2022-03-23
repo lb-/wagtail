@@ -19,12 +19,42 @@ class Command(BaseCommand):
             action="store_true",
             help="Purge all image renditions without regenerating them",
         )
+        parser.add_argument(
+            "--dryrun",
+            action="store_true",
+            help="Logs out image renditions that would have been purged/regenerated",
+        )
+
+    def dry_run(self, renditions, **options):
+        if options["purge"]:
+            self.stdout.write(
+                f"Following {len(renditions)} image rendition(s) would have been purged and regenerated:"
+            )
+            for rendition in renditions:
+                self.stdout.write(rendition.url)
+        elif options["purge_only"]:
+            self.stdout.write(
+                f"Following {len(renditions)} image rendition(s) would have been purged:"
+            )
+            for rendition in renditions:
+                self.stdout.write(rendition.url)
+        else:
+            self.stdout.write(
+                f"Following {len(renditions)} image rendition(s) would have been regenerated:"
+            )
+            for rendition in renditions:
+                self.stdout.write(rendition.url)
 
     def handle(self, *args, **options):
         renditions = get_image_model().get_rendition_model().objects.all()
         if len(renditions) == 0:
             self.stdout.write("No image renditions found!")
             return
+
+        if options["dryrun"]:
+            self.dry_run(renditions=renditions, **options)
+            return
+
         success_count = 0
         if options["purge"]:
             for rendition in renditions:
