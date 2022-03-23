@@ -865,6 +865,17 @@
     }
   },
   {
+    "pk": 1,
+    "model": "wagtailimages.rendition",
+    "fields": {
+      "filter_spec": "original",
+      "image": 1,
+      "width": 1000,
+      "height": 1000,
+      "file": "images/missing.original.jpg"
+    }
+  },
+  {
     "model": "wagtailcore.collectionviewrestriction",
     "pk": 1,
     "fields": {
