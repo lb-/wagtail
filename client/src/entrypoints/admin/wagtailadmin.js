@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Icon, Portal, initUpgradeNotification, initSkipLink } from '../..';
+import { Icon, Portal, initSkipLink } from '../..';
 import { initModernDropdown, initTooltips } from '../../includes/initTooltips';
 import { initTabs } from '../../includes/tabs';
 import { dialog } from '../../includes/dialog';
@@ -23,7 +23,6 @@ window.wagtail.components = {
  * Add in here code to run once the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  initUpgradeNotification();
   initTooltips();
   initModernDropdown();
   initTabs();
