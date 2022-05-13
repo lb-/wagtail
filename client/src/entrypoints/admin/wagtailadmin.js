@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Icon, Portal, initSkipLink } from '../..';
+import { Icon, Portal } from '../..';
 import { initModernDropdown, initTooltips } from '../../includes/initTooltips';
 import { initTabs } from '../../includes/tabs';
 import { dialog } from '../../includes/dialog';
@@ -26,6 +26,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initTooltips();
   initModernDropdown();
   initTabs();
-  initSkipLink();
   dialog();
 });
