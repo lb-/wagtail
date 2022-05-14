@@ -12,7 +12,7 @@ from django.views.generic import ListView, TemplateView
 from wagtail.admin import messages
 from wagtail.admin.views.mixins import SpreadsheetExportMixin
 from wagtail.contrib.forms.forms import SelectDateForm
-from wagtail.contrib.forms.utils import get_forms_for_user
+from wagtail.contrib.forms.utils import get_form_submissions_as_data, get_forms_for_user
 from wagtail.models import Locale, Page
 
 
@@ -305,38 +305,17 @@ class SubmissionsListView(SpreadsheetExportMixin, SafePaginateListView):
         data_rows = []
         context["submissions"] = submissions
         if not self.is_export:
-            # Build data_rows as list of dicts containing model_id and fields
-            for submission in submissions:
-                form_data = submission.get_data()
-                data_row = []
-                for name, label in data_fields:
-                    val = form_data.get(name)
-                    if isinstance(val, list):
-                        val = ", ".join(val)
-                    data_row.append(val)
-                data_rows.append({"model_id": submission.id, "fields": data_row})
-            # Build data_headings as list of dicts containing model_id and fields
-            ordering_by_field = self.get_validated_ordering()
-            orderable_fields = self.orderable_fields
-            data_headings = []
-            for name, label in data_fields:
-                order_label = None
-                if name in orderable_fields:
-                    order = ordering_by_field.get(name)
-                    if order:
-                        order_label = order[1]  # 'ascending' or 'descending'
-                    else:
-                        order_label = "orderable"  # not ordered yet but can be
-                data_headings.append(
-                    {
-                        "name": name,
-                        "label": label,
-                        "order": order_label,
-                    }
-                )
+            (data_headings, data_rows) = get_form_submissions_as_data(
+                data_fields=data_fields,
+                submissions=submissions,
+                orderable_fields=self.orderable_fields,
+                ordering_by_field=self.get_validated_ordering(),
+            )
 
             context.update(
                 {
+                    "app_label": "wagtailforms",
+                    "model_name": "formsubmission",
                     "form_page": self.form_page,
                     "select_date_form": self.select_date_form,
                     "data_headings": data_headings,
