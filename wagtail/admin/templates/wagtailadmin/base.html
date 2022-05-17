@@ -8,12 +8,23 @@
     <main class="content-wrapper w-overflow-x-hidden" id="main">
         <div class="content">
             {# Always show messages div so it can be appended to by JS #}
-            <div class="messages">
+            <div
+                class="w-page-messages messages"
+                data-controller="w-page-messages"
+                data-action="w-page-messages:add@window->w-page-messages#add"
+                MESSAGE_TAGS should be added here to when configured it works - is based on django.contrib.messages.constants.DEFAULT_TAGS
+                data-w-page-messages-tags-value=""
+            >
+                <template data-w-page-messages-target="template">
+                    <ul class="w-page-messages__message-list">
+                        <li class="w-page-messages__message __status__">__text__</li>
+                    </ul>
+                </template>
                 {% if messages %}
-                    <ul>
+                    <ul class="w-page-messages__message-list">
                         {% for message in messages %}
                             {% message_level_tag message as level_tag %}
-                            <li class="{% message_tags message %}">
+                            <li class="w-page-messages__message {% message_tags message %}">
                                 {% if level_tag == "error" %}
                                     {# There is no error icon, use warning icon instead #}
                                     {% icon name="warning" class_name="messages-icon" %}

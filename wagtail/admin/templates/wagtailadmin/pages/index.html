@@ -83,8 +83,14 @@
                         var CSRFToken = $('input[name="csrfmiddlewaretoken"]', orderform).val();
 
                         // Post
-                        $.post(url, {csrfmiddlewaretoken: CSRFToken}, function(){
-                            addMessage('success', '"' + $(movedElement).data('page-title') + '" has been moved successfully.')
+                        $.post(url, { csrfmiddlewaretoken: CSRFToken }, function () {
+                            document.dispatchEvent(new CustomEvent('w-page-messages:add', {
+                                detail: {
+                                    status: 'success',
+                                    // this should be translated also!
+                                    text: '"' + $(movedElement).data('page-title') + '" has been moved successfully.',
+                                }
+                            }));
                         })
                     }
                 });

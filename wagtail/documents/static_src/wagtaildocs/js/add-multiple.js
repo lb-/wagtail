@@ -163,6 +163,7 @@ $(function () {
       url: this.action,
     }).done(function (data) {
       if (data.success) {
+        // here
         var statusText = $('.status-msg.update-success').text();
         addMessage('success', statusText);
         itemElement.slideUp(function () {
