@@ -3,6 +3,7 @@ function compareVersion(versionA, versionB) {
   const va = (versionA + '').replace(re, '').split('.');
   const vb = (versionB + '').replace(re, '').split('.');
   const len = Math.min(va.length, vb.length);
+  // eslint-disable-next-line no-plusplus
   for (let i = 0; i < len; i++) {
     const cmp = parseInt(va[i], 10) - parseInt(vb[i], 10);
     if (cmp !== 0) {
