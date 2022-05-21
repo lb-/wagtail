@@ -8,7 +8,6 @@ const legacyCode = {
   'import/newline-after-import': 'off',
   'import/no-cycle': 'off',
   'import/no-extraneous-dependencies': 'off',
-  'import/no-unresolved': ['error', { ignore: ['jquery'] }],
   'import/no-useless-path-segments': 'off',
   'import/order': 'off',
   'jsx-a11y/alt-text': 'off',
@@ -89,11 +88,8 @@ module.exports = {
     ],
   },
   settings: {
-    'import/resolver': {
-      node: {
-        extensions: ['.js', '.ts', '.tsx'],
-      },
-    },
+    'import/core-modules': ['jquery'],
+    'import/resolver': { node: { extensions: ['.js', '.ts', '.tsx'] } },
   },
   overrides: [
     // Legacy Code - remove from `files` when adopting desired rules in new code progressively
@@ -108,8 +104,8 @@ module.exports = {
       ],
       rules: legacyCode,
     },
+    // Rules we don’t want to enforce for test and tooling code.
     {
-      // Rules we don’t want to enforce for test and tooling code.
       files: [
         'client/extract-translatable-strings.js',
         'client/tests/**',
@@ -130,10 +126,17 @@ module.exports = {
         'react/jsx-props-no-spreading': 'off',
       },
     },
+    // Files that use jquery via a global
     {
-      files: ['docs/_static/**'],
-      globals: { $: 'readonly' },
+      files: [
+        '**/static_src/**',
+        'contrib/modeladmin/static_src/wagtailmodeladmin/js/prepopulate.js',
+        'docs/_static/**',
+        'wagtail/search/templates/wagtailsearch/queries/chooser_field.js',
+      ],
+      globals: { $: 'readonly', jQuery: 'readonly' },
     },
+    // Files that use other globals or legacy/vendor code that is unable to be easily linted
     {
       files: [
         'wagtail/**/**',
@@ -141,12 +144,10 @@ module.exports = {
         'client/src/entrypoints/images/image-chooser-modal.js',
       ],
       globals: {
-        $: 'readonly',
         addMessage: 'readonly',
         buildExpandingFormset: 'readonly',
         cancelSpinner: 'readonly',
         escapeHtml: 'readonly',
-        jQuery: 'readonly',
         jsonData: 'readonly',
         ModalWorkflow: 'readonly',
         DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS: 'writable',
