@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import '../../admin/telepath/telepath';
+import $ from 'jquery';
 import { TypedTableBlockDefinition } from './typed_table_block';
 import { FieldBlockDefinition } from '../../../components/StreamField/blocks/FieldBlock';
 
-import $ from 'jquery';
 window.$ = $;
 
 window.comments = {
@@ -24,7 +22,7 @@ class DummyWidgetDefinition {
   }
 
   render(placeholder, name, id, initialState) {
-    const widgetName = this.widgetName;
+    const { widgetName } = this;
     constructor(widgetName, { name, id, initialState });
 
     $(placeholder).replaceWith(

@@ -51,6 +51,7 @@ class ActionButton {
   enable() {
     this.dom.removeAttr('disabled');
   }
+
   disable() {
     this.dom.attr('disabled', 'true');
   }
@@ -58,9 +59,13 @@ class ActionButton {
 
 class MoveUpButton extends ActionButton {
   enableEvent = 'enableMoveUp';
+
   disableEvent = 'disableMoveUp';
+
   initiallyDisabled = true;
+
   icon = 'arrow-up';
+
   labelIdentifier = 'MOVE_UP';
 
   onClick() {
@@ -70,9 +75,13 @@ class MoveUpButton extends ActionButton {
 
 class MoveDownButton extends ActionButton {
   enableEvent = 'enableMoveDown';
+
   disableEvent = 'disableMoveDown';
+
   initiallyDisabled = true;
+
   icon = 'arrow-down';
+
   labelIdentifier = 'MOVE_DOWN';
 
   onClick() {
@@ -82,8 +91,11 @@ class MoveDownButton extends ActionButton {
 
 class DuplicateButton extends ActionButton {
   enableEvent = 'enableDuplication';
+
   disableEvent = 'disableDuplication';
+
   icon = 'duplicate';
+
   labelIdentifier = 'DUPLICATE';
 
   onClick() {
@@ -93,6 +105,7 @@ class DuplicateButton extends ActionButton {
 
 class DeleteButton extends ActionButton {
   icon = 'bin';
+
   labelIdentifier = 'DELETE';
 
   onClick() {
@@ -258,31 +271,38 @@ export class BaseSequenceChild extends EventEmitter {
       this.block.setCapabilityOptions('duplicate', { enabled: true });
     }
   }
+
   disableDuplication() {
     this.emit('disableDuplication');
     if (this.block && this.block.setCapabilityOptions) {
       this.block.setCapabilityOptions('duplicate', { enabled: false });
     }
   }
+
   enableSplit() {
     if (this.block && this.block.setCapabilityOptions) {
       this.block.setCapabilityOptions('split', { enabled: true });
     }
   }
+
   disableSplit() {
     if (this.block && this.block.setCapabilityOptions) {
       this.block.setCapabilityOptions('split', { enabled: false });
     }
   }
+
   enableMoveUp() {
     this.emit('enableMoveUp');
   }
+
   disableMoveUp() {
     this.emit('disableMoveUp');
   }
+
   enableMoveDown() {
     this.emit('enableMoveDown');
   }
+
   disableMoveDown() {
     this.emit('disableMoveDown');
   }

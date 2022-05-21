@@ -1,8 +1,9 @@
 import $ from 'jquery';
-window.$ = $;
 
 import '../../admin/telepath/telepath';
 import './table';
+
+window.$ = $;
 
 const TEST_OPTIONS = {
   minSpareRows: 0,

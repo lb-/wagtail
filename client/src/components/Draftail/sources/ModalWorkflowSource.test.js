@@ -1,13 +1,6 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-import {
-  ImageModalWorkflowSource,
-  EmbedModalWorkflowSource,
-  LinkModalWorkflowSource,
-  DocumentModalWorkflowSource,
-} from './ModalWorkflowSource';
-import * as DraftUtils from '../DraftUtils';
 import { DraftUtils as DraftailUtils } from 'draftail';
 import {
   EditorState,
@@ -16,6 +9,13 @@ import {
   RichUtils,
   Modifier,
 } from 'draft-js';
+import {
+  ImageModalWorkflowSource,
+  EmbedModalWorkflowSource,
+  LinkModalWorkflowSource,
+  DocumentModalWorkflowSource,
+} from './ModalWorkflowSource';
+import * as DraftUtils from '../DraftUtils';
 
 global.ModalWorkflow = () => {};
 
@@ -425,7 +425,7 @@ describe('ModalWorkflowSource', () => {
             block: () => {},
           }}
           entity={entity}
-          entityKey={'first'}
+          entityKey="first"
           onComplete={onComplete}
           onClose={() => {}}
         />,

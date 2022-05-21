@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+import $ from 'jquery';
 import { StaticBlockDefinition } from './StaticBlock';
 
-import $ from 'jquery';
 window.$ = $;
 
 window.comments = {

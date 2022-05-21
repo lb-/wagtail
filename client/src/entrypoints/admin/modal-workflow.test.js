@@ -1,4 +1,6 @@
+/* eslint-disable import/first */
 import $ from 'jquery';
+
 window.$ = $;
 window.jQuery = $;
 

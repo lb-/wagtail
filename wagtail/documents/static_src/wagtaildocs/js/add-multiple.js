@@ -12,7 +12,7 @@ $(function () {
       var $this = $(this);
       var that = $this.data('blueimp-fileupload') || $this.data('fileupload');
       var li = $($('#upload-list-item').html()).addClass('upload-uploading');
-      var options = that.options;
+      var { options } = that;
 
       $('#upload-list').append(li);
       data.context = li;
@@ -40,7 +40,7 @@ $(function () {
         .fail(function () {
           if (data.files.error) {
             data.context.each(function (index) {
-              var error = data.files[index].error;
+              var { error } = data.files[index];
               if (error) {
                 $(this).find('.error_messages').text(error);
               }

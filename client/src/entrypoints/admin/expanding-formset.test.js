@@ -1,8 +1,9 @@
 /* global buildExpandingFormset */
 import $ from 'jquery';
-window.$ = $;
 
 import './expanding-formset';
+
+window.$ = $;
 
 describe('buildExpandingFormset', () => {
   it('exposes module as global', () => {

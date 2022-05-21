@@ -1,12 +1,12 @@
 import * as React from 'react';
 
+import Tippy from '@tippyjs/react';
 import Icon from '../../Icon/Icon';
 
 import { renderMenu } from '../modules/MainMenu';
 import { SidebarPanel } from '../SidebarPanel';
 import { SIDEBAR_TRANSITION_DURATION } from '../Sidebar';
 import { MenuItemDefinition, MenuItemProps } from './MenuItem';
-import Tippy from '@tippyjs/react';
 
 interface SubMenuItemProps extends MenuItemProps<SubMenuItemDefinition> {
   slim: boolean;
@@ -110,10 +110,15 @@ export const SubMenuItem: React.FunctionComponent<SubMenuItemProps> = ({
 
 export class SubMenuItemDefinition implements MenuItemDefinition {
   name: string;
+
   label: string;
+
   menuItems: MenuItemDefinition[];
+
   iconName: string | null;
+
   classNames?: string;
+
   footerText: string;
 
   constructor(

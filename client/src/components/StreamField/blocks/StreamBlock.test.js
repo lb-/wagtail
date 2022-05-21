@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+import $ from 'jquery';
 import { FieldBlockDefinition } from './FieldBlock';
 import {
   StreamBlockDefinition,
   StreamBlockValidationError,
 } from './StreamBlock';
 
-import $ from 'jquery';
 window.$ = $;
 
 window.comments = {
@@ -26,7 +24,7 @@ class DummyWidgetDefinition {
   }
 
   render(placeholder, name, id, initialState) {
-    const widgetName = this.widgetName;
+    const { widgetName } = this;
     constructor(widgetName, { name, id, initialState });
 
     $(placeholder).replaceWith(

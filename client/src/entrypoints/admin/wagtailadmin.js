@@ -8,7 +8,7 @@ import { dialog } from '../../includes/dialog';
 if (process.env.NODE_ENV === 'development') {
   // Run react-axe in development only, so it does not affect performance
   // in production, and does not break unit tests either.
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, import/no-extraneous-dependencies
   const axe = require('react-axe');
   axe(React, ReactDOM, 1000);
 }

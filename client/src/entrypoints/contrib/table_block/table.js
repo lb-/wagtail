@@ -233,7 +233,7 @@ class TableInput {
     placeholder.replaceWith(container);
 
     const input = container.querySelector(`input[name="${name}"]`);
-    const options = this.options;
+    const { options } = this;
 
     const widget = {
       getValue() {

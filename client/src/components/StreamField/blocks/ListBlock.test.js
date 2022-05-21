@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
+import $ from 'jquery';
 import { FieldBlock, FieldBlockDefinition } from './FieldBlock';
 import { ListBlockDefinition, ListBlockValidationError } from './ListBlock';
 
-import $ from 'jquery';
 window.$ = $;
 
 window.comments = {
@@ -23,7 +21,7 @@ class DummyWidgetDefinition {
   }
 
   render(placeholder, name, id, initialState) {
-    const widgetName = this.widgetName;
+    const { widgetName } = this;
     constructor(widgetName, { name, id, initialState });
 
     $(placeholder).replaceWith(

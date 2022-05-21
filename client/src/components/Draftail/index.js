@@ -6,11 +6,6 @@ import { Provider } from 'react-redux';
 import { gettext } from '../../utils/gettext';
 import Icon from '../Icon/Icon';
 
-export { default as Link } from './decorators/Link';
-export { default as Document } from './decorators/Document';
-export { default as ImageBlock } from './blocks/ImageBlock';
-export { default as EmbedBlock } from './blocks/EmbedBlock';
-
 import {
   ModalWorkflowSource,
   ImageModalWorkflowSource,
@@ -24,6 +19,11 @@ import EditorFallback from './EditorFallback/EditorFallback';
 import CommentableEditor, {
   getSplitControl,
 } from './CommentableEditor/CommentableEditor';
+
+export { default as Link } from './decorators/Link';
+export { default as Document } from './decorators/Document';
+export { default as ImageBlock } from './blocks/ImageBlock';
+export { default as EmbedBlock } from './blocks/EmbedBlock';
 
 // 1024x1024 SVG path rendering of the "↵" character, that renders badly in MS Edge.
 const BR_ICON =
@@ -102,7 +102,7 @@ const initEditor = (selector, originalOptions, currentScript) => {
       const plugin = PLUGINS[type.type];
 
       // Override the properties defined in the JS plugin: Python should be the source of truth.
-      return Object.assign({}, plugin, type);
+      return { ...plugin, ...type };
     });
     return {
       rawContentState: rawContentState,

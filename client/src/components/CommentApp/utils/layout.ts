@@ -7,12 +7,19 @@ const OFFSET = -50; // How many pixels from the annotation position should the c
 
 export class LayoutController {
   commentElements: Map<number, HTMLElement> = new Map();
+
   commentAnnotations: Map<number, Annotation> = new Map();
+
   commentTabs: Map<number, string | null> = new Map();
+
   commentDesiredPositions: Map<number, number> = new Map();
+
   commentHeights: Map<number, number> = new Map();
+
   pinnedComment: number | null = null;
+
   commentCalculatedPositions: Map<number, number> = new Map();
+
   isDirty = false;
 
   setCommentElement(commentId: number, element: HTMLElement | null) {

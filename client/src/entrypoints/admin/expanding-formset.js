@@ -31,7 +31,7 @@ function buildExpandingFormset(prefix, opts = {}) {
     if (opts.onAdd) opts.onAdd(formCount);
     if (opts.onInit) opts.onInit(formCount);
 
-    formCount++;
+    formCount += 1;
     totalFormsInput.val(formCount);
   });
 }

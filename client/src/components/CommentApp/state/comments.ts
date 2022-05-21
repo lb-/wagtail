@@ -1,7 +1,7 @@
+import produce, { enableMapSet, enableES5 } from 'immer';
 import type { Annotation } from '../utils/annotation';
 import * as actions from '../actions/comments';
 import { update } from './utils';
-import produce, { enableMapSet, enableES5 } from 'immer';
 
 enableES5();
 enableMapSet();
@@ -302,7 +302,7 @@ export const reducer = produce(
       }
       case actions.INVALIDATE_CONTENT_PATH: {
         // Delete any comments that exist in the contentpath
-        const comments = draft.comments;
+        const { comments } = draft;
         for (const comment of comments.values()) {
           if (comment.contentpath.startsWith(action.contentPath)) {
             resolveComment(comment);

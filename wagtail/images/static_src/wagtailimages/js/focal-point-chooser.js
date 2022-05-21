@@ -60,8 +60,8 @@ $(function () {
 
   var left = focalPointOriginal.x - focalPointOriginal.width / 2;
   var top = focalPointOriginal.y - focalPointOriginal.height / 2;
-  var width = focalPointOriginal.width;
-  var height = focalPointOriginal.height;
+  var { width } = focalPointOriginal;
+  var { height } = focalPointOriginal;
 
   $indicator.css('left', (left * 100) / original.width + '%');
   $indicator.css('top', (top * 100) / original.height + '%');

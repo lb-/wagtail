@@ -1,7 +1,3 @@
-import { gettext } from '../../../utils/gettext';
-import type { CommentApp } from '../../CommentApp/main';
-import type { Annotation } from '../../CommentApp/utils/annotation';
-import type { Comment } from '../../CommentApp/state/comments';
 import {
   DraftailEditor,
   ToolbarButton,
@@ -32,6 +28,10 @@ import React, {
   useState,
 } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
+import type { Comment } from '../../CommentApp/state/comments';
+import type { Annotation } from '../../CommentApp/utils/annotation';
+import type { CommentApp } from '../../CommentApp/main';
+import { gettext } from '../../../utils/gettext';
 
 import Icon from '../../Icon/Icon';
 
@@ -65,8 +65,11 @@ export class DraftailInlineAnnotation implements Annotation {
    * @param {Element} field - an element to provide the fallback position for comments without any inline decorators
    */
   field: Element;
+
   decoratorRefs: Map<DecoratorRef, BlockKey>;
+
   focusedBlockKey: BlockKey;
+
   cachedMedianRef: DecoratorRef | null;
 
   constructor(field: Element) {
@@ -75,41 +78,48 @@ export class DraftailInlineAnnotation implements Annotation {
     this.focusedBlockKey = '';
     this.cachedMedianRef = null;
   }
+
   addDecoratorRef(ref: DecoratorRef, blockKey: BlockKey) {
     this.decoratorRefs.set(ref, blockKey);
 
     // We're adding a ref, so remove the cached median refs - this needs to be recalculated
     this.cachedMedianRef = null;
   }
+
   removeDecoratorRef(ref: DecoratorRef) {
     this.decoratorRefs.delete(ref);
 
     // We're deleting a ref, so remove the cached median refs - this needs to be recalculated
     this.cachedMedianRef = null;
   }
+
   setFocusedBlockKey(blockKey: BlockKey) {
     this.focusedBlockKey = blockKey;
   }
+
   static getHeightForRef(ref: DecoratorRef) {
     if (ref.current) {
       return ref.current.getBoundingClientRect().top;
     }
     return 0;
   }
+
   static getMedianRef(refArray: Array<DecoratorRef>) {
     const refs = refArray.sort(
       (firstRef, secondRef) =>
         this.getHeightForRef(firstRef) - this.getHeightForRef(secondRef),
     );
-    const length = refs.length;
+    const { length } = refs;
     if (length > 0) {
       return refs[Math.ceil(length / 2 - 1)];
     }
     return null;
   }
+
   getTab() {
     return this.field.closest('[role="tabpanel"]')?.getAttribute('id');
   }
+
   getAnchorNode(focused = false) {
     // The comment should always aim to float by an annotation, rather than between them
     // so calculate which annotation is the median one by height and float the comment by that
@@ -304,7 +314,7 @@ export function getSplitControl(
     return () => (
       <button
         name={name}
-        className={'Draftail-ToolbarButton'}
+        className="Draftail-ToolbarButton"
         type="button"
         aria-label={title}
         data-draftail-balloon={title}
@@ -437,7 +447,8 @@ export function findLeastCommonCommentId(block: ContentBlock, offset: number) {
   const styleCount = styles.count();
   if (styleCount === 0) {
     return null;
-  } else if (styleCount > 1) {
+  }
+  if (styleCount > 1) {
     // We're dealing with overlapping comments.
     // Find the least frequently occurring style and use that - this isn't foolproof, but in
     // most cases should ensure that all comments have at least one clickable section. This
@@ -452,7 +463,7 @@ export function findLeastCommonCommentId(block: ContentBlock, offset: number) {
       findCommentStyleRanges(
         block,
         () => {
-          counter = counter + 1;
+          counter += 1;
         },
         (metadata) =>
           metadata.getStyle().some((rangeStyle) => rangeStyle === style),
@@ -465,7 +476,7 @@ export function findLeastCommonCommentId(block: ContentBlock, offset: number) {
         firstStyleCount[1] - secondStyleCount[1],
     ) as Immutable.OrderedSet<[string, number]>;
 
-    styleToUse = styleFreq.first()[0];
+    [styleToUse] = styleFreq.first();
   } else {
     styleToUse = styles.first();
   }
@@ -488,7 +499,7 @@ function getCommentDecorator(commentApp: CommentApp) {
 
     const enabled = useSelector(commentApp.selectors.selectEnabled);
     const blockKey: BlockKey = children[0].props.block.getKey();
-    const start: number = children[0].props.start;
+    const { start } = children[0].props;
 
     const commentId = useMemo(() => {
       const block = contentState.getBlockForKey(blockKey);
@@ -917,7 +928,8 @@ function CommentableEditor({
                   'background-color': background,
                   'color': standardHighlight,
                 };
-              } else if (numStyles > 1) {
+              }
+              if (numStyles > 1) {
                 // Otherwise if we're in a region with overlapping comments, use a slightly darker colour than usual
                 // to indicate that
                 background = overlappingHighlight;

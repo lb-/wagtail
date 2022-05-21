@@ -58,7 +58,7 @@ window.comments = (() => {
     subscribeToUpdates(localId) {
       const { selectFocused, selectEnabled } = commentApp.selectors;
       const selectComment = commentApp.utils.selectCommentFactory(localId);
-      const store = commentApp.store;
+      const { store } = commentApp;
       const initialState = store.getState();
       let focused = selectFocused(initialState) === localId;
       let shown = selectEnabled(initialState);

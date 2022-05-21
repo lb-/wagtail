@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import Tippy from '@tippyjs/react';
 import { gettext } from '../../../utils/gettext';
 import Icon from '../../Icon/Icon';
 
@@ -7,7 +8,6 @@ import { LinkMenuItemDefinition } from '../menu/LinkMenuItem';
 import { MenuItemDefinition } from '../menu/MenuItem';
 import { SubMenuItemDefinition } from '../menu/SubMenuItem';
 import { ModuleDefinition } from '../Sidebar';
-import Tippy from '@tippyjs/react';
 
 export function renderMenu(
   path: string,
@@ -50,7 +50,7 @@ export interface MenuState {
 }
 
 function menuReducer(state: MenuState, action: MenuAction) {
-  const newState = Object.assign({}, state);
+  const newState = { ...state };
 
   if (action.type === 'set-active-path') {
     newState.activePath = action.path;
@@ -263,7 +263,9 @@ export const Menu: React.FunctionComponent<MenuProps> = ({
 
 export class MainMenuModuleDefinition implements ModuleDefinition {
   menuItems: MenuItemDefinition[];
+
   accountMenuItems: MenuItemDefinition[];
+
   user: {
     name: string;
     avatarUrl: string;

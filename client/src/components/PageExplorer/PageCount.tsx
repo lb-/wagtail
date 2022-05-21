@@ -14,7 +14,7 @@ interface PageCountProps {
 }
 
 const PageCount: React.FunctionComponent<PageCountProps> = ({ page }) => {
-  const count = page.children.count;
+  const { count } = page.children;
 
   return (
     <a

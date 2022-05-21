@@ -60,7 +60,7 @@ class StreamBlockMenu extends BaseInsertionControl {
   constructor(placeholder, opts) {
     super(placeholder, opts);
     this.groupedChildBlockDefs = opts.groupedChildBlockDefs;
-    const animate = opts.animate;
+    const { animate } = opts;
 
     const dom = $(`
       <div>
@@ -173,6 +173,7 @@ class StreamBlockMenu extends BaseInsertionControl {
       this.open({ animate: true });
     }
   }
+
   open(opts) {
     if (!this.canAddBlock) {
       return;
@@ -188,6 +189,7 @@ class StreamBlockMenu extends BaseInsertionControl {
     this.outerContainer.attr('aria-hidden', 'false');
     this.isOpen = true;
   }
+
   close(opts) {
     if (opts && opts.animate) {
       this.outerContainer.slideUp();

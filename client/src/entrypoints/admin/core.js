@@ -29,21 +29,19 @@ function escapeHtml(text) {
 window.escapeHtml = escapeHtml;
 
 function initTagField(id, autocompleteUrl, options) {
-  const finalOptions = Object.assign(
-    {
-      autocomplete: { source: autocompleteUrl },
-      preprocessTag(val) {
-        // Double quote a tag if it contains a space
-        // and if it isn't already quoted.
-        if (val && val[0] !== '"' && val.indexOf(' ') > -1) {
-          return '"' + val + '"';
-        }
+  const finalOptions = {
+    autocomplete: { source: autocompleteUrl },
+    preprocessTag(val) {
+      // Double quote a tag if it contains a space
+      // and if it isn't already quoted.
+      if (val && val[0] !== '"' && val.indexOf(' ') > -1) {
+        return '"' + val + '"';
+      }
 
-        return val;
-      },
+      return val;
     },
-    options,
-  );
+    ...options,
+  };
 
   $('#' + id).tagit(finalOptions);
 }
@@ -121,7 +119,8 @@ function enableDirtyFormCheck(formSelector, options) {
   const isFormDirty = () => {
     if (alwaysDirty) {
       return true;
-    } else if (!initialData) {
+    }
+    if (!initialData) {
       return false;
     }
 
@@ -138,7 +137,8 @@ function enableDirtyFormCheck(formSelector, options) {
       const oldValue = initialData.get(key);
       if (newValue === oldValue) {
         return false;
-      } else if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+      }
+      if (Array.isArray(newValue) && Array.isArray(oldValue)) {
         return (
           newValue.length !== oldValue.length ||
           newValue.some((value, index) => value !== oldValue[index])
@@ -550,8 +550,8 @@ DropDown.prototype = {
   openDropDown(e) {
     e.stopPropagation();
     e.preventDefault();
-    const el = this.el;
-    const $parent = this.$parent;
+    const { el } = this;
+    const { $parent } = this;
     const toggle = el.querySelector(TOGGLE_SELECTOR);
 
     this.state.isOpen = true;
@@ -568,8 +568,8 @@ DropDown.prototype = {
   closeDropDown() {
     this.state.isOpen = false;
 
-    const el = this.el;
-    const $parent = this.$parent;
+    const { el } = this;
+    const { $parent } = this;
     const toggle = el.querySelector(TOGGLE_SELECTOR);
     document.removeEventListener(clickEvent, this.clickOutsideDropDown, false);
     el.classList.remove(IS_OPEN);
@@ -580,7 +580,7 @@ DropDown.prototype = {
   },
 
   clickOutsideDropDown(e) {
-    const el = this.el;
+    const { el } = this;
     const relTarget = e.relatedTarget || e.toElement;
 
     if (!$(relTarget).parents().is(el)) {

@@ -1,7 +1,7 @@
 /* global $ */
-import { escapeHtml as h } from '../../../utils/text';
 import ReactDOM from 'react-dom';
 import React from 'react';
+import { escapeHtml as h } from '../../../utils/text';
 import Icon from '../../Icon/Icon';
 
 export class FieldBlock {
@@ -28,7 +28,8 @@ export class FieldBlock {
     `);
     $(placeholder).replaceWith(dom);
     const widgetElement = dom.find('[data-streamfield-widget]').get(0);
-    this.element = dom[0];
+    const [element] = dom;
+    this.element = element;
 
     this.parentCapabilities = parentCapabilities || new Map();
 
