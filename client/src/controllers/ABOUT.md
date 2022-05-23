@@ -128,6 +128,186 @@ def add_summary_item(request, summary_items):
 </li>
 ```
 
+
+### Adding a new controller v2 - word count limiting (without a build system)
+
+```javascript
+// myapp/static/js/word-count-controller.js
+import { Controller } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js";
+
+class WordCountController extends Controller {
+  static values = { max: { default: 10, type: Number } };
+
+  connect() {
+    const output = document.createElement("output");
+    output.setAttribute("name", "word-count");
+    output.setAttribute("for", this.element.id);
+    output.style.float = "right";
+    this.element.insertAdjacentElement("beforebegin", output);
+    this.output = output;
+    this.updateCount();
+  }
+
+  setupOutput() {
+    if (this.output) return;
+    const template = document.createElement("template");
+    template.innerHTML = `<output name='word-count' for='${this.element.id}' style='float: right;'></output>`;
+    const output = template.content.firstChild;
+    this.element.insertAdjacentElement("beforebegin", output);
+    this.output = output;
+  }
+
+  updateCount(event) {
+    const value = event ? event.target.value : this.element.value;
+    const words = (value || "").split(" ");
+    this.output.textContent = `${words.length} / ${this.maxValue} words`;
+  }
+
+  disconnect() {
+    this.element && this.element.remove();
+  }
+}
+
+document.addEventListener(
+  "wagtail:stimulus-init",
+  ({ detail: { createController, register } }) => {
+    register(["word-count", WordCountController]);
+  },
+  // important: stimulus-init may be called more than once, only run the registration once
+  { once: true }
+);
+```
+
+```python
+# models.py
+# https://docs.wagtail.org/en/stable/reference/pages/panels.html#fieldpanel
+from django import forms
+
+class BlogPage(Page):
+    # ...
+    content_panels = Page.content_panels + [
+        FieldPanel('subtitle', classname="full"),
+        FieldPanel(
+            'introduction',
+            classname="full",
+            widget=forms.TextInput(
+                attrs={
+                    'data-controller': 'word-count',
+                    'data-word-count-max-value': '40',
+                    # decide when you want the count to update with data-action (e.g. 'blur->word-count#updateCount' will only update when field loses focus)
+                    'data-action': 'word-count#updateCount paste->word-count#updateCount',
+                }
+            )
+        ),
+    #...
+```
+
+```python
+# wagtail_hooks.py
+# https://docs.wagtail.org/en/stable/reference/hooks.html
+from django.utils.html import format_html_join
+from django.templatetags.static import static
+
+from wagtail import hooks
+
+
+@hooks.register('insert_editor_js')
+def editor_js():
+    js_files = ['js/word-count-controller.js',]
+    # important - must use 'module'
+    return format_html_join('\n', '<script src="{0}" type="module"></script>',
+        ((static(filename),) for filename in js_files)
+    )
+
+```
+
+
+
+### Adding a new controller v3 - word count limiting (without a build system or even classes!)
+
+```javascript
+// myapp/static/js/word-count-controller.js
+
+const wordCountController = {
+  STATIC: {
+    values: { max: { default: 10, type: Number } },
+  },
+  connect: function () {
+    this.setupOutput();
+    this.updateCount();
+  },
+  setupOutput: function () {
+    if (this.output) return;
+    const template = document.createElement("template");
+    template.innerHTML = `<output name='word-count' for='${this.element.id}' style='float: right;'></output>`;
+    const output = template.content.firstChild;
+    this.element.insertAdjacentElement("beforebegin", output);
+    this.output = output;
+  },
+  updateCount: function (event) {
+    const value = event ? event.target.value : this.element.value;
+    const words = (value || "").split(" ");
+    this.output.textContent = `${words.length} / ${this.maxValue} words`;
+  },
+  disconnect: function () {
+    this.element && this.element.remove();
+  },
+};
+
+document.addEventListener(
+  "wagtail:stimulus-init",
+  ({ detail: { createController, register } }) => {
+    register(["word-count", createController(wordCountController)]);
+  },
+  // important: stimulus-init may be called more than once, only run the registration once
+  { once: true }
+);
+
+```
+
+```python
+# models.py
+# https://docs.wagtail.org/en/stable/reference/pages/panels.html#fieldpanel
+from django import forms
+
+class BlogPage(Page):
+    # ...
+    content_panels = Page.content_panels + [
+        FieldPanel('subtitle', classname="full"),
+        FieldPanel(
+            'introduction',
+            classname="full",
+            widget=forms.TextInput(
+                attrs={
+                    'data-controller': 'word-count',
+                    'data-word-count-max-value': '5',
+                    'data-action': 'word-count#updateCount paste->word-count#updateCount',
+                }
+            )
+        ),
+    #...
+```
+
+```python
+# wagtail_hooks.py
+# https://docs.wagtail.org/en/stable/reference/hooks.html
+from django.utils.html import format_html_join
+from django.templatetags.static import static
+
+from wagtail import hooks
+
+
+@hooks.register('insert_editor_js')
+def editor_js():
+    js_files = ['js/word-count-controller.js',]
+    return format_html_join('\n', '<script src="{0}"></script>',
+        ((static(filename),) for filename in js_files)
+    )
+
+```
+
+
+
 ### Adding a new controller (with a build system)
 
 -   Install `@hotwired/stimulus` using `npm install @hotwired/stimulus --save`

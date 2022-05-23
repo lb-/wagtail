@@ -1,6 +1,9 @@
-import { Application, defaultSchema } from '@hotwired/stimulus';
+/* eslint-disable max-classes-per-file */
+import { Application, Controller, defaultSchema } from '@hotwired/stimulus';
 
 import controllerDefinitions from '../controllers';
+
+const noop = () => null;
 
 /**
  * Extending the built in class for housing additional logic.
@@ -52,6 +55,47 @@ const initStimulus = () => {
 
   application.load(controllerDefinitions);
 
+  /**
+   * WIP - function that accepts a plain old object and returns a Controller.
+   * Useful when ES6 modules with base class being extended not in use
+   * or build tool not in use or for just super convenient class creation.
+   * API not final - not sure if `STATIC` or `STATICS` or start with underscore?
+   * Inspired heavily by
+   * https://github.com/StackExchange/Stacks/blob/develop/lib/ts/stacks.ts#L68
+   *
+   * Also should pull this out to its own file for unit testing
+   */
+  const createController = (controllerDefinition: {
+    STATIC: {
+      classes?: string[];
+      targets?: string[];
+      values: typeof Controller.values;
+    };
+  }): typeof Controller => {
+    class NewController extends Controller {}
+
+    // set up static values
+    Object.entries(controllerDefinition.STATIC || {}).forEach(
+      ([key, value]) => {
+        NewController[key] = value;
+      },
+    );
+
+    // set up class methods
+    Object.entries(controllerDefinition)
+      .filter(([key]) => !['STATIC'].includes(key))
+      .map(([key]) => ({
+        key,
+        property:
+          Object.getOwnPropertyDescriptor(controllerDefinition, key) || noop,
+      }))
+      .forEach(({ key, property }) => {
+        Object.defineProperty(NewController.prototype, key, property);
+      });
+
+    return NewController;
+  };
+
   const getInitEvent = (order: number): CustomEvent =>
     new CustomEvent('wagtail:stimulus-init', {
       bubbles: true,
@@ -59,6 +103,8 @@ const initStimulus = () => {
       detail: {
         // intentionally not providing the application - may add this in a future release if needed
         order,
+        // provide a way to create a controller without ES6, base controller, or transpiled classes
+        createController,
         // provide a way to register controllers
         register: ([identifier, controller]) => {
           application.register(identifier, controller);
