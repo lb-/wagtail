@@ -186,14 +186,14 @@ const initStimulus = () => {
   // --- Events - listeners --- //
 
   /**
-   * allow any custom code to trigger debug mode easily
+   * Allow any custom code to trigger debug mode easily.
    */
   window.addEventListener('wagtail:stimulus-enable-debug', () => {
     application.debug = true;
   });
 
   /**
-   *
+   * Allow controller to be registered ad-hoc if ready events are not suitable.
    */
   window.addEventListener(
     'wagtail:stimulus-register-controller',

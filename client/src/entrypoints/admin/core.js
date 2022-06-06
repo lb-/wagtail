@@ -1,6 +1,4 @@
 import $ from 'jquery';
-import { initTooltips } from '../../includes/initTooltips';
-
 import { initStimulus } from '../../includes/stimulus';
 
 initStimulus();
@@ -293,75 +291,6 @@ $(() => {
       $(this).removeClass('hovered');
     });
 
-  /* Header search behaviour */
-  if (window.headerSearch) {
-    let searchCurrentIndex = 0;
-    let searchNextIndex = 0;
-    const $input = $(window.headerSearch.termInput);
-    const $inputContainer = $input.parent();
-
-    $input.on('keyup cut paste change', () => {
-      clearTimeout($input.data('timer'));
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      $input.data('timer', setTimeout(search, 200));
-    });
-
-    // auto focus on search box
-    $input.trigger('focus');
-
-    // eslint-disable-next-line func-names
-    const search = function () {
-      const workingClasses = 'icon-spinner';
-
-      const newQuery = $input.val();
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const currentQuery = getURLParam('q');
-      // only do the query if it has changed for trimmed queries
-      // for example - " " === "" and "firstword " ==== "firstword"
-      if (currentQuery.trim() !== newQuery.trim()) {
-        $inputContainer.addClass(workingClasses);
-        searchNextIndex++;
-        const index = searchNextIndex;
-
-        // Update q, reset to first page, and keep other query params
-        const searchParams = new URLSearchParams(window.location.search);
-        searchParams.set('q', newQuery);
-        searchParams.delete('p');
-        const queryString = searchParams.toString();
-
-        $.ajax({
-          url: window.headerSearch.url,
-          data: queryString,
-          success(data) {
-            if (index > searchCurrentIndex) {
-              searchCurrentIndex = index;
-              $(window.headerSearch.targetOutput).html(data).slideDown(800);
-              window.history.replaceState(null, null, '?' + queryString);
-              $input[0].dispatchEvent(new Event('search-success'));
-            }
-          },
-          complete() {
-            window.wagtail.ui.initDropDowns();
-            // Reinitialise any tooltips
-            initTooltips();
-            $inputContainer.removeClass(workingClasses);
-          },
-        });
-      }
-    };
-
-    // eslint-disable-next-line func-names
-    const getURLParam = function (name) {
-      const results = new RegExp('[\\?&]' + name + '=([^]*)').exec(
-        window.location.search,
-      );
-      if (results) {
-        return results[1];
-      }
-      return '';
-    };
-  }
-
   /* Debounce submission of long-running forms and add spinner to give sense of activity */
   // eslint-disable-next-line func-names
   $(document).on('click', 'button.button-longrunning', function () {
@@ -620,6 +549,7 @@ function initDropDowns() {
 }
 
 $(document).ready(initDropDowns);
+document.addEventListener('w-search:success', initDropDowns);
 wagtail.ui.initDropDowns = initDropDowns;
 wagtail.ui.DropDownController = DropDownController;
 

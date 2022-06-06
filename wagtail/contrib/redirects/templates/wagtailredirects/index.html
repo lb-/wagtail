@@ -6,17 +6,6 @@
 
 {% block titletag %}{% trans "Redirects" %}{% endblock %}
 
-{% block extra_js %}
-    {{ block.super }}
-    <script>
-        window.headerSearch = {
-            url: "{% url 'wagtailredirects:index' %}",
-            termInput: "#id_q",
-            targetOutput: "#redirects-results"
-        }
-    </script>
-{% endblock %}
-
 {% block content %}
     {% trans "Redirects" as redirects_str %}
     {% if user_can_add %}
@@ -39,7 +28,7 @@
 
 
     {% else %}
-        {% include "wagtailadmin/shared/header.html" with title=redirects_str icon="redirect" search_url="wagtailredirects:index" %}
+        {% include "wagtailadmin/shared/header.html" with title=redirects_str icon="redirect" search_url="wagtailredirects:index" results_selector="#redirects-results" %}
     {% endif %}
 
     <div class="nice-padding">
