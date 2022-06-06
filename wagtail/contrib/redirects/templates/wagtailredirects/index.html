@@ -6,17 +6,6 @@
 
 {% block titletag %}{% trans "Redirects" %}{% endblock %}
 
-{% block extra_js %}
-    {{ block.super }}
-    <script>
-        window.headerSearch = {
-            url: "{% url 'wagtailredirects:index' %}",
-            termInput: "#id_q",
-            targetOutput: "#redirects-results"
-        }
-    </script>
-{% endblock %}
-
 {% block content %}
     {% trans "Redirects" as redirects_str %}
     {% if user_can_add %}
@@ -34,7 +23,17 @@
                     <div class="col">
                         <h1>{% icon name="redirect" %}{{ redirects_str }}</h1>
                     </div>
-                    <form class="col search-form" action="{% url "wagtailredirects:index" %}{% if query_parameters %}?{{ query_parameters }}{% endif %}" method="get" novalidate role="search">
+                    <form
+                        class="col search-form"
+                        action="{% url "wagtailredirects:index" %}{% if query_parameters %}?{{ query_parameters }}{% endif %}"
+                        method="get"
+                        novalidate
+                        role="search"
+                        data-controller="w-search"
+                        data-w-search-animate-in-class="w-animate-fade-in"
+                        data-w-search-processing-class="icon-spinner"
+                        data-w-search-results-selector-value="#redirects-results"
+                    >
                         <ul class="fields">
                             {% for field in search_form %}
                                 {% include "wagtailadmin/shared/field_as_li.html" with field=field field_classes="field-small iconfield" icon="search" %}
@@ -59,7 +58,7 @@
             </div>
         </header>
     {% else %}
-        {% include "wagtailadmin/shared/header.html" with title=redirects_str icon="redirect" search_url="wagtailredirects:index" %}
+        {% include "wagtailadmin/shared/header.html" with title=redirects_str icon="redirect" search_url="wagtailredirects:index" results_selector="#redirects-results" %}
     {% endif %}
 
     <div class="nice-padding">

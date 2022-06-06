@@ -273,8 +273,4 @@ function rebindBulkActionsEventListeners() {
 }
 
 document.addEventListener('DOMContentLoaded', addBulkActionListeners);
-if (window.headerSearch) {
-  document
-    .querySelector(window.headerSearch.termInput)
-    .addEventListener('search-success', rebindBulkActionsEventListeners);
-}
+document.addEventListener('w-search:success', rebindBulkActionsEventListeners);
