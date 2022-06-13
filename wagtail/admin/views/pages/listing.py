@@ -18,6 +18,7 @@ class ListingView(IndexView):
     paginate_by = 50
     header_icon = "page"
     context_object_name = "pages"
+    default_ordering = "-latest_revision_created_at"
     title = _("Exploring")
 
     def setup(self, request, *args, **kwargs):
@@ -44,10 +45,8 @@ class ListingView(IndexView):
     def get_page_subtitle(self):
         return self.parent_page.get_admin_display_title()
 
-    def get_ordering(self):
-        ordering = super().get_ordering()
-
-        if ordering not in [
+    def get_valid_orderings(self):
+        return [
             "title",
             "-title",
             "content_type",
@@ -57,10 +56,7 @@ class ListingView(IndexView):
             "latest_revision_created_at",
             "-latest_revision_created_at",
             "ord",
-        ]:
-            ordering = "-latest_revision_created_at"
-
-        return ordering
+        ]
 
     def get_queryset(self):
         user_perms = UserPagePermissionsProxy(self.request.user)
@@ -131,12 +127,24 @@ class ListingView(IndexView):
         context = super().get_context_data(**kwargs)
 
         parent_page = self.parent_page
+        ordering = self.get_ordering()
+        show_ordering_column = ordering == "ord"
+
         context.update(
             {
-                "show_ordering_column": self.get_ordering() == "ord",
-                "parent_page": parent_page,
+                "ordering": ordering,
+                "locale": self.locale,
+                "parent_page": parent_page.specific,
+                # "pages" - not including paginator!
+                "show_bulk_actions": not show_ordering_column,
+                "show_locale_labels": False,
+                "show_ordering_column": show_ordering_column,
+                "translations": [],
             }
         )
+
+        print('show_ordering_column', show_ordering_column)
+        print('ordering', ordering)
 
         if getattr(settings, "WAGTAIL_I18N_ENABLED", False):
             if not parent_page.is_root():
