@@ -1,0 +1,59 @@
+.w-mini-map {
+  background: lightblue;
+  bottom: 0;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 999;
+
+  // ---- closed state ---- //
+
+  &:not(.w-mini-map--expanded) {
+    .w-mini-map__title {
+      @apply w-sr-only;
+    }
+
+    .w-mini-map__item * {
+      // hide element content
+      display: none;
+    }
+  }
+
+  // REALLY SHOULD AVOID DOING THIS & Bring in the styles from page-editor
+  // OR make a new controller for expanding a thing
+
+  // ---- open state ---- //
+
+  &.w-mini-map--expanded {
+    min-width: 12rem;
+  }
+
+  // ---- items ---- //
+
+  .w-mini-map__item--on-screen {
+    font-weight: bolder;
+
+    &:before {
+      content: '— ';
+    }
+  }
+
+  .w-mini-map__item--off-screen {
+    &:before {
+      content: '- ';
+    }
+  }
+
+  .w-mini-map__item--level-3 {
+    padding-left: 1rem;
+  }
+
+  .w-mini-map__item--level-4 {
+    padding-left: 2rem;
+  }
+
+  .w-mini-map__item--level-5 {
+    padding-left: 3rem;
+  }
+}

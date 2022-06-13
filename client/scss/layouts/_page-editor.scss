@@ -8,6 +8,15 @@
     overflow-x: hidden;
   }
 
+  h2,
+  h3,
+  h4,
+  h5 {
+    // note: slim header is hard-coded as 50px high - but trying to avoid px values here
+    // ensure that if we scroll to an element (anchor link) it will show under the sticky header
+    scroll-margin-top: theme('spacing.20');
+  }
+
   .breadcrumb {
     margin: -1.2em 0 2em; // sass linter complains about $desktop-nice-padding here because of unit mismatch
     padding-inline-start: calc(#{$desktop-nice-padding} - 2em);

@@ -138,7 +138,7 @@ export class BaseSequenceChild extends EventEmitter {
     )}">
 
         <div>
-          <div class="c-sf-container__block-container">
+          <div class="c-sf-container__block-container" data-controller="w-intersection-observer">
             <div class="c-sf-block">
               <div data-block-header class="c-sf-block__header c-sf-block__header--collapsible">
                 <svg class="icon icon-${h(
@@ -146,7 +146,7 @@ export class BaseSequenceChild extends EventEmitter {
                 )} c-sf-block__header__icon" aria-hidden="true">
                   <use href="#icon-${h(this.blockDef.meta.icon)}"></use>
                 </svg>
-                <h3 data-block-title class="c-sf-block__header__title"></h3>
+                <h3 data-block-title data-w-intersection-observer-target="dispatch" data-w-mini-map-target="heading" class="c-sf-block__header__title"></h3>
                 <div class="c-sf-block__actions" data-block-actions>
                   <span class="c-sf-block__type">${h(
                     this.blockDef.meta.label,

@@ -1,14 +1,20 @@
 {% load wagtailadmin_tags  %}
 
-<ul class="objects">
+<ul
+    class="objects"
+    data-controller="w-mini-map"
+    data-action="w-intersection-observer:intersection->w-mini-map#intersectionChanged mouseenter->w-mini-map#expand mouseleave->w-mini-map#collapse"
+    data-w-mini-map-expanded-class="w-mini-map--expanded"
+    data-w-mini-map-index-item-class="w-mini-map__item"
+    >
     {% for child in self.visible_children %}
-        <li class="object {{ child.classes|join:" " }}">
+        <li class="object {{ child.classes|join:" " }}" {% if child.heading %}data-controller="w-intersection-observer"{% endif %}>
             {% if child.heading %}
-                <div class="title-wrapper">
+                <h2 class="title-wrapper" data-w-intersection-observer-target="dispatch" data-w-mini-map-target="heading">
                     <label {% if child.id_for_label %}for="{{ child.id_for_label }}"{% endif %}>
                         {{ child.heading }}
                     </label>
-                </div>
+                </h2>
             {% endif %}
             <div class="object-layout">
                 {% if child.help_text %}
@@ -25,4 +31,19 @@
             </div>
         </li>
     {% endfor %}
+    <!-- this should not be aside - should be an li -->
+    <aside class="w-mini-map" data-w-mini-map-target="miniMap" hidden>
+        <h2 class="w-mini-map__title">Mini map</h2>
+        {% comment "NOT READY" %}
+        <div>
+            <label>
+                Collapse all fields
+                <input type="checkbox" />
+            </label>
+        </div>
+        {% endcomment %}
+        <div class="w-mini-map__index" data-w-mini-map-target="index">
+            <!-- React content here -->
+        </div>
+    </aside>
 </ul>
