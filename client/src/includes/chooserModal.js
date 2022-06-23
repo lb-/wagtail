@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import $ from 'jquery';
 import { initTabs } from './tabs';
 import { gettext } from '../utils/gettext';
@@ -199,7 +198,6 @@ class ChooserModalOnloadHandlerFactory {
     if (this.modalHasTabs(modal)) initTabs();
   }
 
-  // eslint-disable-next-line class-methods-use-this
   modalHasTabs(modal) {
     return $('[data-tabs]', modal.body).length;
   }
