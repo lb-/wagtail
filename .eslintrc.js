@@ -16,7 +16,6 @@ const legacyCode = {
   'no-prototype-builtins': 'off',
   'no-restricted-syntax': 'off',
   'no-this-before-super': 'off',
-  'prefer-destructuring': 'off',
   'prefer-promise-reject-errors': 'off',
   'react-hooks/exhaustive-deps': 'off',
   'react-hooks/rules-of-hooks': 'off',
@@ -82,6 +81,8 @@ module.exports = {
     ],
     // note you must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
+    // this rule can be confusing for new JS devs and forces some non-intuitive code for variable assignment
+    'prefer-destructuring': 'off',
     // using .tsx instead of .jsx for Typescript React components
     'react/jsx-filename-extension': ['error', { extensions: ['.js', '.tsx'] }],
   },
