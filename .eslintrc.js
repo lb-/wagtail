@@ -15,7 +15,6 @@ const legacyCode = {
   'no-prototype-builtins': 'off',
   'no-restricted-syntax': 'off',
   'no-this-before-super': 'off',
-  'prefer-promise-reject-errors': 'off',
   'react-hooks/exhaustive-deps': 'off',
   'react-hooks/rules-of-hooks': 'off',
   'react/button-has-type': 'off',
