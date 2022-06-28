@@ -951,16 +951,25 @@ class PartialNode(template.library.InclusionNode):
         is_end = kwargs.pop('is_end', False)
         super().__init__(*args, **kwargs)
         self.is_end = is_end
+        
 
     def render(self, context):
+        template = context.template.engine.get_template(self.filename)
+        source = template.source
+        parts = source.split('<!-- START:END -->')
+
+        # patch in a template that is just a partial version of the original & re-apply metadata for debugging
+        self.filename = context.template.engine.from_string(parts[1] if self.is_end else parts[0])
+        self.filename.name = template.name
+        self.filename.origin = template.origin
+        self.filename.source = template.source
 
         content = super().render(context)
 
         print('partialNode', content)
 
-        parts = content.split('<!-- START:END -->')
 
-        return parts[1] if self.is_end else parts[0]
+        return content
 
 
 @register.tag
@@ -985,15 +994,10 @@ def start_dropdown(parser, token):
             kwonly, kwonly_defaults, takes_context, function_name,
         )
 
-    # print('parser', parser)
-    # print('args/kwargs', args, kwargs)
-
-    # return '??'
     node = PartialNode(
         func, takes_context, args, kwargs, filename,
     )
 
-    # print('node', node)
     return node
 
 
