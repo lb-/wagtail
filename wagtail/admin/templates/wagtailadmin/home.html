@@ -17,13 +17,9 @@
         </div>
     </header>
 
-    {% if panels %}
-        {% for panel in panels %}
-            {% component panel fallback_render_method=True %}
-        {% endfor %}
-    {% else %}
-        <p>{% trans "This is your dashboard on which helpful information about content you've created will be displayed." %}</p>
-    {% endif %}
+    {% start_dropdown id='foo' title='A BUTTON!' %}
+        INNER CONTENT
+    {% end_dropdown %}
 {% endblock %}
 
 {% block extra_js %}

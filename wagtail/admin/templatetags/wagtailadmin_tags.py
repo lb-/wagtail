@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from inspect import getfullargspec, unwrap
 from urllib.parse import urljoin
 
 from django import template
@@ -942,6 +943,105 @@ def dialog(
 @register.inclusion_tag("wagtailadmin/shared/dialog/end-dialog.html")
 def enddialog():
     return
+
+
+class PartialNode(template.library.InclusionNode):
+
+    def __init__(self, *args, **kwargs):
+        is_end = kwargs.pop('is_end', False)
+        super().__init__(*args, **kwargs)
+        self.is_end = is_end
+
+    def render(self, context):
+
+        content = super().render(context)
+
+        print('partialNode', content)
+
+        parts = content.split('<!-- START:END -->')
+
+        return parts[1] if self.is_end else parts[0]
+
+
+@register.tag
+def start_dropdown(parser, token):
+    takes_context = False
+    name = 'start_dropdown'
+    filename = "wagtailadmin/shared/dropdown/dropdown.html"
+
+    function_name = (name or getattr(func, '_decorated_function', func).__name__)
+
+    def func(id, title, icon_name=None,):
+        return {'id': id, 'title': title, 'icon_name': icon_name}
+
+
+    params, varargs, varkw, defaults, kwonly, kwonly_defaults, _ = getfullargspec(unwrap(func))
+
+    bits = token.split_contents()[1:]
+
+    args, kwargs = template.library.parse_bits(
+        parser,bits,params,
+            varargs, varkw, defaults,
+            kwonly, kwonly_defaults, takes_context, function_name,
+        )
+
+    # print('parser', parser)
+    # print('args/kwargs', args, kwargs)
+
+    # return '??'
+    node = PartialNode(
+        func, takes_context, args, kwargs, filename,
+    )
+
+    # print('node', node)
+    return node
+
+
+@register.tag
+def end_dropdown(parser, token):
+    takes_context = False
+    name = 'end_dropdown'
+    filename = "wagtailadmin/shared/dropdown/dropdown.html"
+
+    function_name = (name or getattr(func, '_decorated_function', func).__name__)
+
+    def func():
+        return { }
+
+
+    params, varargs, varkw, defaults, kwonly, kwonly_defaults, _ = getfullargspec(unwrap(func))
+
+    bits = token.split_contents()[1:]
+
+    args, kwargs = template.library.parse_bits(
+        parser,bits,params,
+            varargs, varkw, defaults,
+            kwonly, kwonly_defaults, takes_context, function_name,
+        )
+
+    # print('parser', parser)
+    # print('args/kwargs', args, kwargs)
+
+    # return '??'
+    node = PartialNode(
+        func, takes_context, args, kwargs, filename,
+        is_end=True
+    )
+
+    print('node', node)
+    return node
+
+# @register.tag
+# def get_settings(parser, token):
+#     bits = token.split_contents()[1:]
+#     target_var = "settings"
+#     if len(bits) >= 2 and bits[-2] == "as":
+#         target_var = bits[-1]
+#         bits = bits[:-2]
+#     kwargs = token_kwargs(bits, parser) if bits else {}
+#     return GetSettingsNode(kwargs, target_var)
+
+
 
 
 # Button used to open dialogs
