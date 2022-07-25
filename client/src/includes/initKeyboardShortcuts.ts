@@ -11,6 +11,9 @@ import Mousetrap from 'mousetrap';
 import pause from 'mousetrap/plugins/pause/mousetrap-pause';
 import globalBind from 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 
+const isHTMLElement = (element): element is HTMLElement =>
+  element instanceof HTMLElement;
+
 /**
  * Set up the keyboard shortcuts based on any element that has `data-keyboard-shortcut`.
  * Ensure that any duplicates are handled (the last element in the DOM will get the shortcut).
@@ -19,14 +22,17 @@ import globalBind from 'mousetrap/plugins/global-bind/mousetrap-global-bind';
  * not be activated.
  */
 class KeyboardShortcutManager {
+  attr: string;
   shortcuts: Record<string, { target: HTMLElement }>;
   unused: Record<string, any>[];
 
   constructor() {
+    this.attr = 'data-keyboard-shortcut';
     this.unused = [globalBind, pause];
     this.shortcuts = {};
     this.setupListeners();
     this.setupShortcuts();
+    this.setupObserver();
   }
 
   /**
@@ -44,20 +50,23 @@ class KeyboardShortcutManager {
     callback: ((arg0: Event) => void) | null = null,
     { isGlobal = false }: { isGlobal?: boolean } = {},
   ): void {
-    (isGlobal ? Mousetrap.bindGlobal : Mousetrap.bind)(
-      Array.isArray(key) ? key : [key],
-      (event: Event) => {
-        if (typeof callback === 'function') {
-          callback(event);
-          return;
-        }
-        event.preventDefault();
-        target.focus();
-        if (target.tagName === 'BUTTON') target.click();
-      },
-    );
+    this.removeShortcut(key); // first - remove any existing keyboard shortcut mapping
+    (isGlobal ? Mousetrap.bindGlobal : Mousetrap.bind)(key, (event: Event) => {
+      if (typeof callback === 'function') {
+        callback(event);
+        return;
+      }
+      event.preventDefault();
+      target.focus();
+      if (target.tagName === 'BUTTON') target.click();
+    });
 
     this.shortcuts[Array.isArray(key) ? key.join('__') : key] = { target };
+  }
+
+  removeShortcut(key: string | string[]) {
+    Mousetrap.unbind(key);
+    delete this.shortcuts[Array.isArray(key) ? key.join('__') : key];
   }
 
   /**
@@ -65,7 +74,7 @@ class KeyboardShortcutManager {
    */
   setupShortcuts(
     elements: HTMLElement[] = [
-      ...document.querySelectorAll('[data-keyboard-shortcut]'),
+      ...document.querySelectorAll(`[${this.attr}]`),
     ] as HTMLElement[],
   ) {
     elements.forEach((target) => {
@@ -110,6 +119,67 @@ class KeyboardShortcutManager {
     >) => {
       this.createShortcut(key, target, callback, options);
     }) as EventListener);
+  }
+
+  /**
+   * Sets up a MutationObserver to listen for any new or changed
+   */
+  setupObserver() {
+    const observer = new MutationObserver((mutations) => {
+      this.setupShortcuts(
+        mutations
+          .filter(({ type }) => type === 'childList')
+          .reduce<Node[]>(
+            (arr, { addedNodes }) => arr.concat([...addedNodes]),
+            [],
+          )
+          .filter(isHTMLElement)
+          .reduce<HTMLElement[]>(
+            (arr, element) =>
+              arr.concat(
+                [...element.querySelectorAll(`[${this.attr}]`)].filter(
+                  isHTMLElement,
+                ),
+              ),
+            [],
+          ),
+      );
+
+      mutations
+        .filter(({ type }) => type === 'attributes')
+        .forEach((record) => {
+          const { oldValue, target } = record;
+          if (!isHTMLElement(target)) return;
+          const { keyboardShortcut = null } = target.dataset;
+
+          if (oldValue) {
+            // if keyboard shortcut removed but did exist
+            if (!keyboardShortcut) {
+              this.removeShortcut(oldValue);
+              return;
+            }
+
+            // if keyboard shortcut existed but has changed
+            if (keyboardShortcut && keyboardShortcut !== oldValue) {
+              this.removeShortcut(oldValue);
+            }
+          }
+
+          if (!keyboardShortcut) return;
+
+          this.createShortcut(keyboardShortcut, target);
+        });
+    });
+
+    const bodyWrapper = document.querySelector('body > .wrapper');
+    if (bodyWrapper) {
+      observer.observe(bodyWrapper, {
+        attributeFilter: [this.attr],
+        attributeOldValue: true,
+        childList: true,
+        subtree: true,
+      });
+    }
   }
 }
 

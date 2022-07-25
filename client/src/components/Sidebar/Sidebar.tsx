@@ -194,6 +194,7 @@ export const Sidebar: React.FunctionComponent<SidebarProps> = ({
         }
         type="button"
         ref={mobileNavToggleRef}
+        {...(isMobile && { 'data-keyboard-shortcut': '[' })}
       >
         {visibleOnMobile ? <Icon name="cross" /> : <Icon name="bars" />}
       </button>
@@ -232,6 +233,7 @@ export const Sidebar: React.FunctionComponent<SidebarProps> = ({
                 hover:w-bg-primary-200
                 hover:text-white
                 hover:opacity-100`}
+              {...(!isMobile && { 'data-keyboard-shortcut': '[' })}
             >
               <Icon
                 name="expand-right"
