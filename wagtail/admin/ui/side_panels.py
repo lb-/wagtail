@@ -29,6 +29,7 @@ class BaseStatusSidePanel(BaseSidePanel):
     order = 100
     toggle_aria_label = gettext_lazy("Toggle status")
     toggle_icon_name = "info-circle"
+    keyboard_shortcut = "alt+]"
 
     def __init__(self, *args, in_explorer=False, **kwargs):
         super().__init__(*args, **kwargs)
@@ -130,6 +131,7 @@ class CommentsSidePanel(BaseSidePanel):
     order = 300
     toggle_aria_label = gettext_lazy("Toggle comments")
     toggle_icon_name = "comment"
+    keyboard_shortcut = "alt+m"
 
 
 class BasePreviewSidePanel(BaseSidePanel):
