@@ -11,6 +11,8 @@ import Mousetrap from 'mousetrap';
 import pause from 'mousetrap/plugins/pause/mousetrap-pause';
 import globalBind from 'mousetrap/plugins/global-bind/mousetrap-global-bind';
 
+import { gettext } from '../utils/gettext';
+
 const isHTMLElement = (element): element is HTMLElement =>
   element instanceof HTMLElement;
 
@@ -52,6 +54,10 @@ class KeyboardShortcutManager {
   ): void {
     this.removeShortcut(key); // first - remove any existing keyboard shortcut mapping
     (isGlobal ? Mousetrap.bindGlobal : Mousetrap.bind)(key, (event: Event) => {
+      // if keyboard modal is open - allow keyboard shortcuts but close the modal first.
+      if (this.keyboardModal) {
+        this.keyboardModal.dispatch(new CustomEvent('wagtail:hide'));
+      }
       if (typeof callback === 'function') {
         callback(event);
         return;
@@ -92,8 +98,17 @@ class KeyboardShortcutManager {
     // a11y modals
     document.addEventListener('wagtail:dialog-shown', (({
       detail: { shown = false } = {},
+      target,
     }: CustomEvent<{ shown?: boolean }>) => {
       if (shown) {
+        const keyboardShortcutModalContent = target.querySelector(
+          '[data-keyboard-shortcut-dialog-content]',
+        );
+        if (keyboardShortcutModalContent) {
+          this.keyboardModal = target;
+          this.updateModalContent(keyboardShortcutModalContent);
+          return;
+        }
         Mousetrap.pause();
       } else {
         Mousetrap.unpause();
@@ -180,6 +195,41 @@ class KeyboardShortcutManager {
         subtree: true,
       });
     }
+  }
+
+  getKeyLabel(key) {
+    const capitaliseFirstLetter = (
+      [first, ...rest],
+      locale = navigator.language,
+    ) =>
+      first === undefined
+        ? ''
+        : first.toLocaleUpperCase(locale) + rest.join('');
+
+    // IS_MAC_OS ? '⌘ + Alt + M' : 'Ctrl + Alt + M'
+    // ⌥
+    if (key === 'alt') return '⌥';
+    if (key === 'mod') return '⌘';
+    if (key === 'meta') return '??';
+    if (key.length <= 1) return key;
+    return capitaliseFirstLetter(key);
+  }
+
+  updateModalContent(target: HTMLElement) {
+    // want to do something where the modal can close
+    console.log('keyboardShortcutModalContent', target);
+
+    target.innerHTML = Object.entries(this.shortcuts)
+      .map(
+        ([key]) =>
+          `<li><samp>${key
+            .split('__')
+            .join(gettext(' or '))
+            .split('+')
+            .map((innerKey) => `<kbd>${this.getKeyLabel(innerKey)}</kbd>`)
+            .join(' + ')}</samp> - <strong>Description!</strong></li>`,
+      )
+      .join('');
   }
 }
 

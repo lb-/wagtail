@@ -32,6 +32,14 @@
             </div>
 
             {% block content %}{% endblock %}
+            {% comment %} might try to refactor to a component? {% endcomment %}
+            {% comment %} keyboard shortcuts modal {% endcomment %}
+            {% dialog_toggle class_name='button button-primary' dialog_id='keyboard-shortcuts-dialog' text='Keyboard shortcuts' attrs="data-keyboard-shortcut='mod+k'" %}
+            {% trans "Keyboard shortcuts" as keyboard_shortcuts_dialog_title %}
+            {% dialog icon_name="doc-full-inverse" id="keyboard-shortcuts-dialog" title=keyboard_shortcuts_dialog_title subtitle="This is as simple as it gets 😀" %}
+                <ul class="w-base-text" data-keyboard-shortcut-dialog-content>
+                </ul>
+            {% enddialog %}
         </div>
     </main>
 {% endblock %}
