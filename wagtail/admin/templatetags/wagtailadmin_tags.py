@@ -1042,7 +1042,7 @@ register.tag("field_row", FieldRowNode.handle)
 
 # Button used to open dialogs
 @register.inclusion_tag("wagtailadmin/shared/dialog/dialog_toggle.html")
-def dialog_toggle(dialog_id, class_name="", text=None):
+def dialog_toggle(dialog_id, class_name="", text=None, attrs=None):
     if not dialog_id:
         raise ValueError("You must supply the dialog ID")
 
@@ -1051,6 +1051,7 @@ def dialog_toggle(dialog_id, class_name="", text=None):
         "text": text,
         # dialog_id must match the ID of the dialog you are toggling
         "dialog_id": dialog_id,
+        "attrs": attrs if attrs else '',
     }
 
 
