@@ -16,7 +16,7 @@ import { initStimulus } from './stimulus';
  *
  * @example
  * import Stories from '../includes/stimulus.stories';
- * const Template = () => <Stories.StimulusWrapper controllers={{ 'w-auto-form': AutoFormController }}><form data-controller="w-auto-form" /></Stories.StimulusWrapper>
+ * const Template = () => <Stories.StimulusWrapper controllers={{ 'w-auto-field': AutoFieldController }}><form data-controller="w-auto-field" /></Stories.StimulusWrapper>
  */
 class StimulusWrapper extends React.Component {
   constructor(props) {
