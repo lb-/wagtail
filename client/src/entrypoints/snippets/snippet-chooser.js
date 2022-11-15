@@ -7,12 +7,17 @@ class SnippetChooser extends Chooser {
 
   getModalUrl() {
     let urlQuery = '';
-    if (wagtailConfig.ACTIVE_CONTENT_LOCALE) {
+
+    const activeContentLocale = document.head.querySelector(
+      '[name="wagtail-active-content-locale"]',
+    )?.content;
+
+    if (activeContentLocale) {
       // The user is editing a piece of translated content.
       // Pass the locale along as a request parameter. If this
       // snippet is also translatable, the results will be
       // pre-filtered by this locale.
-      urlQuery = '?locale=' + wagtailConfig.ACTIVE_CONTENT_LOCALE;
+      urlQuery = '?locale=' + activeContentLocale;
     }
     return this.chooserBaseUrl + urlQuery;
   }

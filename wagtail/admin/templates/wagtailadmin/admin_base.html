@@ -1,6 +1,12 @@
 {% extends "wagtailadmin/skeleton.html" %}
 {% load i18n wagtailadmin_tags %}
 
+{% block meta %}
+    {% if locale %}
+        <meta name="wagtail-active-content-locale" content="{{ locale.language_code|escapejs }}"/>
+    {% endif %}
+{% endblock %}
+
 {% block css %}
     <link rel="stylesheet" href="{% versioned_static 'wagtailadmin/css/core.css' %}">
 
@@ -31,10 +37,6 @@
             {% locales as locales %}
             wagtailConfig.I18N_ENABLED = {% if i18n_enabled %}true{% else %}false{% endif %};
             wagtailConfig.LOCALES = {{ locales|safe }};
-
-            {% if locale %}
-                wagtailConfig.ACTIVE_CONTENT_LOCALE = '{{ locale.language_code }}'
-            {% endif %}
 
             wagtailConfig.STRINGS = {% js_translation_strings %};
 
