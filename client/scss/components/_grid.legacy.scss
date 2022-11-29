@@ -31,10 +31,8 @@
   @include slim-header-scroll-offset();
   scroll-behavior: smooth;
   width: 100%;
-  height: 100%; // this has no effect on desktop, but on mobile it helps aesthetics of menu popout action
-  float: left;
+  height: auto;
   position: relative;
-  border-bottom: 1px solid $color-grey-3;
 }
 
 .content {
