@@ -10,12 +10,30 @@
     {% block extra_css %}{% endblock %}
 {% endblock %}
 
+{% block meta %}
+    <meta name="ACTIVE_CONTENT_LOCALE" content="{% if locale %}{{ locale.language_code|escapejs }}{% endif %}" data-wagtail-metadata-item/>
+    <meta name="CSRF_TOKEN" content="{{ csrf_token|escapejs }}" data-wagtail-metadata-item/>
+    <meta name="CSRF_HEADER_NAME" content="" data-wagtail-metadata-item/>
+    <meta name="I18N_ENABLED" content="{% if i18n_enabled %}true{% else %}false{% endif %}" data-wagtail-metadata-item="boolean"/>
+    <meta name="ADMIN_API.PAGES" content="{% url 'wagtailadmin_api:pages:listing' %}" data-wagtail-metadata-item/>
+    <meta name="ADMIN_API.DOCUMENTS" content="'{% url 'wagtailadmin_api:documents:listing' %}" data-wagtail-metadata-item/>
+    <meta name="ADMIN_API.IMAGES" content="{% url 'wagtailadmin_api:images:listing' %}" data-wagtail-metadata-item/>
+    <meta name="ADMIN_API.EXTRA_CHILDREN_PARAMETERS" content="" data-wagtail-metadata-item/>
+    <meta name="ADMIN_URLS.PAGES" content="{% url 'wagtailadmin_explore_root' %}" data-wagtail-metadata-item/>
+    <meta name="ADMIN_URLS.DISMISSIBLES" content="{% url 'wagtailadmin_dismissibles' %}" data-wagtail-metadata-item/>
+    {% locales as locales %}
+    <meta name="LOCALES" content='{{ locales|safe }}' data-wagtail-metadata-item="json"/>
+    <meta name="MAX_EXPLORER_PAGES" content="200" data-wagtail-metadata-item="number"/>
+{% endblock %}
+
 {% block branding_favicon %}
     <link rel="shortcut icon" href="{% versioned_static 'wagtailadmin/images/favicon.ico' %}" />
 {% endblock %}
 
 {% block js %}
+    <script src="{% versioned_static 'wagtailadmin/js/metadata.js' %}" data-wagtail-metadata="data-wagtail-metadata-item"></script>
     <script>
+        // note: with the above metadata approach - we should no longer need any of the items below
         (function(document, window) {
             window.wagtailConfig = window.wagtailConfig || {};
             wagtailConfig.ADMIN_API = {
@@ -41,6 +59,7 @@
             wagtailConfig.ADMIN_URLS = {
                 PAGES: '{% url "wagtailadmin_explore_root" %}'
             };
+            console.log('wagtailConfig', wagtailConfig);
         })(document, window);
     </script>
     {% wagtail_config as config %}

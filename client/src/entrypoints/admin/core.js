@@ -3,6 +3,9 @@ import { escapeHtml } from '../../utils/text';
 import { initButtonSelects } from '../../includes/initButtonSelects';
 import { initTagField } from '../../includes/initTagField';
 import { initTooltips } from '../../includes/initTooltips';
+import { getMetadata } from '../../utils/getMetadata';
+
+console.log('core js loaded!', getMetadata());
 
 /* generic function for adding a message to message area through JS alone */
 function addMessage(status, text) {
