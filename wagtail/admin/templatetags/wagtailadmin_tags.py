@@ -449,7 +449,7 @@ def pagination_querystring(context, page_number, page_key="p"):
 @register.inclusion_tag(
     "wagtailadmin/pages/listing/_pagination.html", takes_context=True
 )
-def paginate(context, page, base_url="", page_key="p", classnames=""):
+def paginate(context, page, base_url="", page_key="p", classname=""):
     """
     Print pagination previous/next links, and the page count. Take the
     following arguments:
@@ -466,13 +466,13 @@ def paginate(context, page, base_url="", page_key="p", classnames=""):
     page_key
         The name of the page variable in the query string. Defaults to 'p'.
 
-    classnames
+    classname
         Extra classes to add to the next/previous links.
     """
     request = context["request"]
     return {
         "base_url": base_url,
-        "classnames": classnames,
+        "classname": classname,
         "request": request,
         "page": page,
         "page_key": page_key,
@@ -674,24 +674,30 @@ def versioned_static(path):
 
 
 @register.inclusion_tag("wagtailadmin/shared/icon.html", takes_context=False)
-def icon(name=None, class_name="icon", title=None, wrapped=False):
+def icon(name=None, classname=None, title=None, wrapped=False, class_name=None):
     """
     Abstracts away the actual icon implementation.
 
     Usage:
         {% load wagtailadmin_tags %}
         ...
-        {% icon name="cogs" class_name="icon--red" title="Settings" %}
+        {% icon name="cogs" classname="icon--red" title="Settings" %}
 
     :param name: the icon name/id, required (string)
-    :param class_name: default 'icon' (string)
+    :param classname: defaults to 'icon' if not provided (string)
     :param title: accessible label intended for screen readers (string)
     :return: Rendered template snippet (string)
     """
     if not name:
         raise ValueError("You must supply an icon name")
 
-    return {"name": name, "class_name": class_name, "title": title, "wrapped": wrapped}
+    return {
+        "name": name,
+        # supporting class_name for backwards compatibility
+        "classname": classname or class_name or "icon",
+        "title": title,
+        "wrapped": wrapped,
+    }
 
 
 @register.filter()
@@ -742,7 +748,7 @@ def timesince_last_update(
                     "user_display_name": user_display_name,
                 }
             else:
-                return _("%(time)s") % {"time": time_str}
+                return time_str
     else:
         if use_shorthand:
             # Note: Duplicate code in timesince_simple()
@@ -1091,12 +1097,12 @@ register.tag("field_row", FieldRowNode.handle)
 
 # Button used to open dialogs
 @register.inclusion_tag("wagtailadmin/shared/dialog/dialog_toggle.html")
-def dialog_toggle(dialog_id, class_name="", text=None):
+def dialog_toggle(dialog_id, classname="", text=None):
     if not dialog_id:
         raise ValueError("You must supply the dialog ID")
 
     return {
-        "class_name": class_name,
+        "classname": classname,
         "text": text,
         # dialog_id must match the ID of the dialog you are toggling
         "dialog_id": dialog_id,

@@ -4,6 +4,7 @@ Changelog
 4.2 (xx.xx.xxxx) - IN DEVELOPMENT
 ~~~~~~~~~~~~~~~~
 
+ * Added StreamField data migration helpers (Sandil Ranasinghe, Jacob Topp-Mugglestone, Joshua Munn, Karl Hobley)
  * Switch to using Willow instead of Pillow for images (Darrel O'Pry)
  * Test assertion util `WagtailPageTestCase.assertCanCreate` now supports the kwarg `publish=True` to check publish redirection (Harry Percival, Akua Dokua Asiedu)
  * Ensure that the `rebuild_references_index` command can run without console output if called with `--verbosity 0` (Omerzahid Ali, Aman Pandey)
@@ -12,6 +13,11 @@ Changelog
  * Make it possible to resize the page editor’s side panels (Sage Abdullah)
  * Add ability to include `form_fields` as an APIField on `FormPage` (Sævar Öfjörð Magnússon, Suyash Singh, LB (Ben) Johnston)
  * Ensure that images listings are more consistently aligned when there are fewer images uploaded (Theresa Okoro)
+ * Add more informative validation error messages for non-unique slugs within the admin interface and for programmatic page creation (Benjamin Bach)
+ * Always show the page editor title field’s border when the field is empty (Thibaud Colas)
+ * Snippet models extending `DraftStateMixin` now automatically define a "Publish" permission type (Sage Abdullah)
+ * Users now remain on the edit page after saving a snippet as draft (Sage Abdullah)
+ * Base project template now populates the meta description tag from the search description field (Aman Pandey)
  * Fix: Make sure workflow timeline icons are visible in high-contrast mode (Loveth Omokaro)
  * Fix: Ensure authentication forms (login, password reset) have a visible border in Windows high-contrast mode (Loveth Omokaro)
  * Fix: Ensure visual consistency between buttons and links as buttons in Windows high-contrast mode (Albina Starykova)
@@ -35,6 +41,13 @@ Changelog
  * Fix: Support text resizing in workflow steps cards (Ivy Jeptoo)
  * Fix: Ignore images added via fixtures when using `WAGTAILIMAGES_FEATURE_DETECTION_ENABLED` to avoid errors for images that do not exist (Aman Pandey)
  * Fix: Restore ability to perform JSONField query operations against StreamField when running against the Django 4.2 development branch (Sage Abdullah)
+ * Fix: Ensure there is correct grammar and pluralisation for Tab error counts shown to screen readers (Aman Pandey)
+ * Fix: Pass through expected expected `cc`, `bcc` and `reply_to` to the Django mail helper from `wagtail.admin.mail.send_mail` (Ben Gosney)
+ * Fix: Allow reviewing or reverting to a Page's initial revision (Andy Chosak)
+ * Fix: Allow both horizontal and vertical manual resizing of TextFields (Anisha Singh)
+ * Fix: Use the correct padding for autocomplete block picker (Umar Farouk Yunusa)
+ * Fix: Ensure that short content pages (such as editing snippets) do not show an inconsistent background (Sage Abdullah)
+ * Fix: Fix horizontal positioning of rich text inline toolbar (Thibaud Colas)
  * Docs: Add custom permissions section to permissions documentation page (Dan Hayden)
  * Docs: Add documentation for how to get started with contributing translations for the Wagtail admin (Ogunbanjo Oluwadamilare)
  * Docs: Officially recommend `fnm` over `nvm` in development documentation (LB (Ben) Johnston)
@@ -49,6 +62,7 @@ Changelog
  * Docs: Grammatical adjustments of `page models` usage guide (Damilola Oladele)
  * Docs: Add class inheritance information to StreamField block sreference (Temidayo Azeez)
  * Docs: Document the hook `register_image_operations` and add an example of a custom Image filter (Coen van der Kamp)
+ * Docs: Fix incorrect example code for StreamField migration of `RichTextField` (Matt Westcott)
  * Maintenance: Remove unsquashed `testapp` migrations (Matt Westcott)
  * Maintenance: Upgrade to Node 18 for frontend build tooling (LB (Ben) Johnston)
  * Maintenance: Run Python tests with coverage and upload coverage data to codecov (Sage Abdullah)
@@ -63,6 +77,13 @@ Changelog
  * Maintenance: Migrated `initTooltips` to TypeScript add JSDoc and unit tests (Fatuma Abdullahi)
  * Maintenance: Migrated `initTagField` from core.js to own TypeScript file and add unit tests (Chisom Okeoma)
  * Maintenance: Added unit tests & JSDoc to `initDissmisibles` (Yekasumah)
+ * Maintenance: Standardise on `classname` for passing HTML class attributes (LB (Ben Johnston))
+ * Maintenance: Clean up expanding formset and `InlinePanel` JavaScript initialisation code and adopt a class approach (Matt Westcott)
+ * Maintenance: Extracted revision and draft state logic from generic views into mixins (Sage Abdullah)
+ * Maintenance: Extracted generic lock / unlock views from page lock / unlock views (Sage Abdullah)
+ * Maintenance: Move `identity` JavaScript util into shared utils folder (LB (Ben Johnston))
+ * Maintenance: Remove unnecessary declaration of function to determine URL query params, instead use `URLSearchParams` (Loveth Omokaro)
+ * Maintenance: Update `tsconfig` to better support modern TypeScript development and clean up some code quality issues via Eslint (Loveth Omokaro)
 
 
 4.1.2 (xx.xx.xxxx) - IN DEVELOPMENT
@@ -72,9 +93,9 @@ Changelog
  * Fix: Prevent crash when reverting revisions on a snippet with `PreviewableMixin` applied (Sage Abdullah)
  * Fix: Use consistent heading styles on top-level fields in the page editor (Sage Abdullah)
  * Fix: Allow button labels to wrap onto two lines in dropdown buttons (Coen van der Kamp)
- * Fix: Allow both horizontal and vertical manual resizing of TextFields (Anisha Singh)
  * Fix: Move DateField, DateTimeField, TimeField comment buttons to be right next to the fields (Theresa Okoro)
  * Fix: Support text resizing in workflow steps cards (Ivy Jeptoo)
+ * Fix: Use the correct padding for autocomplete block picker (Umar Farouk Yunusa)
 
 
 4.1.1 (11.11.2022)

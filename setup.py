@@ -60,12 +60,15 @@ testing_extras = [
     "flake8-print==5.0.0",
     "doc8==0.8.1",
     "flake8-assertive==2.0.0",
+    "semgrep",
     # For templates linting
     "curlylint==0.13.1",
     # For template indenting
     "djhtml==1.4.13",
     # for validating string formats in .po translation files
     "polib>=1.1,<2.0",
+    # For streamfield migration toolkit
+    "wagtail-factories>=4.0,<5",
 ]
 
 # Documentation dependencies

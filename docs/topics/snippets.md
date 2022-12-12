@@ -309,6 +309,45 @@ class Advert(RevisionMixin, models.Model):
         return self._revisions
 ```
 
+If your snippet model defines relations using Django's {class}`~django.db.models.ForeignKey` or {class}`~django.db.models.ManyToManyField`, you need to change the model class to inherit from `modelcluster.models.ClusterableModel` instead of `django.models.Model` and replace the `ForeignKey` and `ManyToManyField` with `ParentalKey` and `ParentalManyToManyField`, respectively. This is necessary in order to allow the relations to be stored in the revisions. For example:
+
+```python
+from django.db import models
+from modelcluster.fields import ParentalKey, ParentalManyToManyField
+from modelcluster.models import ClusterableModel
+from wagtail.models import RevisionMixin
+
+
+class ShirtColour(models.Model):
+    name = models.CharField(max_length=255)
+
+    panels = [FieldPanel("name")]
+
+
+class ShirtCategory(models.Model):
+    name = models.CharField(max_length=255)
+
+    panels = [FieldPanel("name")]
+
+
+@register_snippet
+class Shirt(RevisionMixin, ClusterableModel):
+    name = models.CharField(max_length=255)
+    colour = ParentalKey("shirts.ShirtColour")
+    categories = ParentalManyToManyField("shirts.ShirtCategory", blank=True)
+    _revisions = GenericRelation("wagtailcore.Revision", related_query_name="shirt")
+
+    panels = [
+        FieldPanel("name"),
+        FieldPanel("colour"),
+        FieldPanel("categories", widget=forms.CheckboxSelectMultiple),
+    ]
+
+    @property
+    def revisions(self):
+        return self._revisions
+```
+
 The `RevisionMixin` includes a `latest_revision` field that needs to be added to your database table. Make sure to run the `makemigrations` and `migrate` management commands after making the above changes to apply the changes to your database.
 
 With the `RevisionMixin` applied, any changes made from the snippets admin will create an instance of the `Revision` model that contains the state of the snippet instance. The revision instance is attached to the [audit log](audit_log) entry of the edit action, allowing you to revert to a previous revision or compare the changes between revisions from the snippet history page.
@@ -328,6 +367,8 @@ Support for scheduled publishing via `PublishingPanel` was introduced.
 ```
 
 If a snippet model inherits from {class}`~wagtail.models.DraftStateMixin`, Wagtail will automatically add a live/draft status column to the listing view, change the "Save" action menu to "Save draft", and add a new "Publish" action menu in the editor. Any changes you save in the snippets admin will be saved as revisions and will not be reflected in the "live" snippet instance until you publish the changes.
+
+As the `DraftStateMixin` works by saving draft changes as revisions, inheriting from this mixin also requires inheriting from `RevisionMixin`. See [](wagtailsnippets_saving_revisions_of_snippets) above for more details.
 
 Wagtail will also allow you to set publishing schedules for instances of the model if there is a `PublishingPanel` in the model's panels definition.
 
@@ -364,6 +405,12 @@ The `DraftStateMixin` includes additional fields that need to be added to your d
 You can publish revisions programmatically by calling {meth}`instance.publish(revision) <wagtail.models.DraftStateMixin.publish>` or by calling {meth}`revision.publish() <wagtail.models.Revision.publish>`. After applying the mixin, it is recommended to publish at least one revision for each instance of the snippet that already exists (if any), so that the `latest_revision` and `live_revision` fields are populated in the database table.
 
 If you use the scheduled publishing feature, make sure that you run the [`publish_scheduled`](publish_scheduled) management command periodically. For more details, see [](scheduled_publishing).
+
+```{versionadded} 4.2
+For models that extend `DraftStateMixin`, `publish` permissions are automatically created.
+```
+
+Publishing a snippet instance requires `publish` permission on the snippet model. For models with `DraftStateMixin` applied, Wagtail automatically creates the corresponding `publish` permissions and display them in the 'Groups' area of the Wagtail admin interface. For more details on how to configure the permission, see [](permissions).
 
 ```{warning}
 Wagtail does not yet have a mechanism to prevent editors from including unpublished ("draft") snippets in pages. When including a `DraftStateMixin`-enabled snippet in pages, make sure that you add necessary checks to handle how a draft snippet should be rendered (e.g. by checking its `live` field). We are planning to improve this in the future.

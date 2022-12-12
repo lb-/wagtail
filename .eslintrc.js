@@ -1,15 +1,10 @@
 // Rules which have been enforced in configuration upgrades and flag issues in existing code.
 // We need to consider whether to disable those rules permanently, or fix the issues.
 const legacyCode = {
-  'class-methods-use-this': 'off',
-  'constructor-super': 'off',
   'default-param-last': 'off',
-  'max-classes-per-file': 'off',
   'no-continue': 'off',
   'no-else-return': 'off',
-  'no-plusplus': 'off',
   'no-restricted-syntax': 'off',
-  'no-this-before-super': 'off',
 };
 
 module.exports = {
@@ -29,6 +24,8 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-use-before-define': ['error'],
+    // it is often helpful to pull out logic to class methods that may not use `this`
+    'class-methods-use-this': 'off',
     'import/extensions': [
       'error',
       'always',
@@ -50,6 +47,7 @@ module.exports = {
       'always',
       { exceptAfterSingleLine: true },
     ],
+    'max-classes-per-file': 'off',
     // note you must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
     'react/jsx-filename-extension': ['error', { extensions: ['.js', '.tsx'] }],
@@ -68,14 +66,10 @@ module.exports = {
     // Legacy Code - remove from `files` when adopting desired rules in new code progressively
     {
       files: [
-        'client/src/entrypoints/admin/comments.js',
         'client/src/entrypoints/admin/core.js',
-        'client/src/entrypoints/admin/page-chooser.js',
         'client/src/entrypoints/admin/page-editor.js',
         'client/src/entrypoints/admin/telepath/widgets.js',
         'client/src/entrypoints/contrib/typed_table_block/typed_table_block.js',
-        'client/src/entrypoints/images/image-chooser-modal.js',
-        'client/src/utils/actions.ts',
         'client/src/utils/version.js',
       ],
       rules: legacyCode,
