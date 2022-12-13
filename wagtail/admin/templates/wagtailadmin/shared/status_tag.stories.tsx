@@ -9,6 +9,9 @@ export default {
   parameters: { docs },
   argTypes: {
     ...argTypes,
+    classname: {
+      options: [null, 'primary', 'status-tag--label'],
+    },
   },
 };
 
@@ -16,13 +19,6 @@ const Template = (args) => <Pattern filename={__filename} context={args} />;
 export const Live = Template.bind({});
 
 Live.args = {
-  live: true,
-  status_string: 'live',
-};
-
-export const Draft = Template.bind({});
-
-Draft.args = {
-  live: false,
-  status_string: 'draft',
+  children: 'live',
+  classname: null,
 };
