@@ -1,3 +1,4 @@
+{% load wagtailadmin_tags %}
 <td {% if column.classname %}class="{{ column.classname }}"{% endif %}>
     {% if value %}
         <a href="{% url 'wagtailadmin_choose_page_child' value.id %}" class="navigate-parent">{{ value.get_admin_display_title }}</a>

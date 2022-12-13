@@ -483,3 +483,32 @@ class ClassnamesTagTest(TestCase):
         actual = Template(template).render(context)
 
         self.assertEqual(expected.strip(), actual.strip())
+
+
+class StatusTagTest(TestCase):
+    def test_render_block_component(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% status classname="primary" %}Proceed with caution{% endstatus %}
+        """
+
+        expected = """
+            <span class="status-tag primary">Proceed with caution</span>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_render_as_variable(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% status classname="primary" as status_var %}Proceed with caution{% endstatus %}
+            <template>{{ status_var }}</template>
+        """
+
+        expected = """
+            <template>
+                <span class="status-tag primary">Proceed with caution</span>
+            </template>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))
