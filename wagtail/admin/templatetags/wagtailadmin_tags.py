@@ -93,11 +93,6 @@ def breadcrumbs(
     }
 
 
-@register.inclusion_tag("wagtailadmin/shared/status_tag.html")
-def status_tag(page=None, classname=None):
-    return {"page": page, "classname": classname}
-
-
 @register.inclusion_tag("wagtailadmin/shared/search_other.html", takes_context=True)
 def search_other(context, current=None):
     request = context["request"]
@@ -1072,6 +1067,13 @@ class HelpBlockNode(BlockInclusionNode):
 
 
 register.tag("help_block", HelpBlockNode.handle)
+
+
+class StatusTagNode(BlockInclusionNode):
+    template = "wagtailadmin/shared/status_tag.html"
+
+
+register.tag("status", StatusTagNode.handle)
 
 
 class PanelNode(BlockInclusionNode):

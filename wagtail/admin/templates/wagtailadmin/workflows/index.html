@@ -37,7 +37,7 @@
                                 <div class="title-wrapper">
                                     <a href="{% url view.edit_url_name workflow.pk %}">{{ workflow }}</a>
                                     {% if not workflow.active %}
-                                        <span class="status-tag">Disabled</span>
+                                        {% status %}Disabled{% endstatus %}
                                     {% endif %}
                                 </div>
                             </td>
