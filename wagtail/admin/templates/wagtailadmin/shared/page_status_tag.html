@@ -13,5 +13,7 @@
         {% endstatus %}
     {% endif %}
 {% else %}
-    {% status %}<span class="visuallyhidden">{% trans "Current page status:" %}</span> {{ page.status_string }}{% endstatus %}
+    {% status %}
+        <span class="visuallyhidden">{% trans "Current page status:" %}</span>{{ page.status_string }}
+    {% endstatus %}
 {% endif %}

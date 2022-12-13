@@ -512,3 +512,15 @@ class StatusTagTest(TestCase):
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_render_with_blocktrans(self):
+        template = """
+            {% load i18n wagtailadmin_tags %}
+            {% status classname="primary" as status_var %}Proceed with caution{% endstatus %}
+            {% blocktrans trimmed with status_var as status %}{{status}}{% endblocktrans %}
+        """
+        expected = """
+            <span class="status-tag primary">Proceed with caution</span>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))

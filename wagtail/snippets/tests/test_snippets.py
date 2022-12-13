@@ -4051,6 +4051,7 @@ class TestSnippetHistory(TestCase, WagtailTestUtils):
             "revisions_revert",
             args=[self.revisable_snippet.pk, self.initial_revision.pk],
         )
+
         # Should not show the "live version" or "current draft" status tags
         self.assertNotContains(
             response, '<span class="status-tag primary">Live version</span>'
@@ -4082,6 +4083,7 @@ class TestSnippetHistory(TestCase, WagtailTestUtils):
         snippet.save_revision(log_action=True)
 
         response = self.get(snippet)
+
         # Should show the "live version" status tag for the published revision
         self.assertContains(
             response, '<span class="status-tag primary">Live version</span>', count=1
