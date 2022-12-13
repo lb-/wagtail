@@ -1,7 +1,9 @@
-{% load i18n wagtailadmin_tags wagtailcore_tags %}
+{% load i18n %}
+{% load wagtailadmin_tags wagtailcore_tags %}
 
 {% if page.live %}
-    {% if page.url is not None %}
+    {% pageurl page as page_url %}
+    {% if page_url is not None %}
         <a href="{% pageurl page %}" target="_blank" rel="noreferrer" class="status-tag primary" title="{% trans 'Visit the live page' %}">
             <span class="visuallyhidden">{% trans "Current page status:" %}</span> {{ page.status_string }}
         </a>
