@@ -801,15 +801,36 @@ class LockableMixin(models.Model):
     class Meta:
         abstract = True
 
+    @classmethod
+    def check(cls, **kwargs):
+        return [
+            *super().check(**kwargs),
+            *cls._check_revision_mixin(),
+        ]
+
+    @classmethod
+    def _check_revision_mixin(cls):
+        mro = cls.mro()
+        error = checks.Error(
+            "LockableMixin must be applied before RevisionMixin.",
+            hint="Move LockableMixin in the model's base classes before RevisionMixin.",
+            obj=cls,
+            id="wagtailcore.E005",
+        )
+
+        try:
+            if mro.index(RevisionMixin) < mro.index(LockableMixin):
+                return [error]
+        except ValueError:
+            # LockableMixin can be used without RevisionMixin.
+            return []
+
+        return []
+
     def with_content_json(self, content):
         """
-        Returns a new version of the object with field values updated to reflect changes
-        in the provided ``content`` (which usually comes from a previously-saved revision).
-
-        Certain field values are preserved in order to prevent errors if the returned
-        object is saved, such as ``id``. The following field values are also preserved,
-        as they are considered to be meaningful to the object as a whole, rather than
-        to a specific revision:
+        Similar to :meth:`RevisionMixin.with_content_json`,
+        but with the following fields also preserved:
 
         * ``locked``
         * ``locked_at``
@@ -827,7 +848,7 @@ class LockableMixin(models.Model):
 
     def get_lock(self):
         """
-        Returns a sub-class of BaseLock if the instance is locked, otherwise None
+        Returns a sub-class of ``BaseLock`` if the instance is locked, otherwise ``None``.
         """
         if isinstance(self, DraftStateMixin) and self.scheduled_revision:
             return ScheduledForPublishLock(self)
