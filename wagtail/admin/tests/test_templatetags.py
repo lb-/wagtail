@@ -522,3 +522,26 @@ class StatusTagTest(TestCase):
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_render_as_fragment(self):
+        template = """
+            {% load wagtailadmin_tags i18n %}
+            {% fragment as var %}
+                {% trans "title" as trans_title %}
+                {% trans "hidden label" as trans_hidden_label %}
+                {% status "live" url="/test-url/" title=trans_title hidden_label=trans_hidden_label classname="primary" %}
+                {% status "live" hidden_label=trans_hidden_label classname="primary" %}
+            {% endfragment %}
+            {{var}}
+        """
+
+        expected = """
+            <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag primary" title="title">
+                <span class="visuallyhidden">hidden label</span> live
+            </a>
+            <span class="status-tag primary">
+                <span class="visuallyhidden">hidden label</span> live
+            </span>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))

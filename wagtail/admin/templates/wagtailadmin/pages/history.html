@@ -36,11 +36,9 @@
                             {% endif %}
                             {% if entry.revision %}
                                 {% if entry.action == 'wagtail.publish' %}
-                                    {% trans 'Live version' as trans_label %}
-                                    {% if entry.revision_id == page.live_revision_id %}{% status trans_label classname="primary" %}{% endif %}
+                                    {% if entry.revision_id == page.live_revision_id %}{% trans 'Live version' as trans_label %}{% status trans_label classname="primary" %}{% endif %}
                                 {% elif entry.content_changed %}
-                                    {% trans 'Current draft' as trans_label %}
-                                    {% if entry.revision == page_latest_revision %}{% status trans_label classname="primary" %}{% endif %}
+                                    {% if entry.revision == page_latest_revision %}{% trans 'Current draft' as trans_label %}{% status trans_label classname="primary" %}{% endif %}
                                     {% include "wagtailadmin/pages/revisions/_actions.html" with revision=entry.revision %}
                                 {% endif %}
                             {% endif %}
