@@ -12,6 +12,15 @@ export default {
     classname: {
       options: [null, 'primary', 'status-tag--label'],
     },
+    url: {
+      options: [null, 'https://wagtail.org/'],
+    },
+    title: {
+      options: [null, 'wagtail live url'],
+    },
+    hidden_label: {
+      options: [null, 'current status:'],
+    },
   },
 };
 
@@ -19,6 +28,9 @@ const Template = (args) => <Pattern filename={__filename} context={args} />;
 export const Live = Template.bind({});
 
 Live.args = {
-  children: 'live',
+  label: 'live',
   classname: null,
+  url: null,
+  title: null,
+  hidden_label: null,
 };

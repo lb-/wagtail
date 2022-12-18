@@ -486,41 +486,39 @@ class ClassnamesTagTest(TestCase):
 
 
 class StatusTagTest(TestCase):
-    def test_render_block_component(self):
+    def test_render_block_component_span_variations(self):
         template = """
-            {% load wagtailadmin_tags %}
-            {% status classname="primary" %}Proceed with caution{% endstatus %}
+            {% load wagtailadmin_tags i18n %}
+            {% status "live" classname="primary" %}
+            {% status "live" %}
+            {% trans "hidden translated label" as trans_hidden_label %}
+            {% status "live" hidden_label=trans_hidden_label classname="primary" %}
         """
 
         expected = """
-            <span class="status-tag primary">Proceed with caution</span>
+            <span class="status-tag primary">live</span>
+            <span class="status-tag ">live</span>
+            <span class="status-tag primary"><span class="visuallyhidden">hidden translated label</span>live</span>
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
 
-    def test_render_as_variable(self):
+    def test_render_block_component_anchor_variations(self):
         template = """
-            {% load wagtailadmin_tags %}
-            {% status classname="primary" as status_var %}Proceed with caution{% endstatus %}
-            <template>{{ status_var }}</template>
+            {% load wagtailadmin_tags i18n %}
+            {% trans "title" as trans_title %}
+            {% trans "hidden label" as trans_hidden_label %}
+            {% status "live" url="/test-url/" title=trans_title hidden_label=trans_hidden_label classname="primary" %}
+            {% status "live" url="/test-url/" title=trans_title classname="primary" %}
         """
 
         expected = """
-            <template>
-                <span class="status-tag primary">Proceed with caution</span>
-            </template>
-        """
-
-        self.assertHTMLEqual(expected, Template(template).render(Context()))
-
-    def test_render_with_blocktrans(self):
-        template = """
-            {% load i18n wagtailadmin_tags %}
-            {% status classname="primary" as status_var %}Proceed with caution{% endstatus %}
-            {% blocktrans trimmed with status_var as status %}{{status}}{% endblocktrans %}
-        """
-        expected = """
-            <span class="status-tag primary">Proceed with caution</span>
+            <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag primary" title="title">
+                <span class="visuallyhidden">hidden label</span> live
+            </a>
+            <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag primary" title="title">
+                live
+            </a>
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))

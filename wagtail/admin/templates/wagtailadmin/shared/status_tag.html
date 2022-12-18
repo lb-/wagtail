@@ -1,1 +1,11 @@
-<span class="status-tag {{classname}}">{{children}}</span>
+{% if url %}
+    <a href="{{url}}" target="_blank" rel="noreferrer" class="status-tag {{classname}}" {% if title %}title="{{title}}"{% endif %}>
+        {% if hidden_label %}
+            <span class="visuallyhidden">{{hidden_label}}</span> {{ label }}
+        {% else %}
+            {{ label }}
+        {% endif %}
+    </a>
+{% else %}
+    <span class="status-tag {{classname}}">{% if hidden_label %}<span class="visuallyhidden">{{hidden_label}}</span> {{ label }} {% else %}{{label}}{% endif %}</span>
+{% endif %}

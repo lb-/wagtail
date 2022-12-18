@@ -7,7 +7,7 @@
             {{ value }}
         {% endif %}
         {% if column.show_locale_labels and page.depth == 2 %}
-            {% status classname="status-tag--label" %}{{ page.locale.get_display_name }}{% endstatus %}
+            {% status page.locale.get_display_name classname="status-tag--label" %}
         {% endif %}
 
         {% include "wagtailadmin/pages/listing/_privacy_indicator.html" with page=page %}

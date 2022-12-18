@@ -695,6 +695,24 @@ def icon(name=None, classname=None, title=None, wrapped=False, class_name=None):
     }
 
 
+@register.inclusion_tag("wagtailadmin/shared/status_tag.html", takes_context=False)
+def status(label, url=None, title=None, hidden_label=None, classname=None):
+
+    if label is None:
+        label = ""
+
+    if classname is None:
+        classname = ""
+
+    return {
+        "label": label,
+        "url": url,
+        "title": title,
+        "hidden_label": hidden_label,
+        "classname": classname,
+    }
+
+
 @register.filter()
 def timesince_simple(d):
     """
@@ -1069,11 +1087,11 @@ class HelpBlockNode(BlockInclusionNode):
 register.tag("help_block", HelpBlockNode.handle)
 
 
-class StatusTagNode(BlockInclusionNode):
-    template = "wagtailadmin/shared/status_tag.html"
+# class StatusTagNode(BlockInclusionNode):
+#     template = "wagtailadmin/shared/status_tag.html"
 
 
-register.tag("status", StatusTagNode.handle)
+# register.tag("status", StatusTagNode.handle)
 
 
 class PanelNode(BlockInclusionNode):

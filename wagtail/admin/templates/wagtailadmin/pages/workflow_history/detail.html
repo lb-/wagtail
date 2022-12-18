@@ -26,7 +26,7 @@
         </p>
 
         <p>
-            {% status classname="primary" as status_tag_variable %}{{workflow_state.get_status_display}}{% endstatus %}
+            {% fragment as status_tag_variable %}{% status workflow_state.get_status_display classname="primary" %}{% endfragment %}
             {% blocktrans trimmed with status_tag_variable as status %}Status {{ status }}{% endblocktrans %}
         </p>
 

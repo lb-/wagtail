@@ -4,16 +4,14 @@
 {% if page.live %}
     {% pageurl page as page_url %}
     {% if page_url is not None %}
-        <a href="{% pageurl page %}" target="_blank" rel="noreferrer" class="status-tag primary" title="{% trans 'Visit the live page' %}">
-            <span class="visuallyhidden">{% trans "Current page status:" %}</span> {{ page.status_string }}
-        </a>
+        {% trans 'Visit the live page' as trans_title %}
+        {% trans "Current page status:" as trans_hidden_label %}
+        {% status page.status_string url=page_url title=trans_title hidden_label=trans_hidden_label classname="primary" %}
     {% else %}
-        {% status classname="primary" %}
-            <span class="visuallyhidden">{% trans "Current page status:" %}</span> {{ page.status_string }}
-        {% endstatus %}
+        {% trans "Current page status:" as trans_hidden_label %}
+        {% status page.status_string hidden_label=trans_hidden_label classname="primary" %}
     {% endif %}
 {% else %}
-    {% status %}
-        <span class="visuallyhidden">{% trans "Current page status:" %}</span>{{ page.status_string }}
-    {% endstatus %}
+    {% trans "Current page status:" as trans_hidden_label %}
+    {% status page.status_string hidden_label=trans_hidden_label %}
 {% endif %}
