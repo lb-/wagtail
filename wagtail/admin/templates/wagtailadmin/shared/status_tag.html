@@ -1,11 +1,11 @@
 {% if url %}
-    <a href="{{url}}" target="_blank" rel="noreferrer" class="status-tag {{classname}}" {% if title %}title="{{title}}"{% endif %}>
+    <a href="{{url}}" target="_blank" rel="noreferrer" class="status-tag {% if classname %}{{classname}}{% endif %}" {% if title %}title="{{title}}"{% endif %}>
         {% if hidden_label %}
-            <span class="visuallyhidden">{{hidden_label}}</span> {{ label }}
+            <span class="visuallyhidden">{{hidden_label}}</span> {% if label %}{{ label }}{% endif %}
         {% else %}
-            {{ label }}
+            {% if label %}{{ label }}{% endif %}
         {% endif %}
     </a>
 {% else %}
-    <span class="status-tag {{classname}}">{% if hidden_label %}<span class="visuallyhidden">{{hidden_label}}</span> {{ label }} {% else %}{{label}}{% endif %}</span>
+    <span class="status-tag {% if classname %}{{classname}}{% endif %}">{% if hidden_label %}<span class="visuallyhidden">{{hidden_label}}</span> {% if label %}{{ label }}{% endif %} {% else %}{% if label %}{{label}}{% endif %}{% endif %}</span>
 {% endif %}

@@ -493,12 +493,14 @@ class StatusTagTest(TestCase):
             {% status "live" %}
             {% trans "hidden translated label" as trans_hidden_label %}
             {% status "live" hidden_label=trans_hidden_label classname="primary" %}
+            {% status %}
         """
 
         expected = """
             <span class="status-tag primary">live</span>
             <span class="status-tag ">live</span>
             <span class="status-tag primary"><span class="visuallyhidden">hidden translated label</span>live</span>
+            <span class="status-tag "></span>
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
@@ -510,6 +512,8 @@ class StatusTagTest(TestCase):
             {% trans "hidden label" as trans_hidden_label %}
             {% status "live" url="/test-url/" title=trans_title hidden_label=trans_hidden_label classname="primary" %}
             {% status "live" url="/test-url/" title=trans_title classname="primary" %}
+            {% status "live" url="/test-url/" title=trans_title %}
+            {% status  url="/test-url/" title=trans_title %}
         """
 
         expected = """
@@ -518,6 +522,11 @@ class StatusTagTest(TestCase):
             </a>
             <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag primary" title="title">
                 live
+            </a>
+            <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag " title="title">
+                live
+            </a>
+            <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag " title="title">
             </a>
         """
 

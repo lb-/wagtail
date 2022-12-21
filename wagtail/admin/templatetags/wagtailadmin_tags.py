@@ -712,12 +712,6 @@ def status(label=None, url=None, title=None, hidden_label=None, classname=None):
     :return: Rendered template snippet (string)
 
     """
-    if label is None:
-        label = ""
-
-    if classname is None:
-        classname = ""
-
     return {
         "label": label,
         "url": url,
