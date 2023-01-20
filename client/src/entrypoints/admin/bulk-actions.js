@@ -4,13 +4,4 @@ import {
 } from '../../includes/bulk-actions';
 
 document.addEventListener('DOMContentLoaded', addBulkActionListeners);
-
-if (window.headerSearch) {
-  const termInput = document.querySelector(window.headerSearch.termInput);
-  if (termInput) {
-    termInput.addEventListener(
-      'search-success',
-      rebindBulkActionsEventListeners,
-    );
-  }
-}
+document.addEventListener('w-search:success', rebindBulkActionsEventListeners);

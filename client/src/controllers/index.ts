@@ -1,8 +1,9 @@
 import type { Definition } from '@hotwired/stimulus';
 
-// Order controller imports alphabetically.
+// Order controller imports alphabetically
 import { ActionController } from './ActionController';
 import { AutoFieldController } from './AutoFieldController';
+import { SearchController } from './SearchController';
 import { SkipLinkController } from './SkipLinkController';
 import { UpgradeController } from './UpgradeController';
 
@@ -13,6 +14,7 @@ export const coreControllerDefinitions: Definition[] = [
   // Keep this list in alphabetical order
   { controllerConstructor: ActionController, identifier: 'w-action' },
   { controllerConstructor: AutoFieldController, identifier: 'w-auto-field' },
+  { controllerConstructor: SearchController, identifier: 'w-search' },
   { controllerConstructor: SkipLinkController, identifier: 'w-skip-link' },
   { controllerConstructor: UpgradeController, identifier: 'w-upgrade' },
 ];

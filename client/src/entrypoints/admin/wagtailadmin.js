@@ -38,3 +38,12 @@ window.addEventListener('load', () => {
   initAnchoredPanels();
   initMinimap();
 });
+
+/**
+ * When page search results are successful, reinitialise widgets
+ * that could be inside the newly injected DOM.
+ */
+window.addEventListener('w-search:success', () => {
+  window.wagtail.ui.initDropDowns();
+  initTooltips(); // reinitialise any tooltips
+});
