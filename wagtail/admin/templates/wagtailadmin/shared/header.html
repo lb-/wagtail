@@ -44,7 +44,15 @@
                 {% if description %}<div class="w-header__description">{{ description }}</div>{% endif %}
             </div>
             {% if search_url %}
-                <form class="col search-form" action="{% url search_url %}{% if query_parameters %}?{{ query_parameters }}{% endif %}" method="get" novalidate role="search">
+                <form
+                    class="col search-form"
+                    action="{% url search_url %}{% if query_parameters %}?{{ query_parameters }}{% endif %}"
+                    method="get"
+                    novalidate
+                    role="search"
+                    data-controller="w-swap"
+                    data-action="change->w-swap#updateLocation input->w-swap#updateLocation"
+                >
                     {% for field in search_form %}
                         {% include "wagtailadmin/shared/field.html" with field=field classname="w-mb-0 -w-mt-2.5" sr_only_label=True icon="search" %}
                     {% endfor %}
