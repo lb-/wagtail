@@ -779,8 +779,10 @@ def icon(name=None, classname=None, title=None, wrapped=False, class_name=None):
     }
 
 
-@register.inclusion_tag("wagtailadmin/shared/status_tag.html", takes_context=False)
-def status(label=None, url=None, title=None, hidden_label=None, classname=None):
+@register.inclusion_tag("wagtailadmin/shared/status_tag.html", takes_context=True)
+def status(
+    context, label=None, url=None, title=None, hidden_label=None, classname=None
+):
     """
     abstract away the status-tag css with <span></span> and <><a/> implementation
 
