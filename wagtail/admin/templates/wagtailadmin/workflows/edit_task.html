@@ -41,8 +41,16 @@
                     <li class="actions footer__container">
                         {% block form_actions %}
                             <div class="dropdown dropup dropdown-button match-width">
-                                <button type="submit" class="button action-save button-longrunning" data-clicked-text="{% trans 'Saving…' %}">
-                                    {% icon name="spinner" %}<em>{% trans 'Save' %}</em>
+                                <button 
+                                    type="submit" 
+                                    class="button action-save button-longrunning" 
+                                    data-action="w-loader#activate"
+                                    data-controller="w-loader"
+                                    data-w-loader-active-class="button-longrunning-active"
+                                    data-w-loader-active-value="{% trans 'Saving…' %}"
+                                    data-w-loader-duration-seconds-value="40"
+                                    >
+                                    {% icon name="spinner" %}<em data-w-loader-target="label">{% trans 'Save' %}</em>
                                 </button>
 
                                 <div class="dropdown-toggle">{% icon name="arrow-up" %}</div>

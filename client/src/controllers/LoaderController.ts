@@ -1,0 +1,133 @@
+import { Application, Controller } from '@hotwired/stimulus';
+import { gettext } from '../utils/gettext';
+
+/**
+ * <button
+ *   type="submit"
+ *   class="button button-longrunning"
+ *   data-controller="w-loader"
+ *   data-w-loader-active-class="button-longrunning-active"
+ *   data-w-loader-active-value="{% trans 'Signing in…' %}"
+ *   data-w-loader-duration-seconds-value="40"
+ *   data-action="w-loader#activate"
+ * >
+ *  {% icon name="spinner" %}
+ *  <em data-w-loader-target="label">{% trans 'Sign in' %}</em>
+ * </button>
+ */
+export class LoaderController extends Controller {
+  static classes = ['active'];
+  static targets = ['label'];
+  static values = {
+    loading: { type: Boolean, default: false },
+    active: { type: String, default: gettext('Loading') },
+    durationSeconds: { type: Number, default: 30 },
+    label: { type: String, default: '' },
+  };
+
+  declare activeClass: string;
+  declare activeValue: string;
+  declare loadingValue: boolean;
+  declare durationSecondsValue: number;
+  declare labelTarget: HTMLElement;
+  declare hasActiveClass: boolean;
+  declare hasLabelTarget: boolean;
+  declare labelValue: string;
+  timer?: number;
+
+  static afterLoad(identifier: string, application: Application) {
+    const { controllerAttribute } = application.schema;
+    const { actionAttribute } = application.schema;
+
+    const updateLoader = () => {
+      const em = document.querySelector('em') as HTMLElement;
+      document
+        .querySelectorAll(
+          `.button-longrunning:not([data-controller~='${identifier}'])`,
+        )
+        .forEach((button) => {
+          button.setAttribute(controllerAttribute, identifier);
+          button.setAttribute(actionAttribute, 'w-loader#activate');
+
+          if (button.getAttribute('data-clicked-text')) {
+            button.setAttribute(
+              'data-w-loader-active-value',
+              `${button.getAttribute('data-clicked-text')}`,
+            );
+            button.removeAttribute('data-clicked-text');
+          }
+
+          if (em.matches('button em')) {
+            em.setAttribute('data-w-loader-target', 'label');
+          }
+
+          button.setAttribute('data-w-loader-duration-seconds-value', '10');
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', updateLoader);
+  }
+
+  activate() {
+    this.labelValue = this.hasLabelTarget
+      ? (this.labelTarget.textContent as string)
+      : (this.element.textContent as string);
+
+    // If client-side validation is active on this form, and is going to block submission of the
+    // form, don't activate the spinner
+    const form = this.element.closest('form');
+
+    if (
+      form &&
+      form.checkValidity &&
+      !form.noValidate &&
+      !form.checkValidity()
+    ) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      if (this.activeValue && this.hasLabelTarget === true) {
+        this.labelTarget.textContent = this.activeValue;
+      }
+
+      this.loadingValue = true;
+
+      const durationMs = this.durationSecondsValue * 1000;
+
+      this.timer = window.setTimeout(() => this.reset(), durationMs);
+    });
+  }
+
+  loadingValueChanged(isLoading: boolean) {
+    const activeClass = this.hasActiveClass
+      ? this.activeClass
+      : 'button-longrunning-active';
+    this.element.classList.toggle(activeClass, isLoading);
+
+    if (isLoading) {
+      // Disabling button must be done last: disabled buttons can't be
+      // modified in the normal way, it would seem.
+      this.element.setAttribute('disabled', '');
+    }
+
+    if (!isLoading) {
+      this.element.removeAttribute('disabled');
+    }
+  }
+
+  reset() {
+    const originalText = this.labelValue;
+    this.loadingValue = false;
+
+    if (this.activeValue && this.hasLabelTarget) {
+      this.labelTarget.textContent = originalText;
+    }
+  }
+
+  disconnect(): void {
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+  }
+}
