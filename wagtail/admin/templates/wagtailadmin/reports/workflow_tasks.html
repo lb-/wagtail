@@ -42,30 +42,24 @@
                                     {% latest_str object %}
                                 </a>
                                 {% i18n_enabled as show_locale_labels %}
-                                <<<<<<< HEAD
                                 {% if show_locale_labels %}
                                     {% locale_label_from_id page.locale_id as locale_label %}
                                     {% status locale_label classname="status-tag--label" %}
-                                    =======
-                                    {% if show_locale_labels and object.locale_id %}
-                                        {% locale_label_from_id object.locale_id as locale_label %}
-                                        <span class="status-tag status-tag--label">{{ locale_label }}</span>
-                                        >>>>>>> 8801a49da8d868b667832c3d49d26649f7101064
-                                    {% endif %}
-                                {% endwith %}
-                                </td>
-                                <td>
-                                    <div class="status-tag primary">
-                                        {{ task_state.get_status_display }}
-                                    </div>
-                                </td>
-                                <td>{{ task_state.started_at }}</td>
-                                <td>{{ task_state.finished_at }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p>{% trans "No pages/snippets have been submitted for moderation yet" %}</p>
-                {% endif %}
-    {% endblock %}
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <div class="status-tag primary">
+                                {{ task_state.get_status_display }}
+                            </div>
+                        </td>
+                        <td>{{ task_state.started_at }}</td>
+                        <td>{{ task_state.finished_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>{% trans "No pages/snippets have been submitted for moderation yet" %}</p>
+    {% endif %}
+{% endblock %}

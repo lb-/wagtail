@@ -1179,13 +1179,6 @@ class HelpBlockNode(BlockInclusionNode):
 register.tag("help_block", HelpBlockNode.handle)
 
 
-# class StatusTagNode(BlockInclusionNode):
-#     template = "wagtailadmin/shared/status_tag.html"
-
-
-# register.tag("status", StatusTagNode.handle)
-
-
 class PanelNode(BlockInclusionNode):
     template = "wagtailadmin/shared/panel.html"
 

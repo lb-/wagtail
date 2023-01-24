@@ -33,34 +33,28 @@
                                     {% endif %}
 
                                     {% i18n_enabled as show_locale_labels %}
-                                    <<<<<<< HEAD:wagtail/admin/templates/wagtailadmin/home/user_pages_in_workflow_moderation.html
                                     {% if show_locale_labels and workflow_state.page.locale_id %}
                                         {% locale_label_from_id workflow_state.page.locale_id as locale_label %}
                                         {% status locale_label classname="status-tag--label" %}
-                                        =======
-                                        {% if show_locale_labels and obj.locale_id %}
-                                            {% locale_label_from_id obj.locale_id as locale_label %}
-                                            <span class="status-tag status-tag--label">{{ locale_label }}</span>
-                                            >>>>>>> 8801a49da8d868b667832c3d49d26649f7101064:wagtail/admin/templates/wagtailadmin/home/user_objects_in_workflow_moderation.html
-                                        {% endif %}
-                                        {% include "wagtailadmin/pages/listing/_privacy_indicator.html" with page=obj %}
-                                        {% include "wagtailadmin/pages/listing/_locked_indicator.html" with page=obj %}
-                                        </div>
-                                        </td>
-                                        <td class="task" valign="top">
-                                            {% if workflow_state.current_task_state.status == 'rejected' %}
-                                                {% icon name="warning" classname="default" %}
-                                                {% trans "Changes requested at" %}
-                                            {% elif workflow_state.current_task_state.status == 'in_progress' %}
-                                                {% trans "Awaiting" %}
-                                            {% endif %}
-                                            {{ workflow_state.current_task_state.task.name }}
-                                        </td>
-                                        <td valign="top">{% human_readable_date workflow_state.current_task_state.started_at %}</td>
-                                        </tr>
-                                    {% endwith %}
-                    {% endfor %}
-                    </tbody>
-                    </table>
-                {% endpanel %}
-    {% endif %}
+                                    {% endif %}
+                                    {% include "wagtailadmin/pages/listing/_privacy_indicator.html" with page=obj %}
+                                    {% include "wagtailadmin/pages/listing/_locked_indicator.html" with page=obj %}
+                                </div>
+                            </td>
+                            <td class="task" valign="top">
+                                {% if workflow_state.current_task_state.status == 'rejected' %}
+                                    {% icon name="warning" classname="default" %}
+                                    {% trans "Changes requested at" %}
+                                {% elif workflow_state.current_task_state.status == 'in_progress' %}
+                                    {% trans "Awaiting" %}
+                                {% endif %}
+                                {{ workflow_state.current_task_state.task.name }}
+                            </td>
+                            <td valign="top">{% human_readable_date workflow_state.current_task_state.started_at %}</td>
+                        </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endpanel %}
+{% endif %}
