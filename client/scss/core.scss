@@ -101,6 +101,7 @@ These are classes for components.
 @import '../src/components/Transition/Transition';
 @import '../src/components/LoadingSpinner/LoadingSpinner';
 @import '../src/components/PublicationStatus/PublicationStatus';
+@import '../src/components/ComboBox/ComboBox';
 @import '../src/components/PageExplorer/PageExplorer';
 @import '../src/components/CommentApp/main';
 
@@ -143,7 +144,6 @@ These are classes for components.
 @import 'components/messages.capability';
 @import 'components/messages.status';
 @import 'components/header';
-@import 'components/search-bar';
 @import 'components/progressbar';
 @import 'components/summary';
 @import 'components/whats-new';
@@ -163,6 +163,7 @@ These are classes for components.
 @import 'components/preview-panel';
 @import 'components/preview-error';
 @import 'components/form-side';
+@import 'components/userbar';
 
 @import '../src/components/Sidebar/Sidebar';
 @import '../src/components/Minimap/Minimap';

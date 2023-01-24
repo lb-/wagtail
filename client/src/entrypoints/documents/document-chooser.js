@@ -1,9 +1,5 @@
-import { Chooser } from '../../components/ChooserWidget';
+import { DocumentChooser } from '../../components/ChooserWidget/DocumentChooserWidget';
 
-class DocumentChooser extends Chooser {
-  // eslint-disable-next-line no-undef
-  modalOnloadHandlers = DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS;
-}
 window.DocumentChooser = DocumentChooser;
 
 function createDocumentChooser(id) {

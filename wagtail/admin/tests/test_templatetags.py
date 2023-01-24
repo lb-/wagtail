@@ -27,6 +27,7 @@ from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Locale
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.users.models import UserProfile
+from wagtail.utils.deprecation import RemovedInWagtail50Warning
 
 
 class TestAvatarTemplateTag(TestCase, WagtailTestUtils):
@@ -529,7 +530,6 @@ class StatusTagTest(TestCase):
             <a href="/test-url/" target="_blank" rel="noreferrer" class="status-tag " title="title">
             </a>
         """
-
         self.assertHTMLEqual(expected, Template(template).render(Context()))
 
     def test_render_as_fragment(self):
@@ -554,3 +554,62 @@ class StatusTagTest(TestCase):
         """
 
         self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+
+class IconTagTest(TestCase):
+    def test_basic(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% icon "wagtail" %}
+        """
+
+        expected = """
+            <svg aria-hidden="true" class="icon icon-wagtail icon"><use href="#icon-wagtail"></svg>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_with_classes_positional(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% icon "cogs" "myclass" %}
+        """
+
+        expected = """
+            <svg aria-hidden="true" class="icon icon-cogs myclass"><use href="#icon-cogs"></svg>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_with_classes_keyword(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% icon "warning" classname="myclass" %}
+        """
+
+        expected = """
+            <svg aria-hidden="true" class="icon icon-warning myclass"><use href="#icon-warning"></svg>
+        """
+
+        self.assertHTMLEqual(expected, Template(template).render(Context()))
+
+    def test_with_classes_obsolete_keyword(self):
+        template = """
+            {% load wagtailadmin_tags %}
+            {% icon "doc-empty" class_name="myclass" %}
+        """
+
+        expected = """
+            <svg aria-hidden="true" class="icon icon-doc-empty myclass"><use href="#icon-doc-empty"></svg>
+        """
+
+        with self.assertWarnsMessage(
+            RemovedInWagtail50Warning,
+            (
+                "Icon template tag `class_name` has been renamed to `classname`, "
+                "please adopt the new usage instead. Replace "
+                '`{% icon ... class_name="myclass" %}` with '
+                '`{% icon ... classname="myclass" %}`'
+            ),
+        ):
+            self.assertHTMLEqual(expected, Template(template).render(Context()))

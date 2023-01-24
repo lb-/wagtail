@@ -1,12 +1,3 @@
-// Rules which have been enforced in configuration upgrades and flag issues in existing code.
-// We need to consider whether to disable those rules permanently, or fix the issues.
-const legacyCode = {
-  'default-param-last': 'off',
-  'no-continue': 'off',
-  'no-else-return': 'off',
-  'no-restricted-syntax': 'off',
-};
-
 module.exports = {
   extends: [
     '@wagtail/eslint-config-wagtail',
@@ -63,26 +54,15 @@ module.exports = {
     'import/resolver': { node: { extensions: ['.js', '.ts', '.tsx'] } },
   },
   overrides: [
-    // Legacy Code - remove from `files` when adopting desired rules in new code progressively
-    {
-      files: [
-        'client/src/entrypoints/admin/core.js',
-        'client/src/entrypoints/admin/page-editor.js',
-        'client/src/entrypoints/admin/telepath/widgets.js',
-        'client/src/entrypoints/contrib/typed_table_block/typed_table_block.js',
-        'client/src/utils/version.js',
-      ],
-      rules: legacyCode,
-    },
     // Rules that we are ignoring currently due to legacy code in React components only
     {
       files: ['client/src/components/**'],
       rules: {
-        ...legacyCode,
         'jsx-a11y/click-events-have-key-events': 'off',
         'jsx-a11y/interactive-supports-focus': 'off',
         'jsx-a11y/no-noninteractive-element-interactions': 'off',
         'jsx-a11y/role-supports-aria-props': 'off',
+        'no-restricted-syntax': 'off',
         'react-hooks/exhaustive-deps': 'off',
         'react-hooks/rules-of-hooks': 'off',
         'react/button-has-type': 'off',
@@ -93,6 +73,50 @@ module.exports = {
         'react/no-danger': 'off',
         'react/no-deprecated': 'off',
         'react/require-default-props': 'off',
+      },
+    },
+    // Rules we want to enforce or change for Stimulus Controllers
+    {
+      files: ['*Controller.ts'],
+      rules: {
+        '@typescript-eslint/member-ordering': [
+          'error',
+          {
+            classes: {
+              memberTypes: ['signature', 'field', 'method'],
+            },
+          },
+        ],
+        '@typescript-eslint/naming-convention': [
+          'error',
+          {
+            selector: 'method',
+            format: ['camelCase'],
+            custom: {
+              // Use connect or initialize instead of constructor, avoid generic 'render' or 'update' methods and instead be more specific.
+              regex: '^(constructor|render|update)$',
+              match: false,
+            },
+          },
+          {
+            selector: 'property',
+            format: ['camelCase'],
+            custom: {
+              // Use Stimulus values where possible for internal state, avoid a generic state object as these are not reactive.
+              regex: '^(state)$',
+              match: false,
+            },
+          },
+        ],
+        'no-restricted-properties': [
+          'error',
+          {
+            object: 'window',
+            property: 'Stimulus',
+            message:
+              "Please import the base Controller or only access the Stimulus instance via the controller's `this.application` attribute.",
+          },
+        ],
       },
     },
     // Rules we don’t want to enforce for test and tooling code.

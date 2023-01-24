@@ -105,7 +105,21 @@ WAGTAILFRONTENDCACHE = {
 }
 ```
 
-Configuration of credentials can done in multiple ways. You won't need to store them in your Django settings file. You can read more about this here: [Boto 3 Docs](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html).
+Configuration of credentials can done in multiple ways. You won't need to store them in your Django settings file. You can read more about this here: [Boto 3 Docs](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html). The user will need a policy similar to:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowWagtailFrontendInvalidation",
+            "Effect": "Allow",
+            "Action": "cloudfront:CreateInvalidation",
+            "Resource": "arn:aws:cloudfront::<account id>:distribution/<distribution id>"
+        }
+    ]
+}
+```
 
 In case you run multiple sites with Wagtail and each site has its CloudFront distribution, provide a mapping instead of a single distribution. Make sure the mapping matches with the hostnames provided in your site settings.
 
@@ -132,10 +146,14 @@ With [Azure CDN](https://azure.microsoft.com/en-gb/products/cdn/) you will need 
 The third-party dependencies of this backend are:
 
 | PyPI Package                                                           | Essential | Reason                                                                                                                              |
-| ---------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [`azure-mgmt-cdn`](https://pypi.org/project/azure-mgmt-cdn/)           | Yes       | Interacting with the CDN service.                                                                                                   |
-| [`azure-identity`](https://pypi.org/project/azure-identity/)           | No        | Obtaining credentials. It's optional if you want to specify your own credential using a `CREDENTIALS` setting (more details below). |
-| [`azure-mgmt-resource`](https://pypi.org/project/azure-mgmt-resource/) | No        | For obtaining the subscription ID. Redundant if you want to explicitly specify a `SUBSCRIPTION_ID` setting (more details below).    |
+| ---------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [`azure-mgmt-cdn`](https://pypi.org/project/azure-mgmt-cdn/)           | Yes (v10.0 or above) | Interacting with the CDN service.                                                                                                   |
+| [`azure-identity`](https://pypi.org/project/azure-identity/)           | No                   | Obtaining credentials. It's optional if you want to specify your own credential using a `CREDENTIALS` setting (more details below). |
+| [`azure-mgmt-resource`](https://pypi.org/project/azure-mgmt-resource/) | No                   | For obtaining the subscription ID. Redundant if you want to explicitly specify a `SUBSCRIPTION_ID` setting (more details below).    |
+
+```{versionchanged} 4.1
+Support for versions of `azure-mgmt-cdn` below 10.0 is deprecated and will be dropped in a future release.
+```
 
 Add an item into the `WAGTAILFRONTENDCACHE` and set the `BACKEND` parameter to `wagtail.contrib.frontend_cache.backends.AzureCdnBackend`. This backend requires the following settings to be set:
 
@@ -182,10 +200,14 @@ With [Azure Front Door](https://azure.microsoft.com/en-gb/products/frontdoor/) y
 The third-party dependencies of this backend are:
 
 | PyPI Package                                                             | Essential | Reason                                                                                                                              |
-| ------------------------------------------------------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [`azure-mgmt-frontdoor`](https://pypi.org/project/azure-mgmt-frontdoor/) | Yes       | Interacting with the Front Door service.                                                                                            |
-| [`azure-identity`](https://pypi.org/project/azure-identity/)             | No        | Obtaining credentials. It's optional if you want to specify your own credential using a `CREDENTIALS` setting (more details below). |
-| [`azure-mgmt-resource`](https://pypi.org/project/azure-mgmt-resource/)   | No        | For obtaining the subscription ID. Redundant if you want to explicitly specify a `SUBSCRIPTION_ID` setting (more details below).    |
+| ------------------------------------------------------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [`azure-mgmt-frontdoor`](https://pypi.org/project/azure-mgmt-frontdoor/) | Yes (v1.0 or above) | Interacting with the Front Door service.                                                                                            |
+| [`azure-identity`](https://pypi.org/project/azure-identity/)             | No                  | Obtaining credentials. It's optional if you want to specify your own credential using a `CREDENTIALS` setting (more details below). |
+| [`azure-mgmt-resource`](https://pypi.org/project/azure-mgmt-resource/)   | No                  | For obtaining the subscription ID. Redundant if you want to explicitly specify a `SUBSCRIPTION_ID` setting (more details below).    |
+
+```{versionchanged} 4.1
+Support for versions of `azure-mgmt-frontdoor` below 1.0 is deprecated and will be dropped in a future release.
+```
 
 Add an item into the `WAGTAILFRONTENDCACHE` and set the `BACKEND` parameter to `wagtail.contrib.frontend_cache.backends.AzureFrontDoorBackend`. This backend requires the following settings to be set:
 

@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.contrib.admin.utils import quote
 from django.db import models, transaction
@@ -6,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
@@ -25,6 +28,8 @@ from wagtail.models import (
     LockableMixin,
     RevisionMixin,
     TranslatableMixin,
+    WorkflowMixin,
+    WorkflowState,
 )
 
 
@@ -202,6 +207,8 @@ class CreateEditViewOptionalFeaturesMixin:
     lock_url_name = None
     unlock_url_name = None
     revisions_unschedule_url_name = None
+    workflow_history_url_name = None
+    confirm_workflow_cancellation_url_name = None
 
     def setup(self, request, *args, **kwargs):
         # Need to set these here as they are used in get_object()
@@ -223,21 +230,117 @@ class CreateEditViewOptionalFeaturesMixin:
         self.locked_for_user = self.lock and self.lock.for_user(request.user)
         super().setup(request, *args, **kwargs)
 
+    @cached_property
+    def workflow(self):
+        if not self.model or not issubclass(self.model, WorkflowMixin):
+            return None
+        if self.object:
+            return self.object.get_workflow()
+        return self.model.get_default_workflow()
+
+    @cached_property
+    def workflow_enabled(self):
+        return self.workflow is not None
+
+    @cached_property
+    def workflow_state(self):
+        if not self.workflow_enabled or not self.object:
+            return None
+        return (
+            self.object.current_workflow_state
+            or self.object.workflow_states.order_by("created_at").last()
+        )
+
+    @cached_property
+    def current_workflow_task(self):
+        if not self.workflow_enabled or not self.object:
+            return None
+        return self.object.current_workflow_task
+
+    @cached_property
+    def workflow_tasks(self):
+        if not self.workflow_state:
+            return []
+        return self.workflow_state.all_tasks_with_status()
+
     def user_has_permission(self, permission):
-        # Allow unlocking even if the user does not have the 'unlock' permission
-        # if they are the user who locked the object
-        if permission == "unlock" and self.object.locked_by_id == self.request.user.pk:
+        user = self.request.user
+        if user.is_superuser:
             return True
-        return super().user_has_permission(permission)
+
+        # Workflow lock/unlock methods take precedence before the base
+        # "lock" and "unlock" permissions -- see PagePermissionTester for reference
+        if permission == "lock":
+            if self.lock:
+                return False
+            if self.current_workflow_task:
+                return self.current_workflow_task.user_can_lock(self.object, user)
+        if permission == "unlock":
+            if not isinstance(self.lock, BasicLock):
+                return False
+            # Allow unlocking even if the user does not have the 'unlock' permission
+            # if they are the user who locked the object
+            if self.object.locked_by_id == user.pk:
+                return True
+            if self.current_workflow_task:
+                return self.current_workflow_task.user_can_unlock(self.object, user)
+
+        # Check with base PermissionCheckedMixin logic
+        has_base_permission = super().user_has_permission(permission)
+        if has_base_permission:
+            return True
+
+        # Allow access to the editor if the current workflow task allows it,
+        # even if the user does not normally have edit access. Users with edit
+        # permissions can always edit regardless what this method returns --
+        # see Task.user_can_access_editor() for reference
+        if (
+            permission == "change"
+            and self.current_workflow_task
+            and self.current_workflow_task.user_can_access_editor(
+                self.object, self.request.user
+            )
+        ):
+            return True
+
+        return False
+
+    def workflow_action_is_valid(self):
+        if not self.current_workflow_task:
+            return False
+        self.workflow_action = self.request.POST.get("workflow-action-name")
+        available_actions = self.current_workflow_task.get_actions(
+            self.object, self.request.user
+        )
+        available_action_names = [
+            name for name, verbose_name, modal in available_actions
+        ]
+        return self.workflow_action in available_action_names
 
     def get_available_actions(self):
         actions = [*super().get_available_actions()]
+
+        if self.request.method != "POST":
+            return actions
 
         if self.draftstate_enabled and (
             not self.permission_policy
             or self.permission_policy.user_has_permission(self.request.user, "publish")
         ):
             actions.append("publish")
+
+        if self.workflow_enabled:
+            actions.append("submit")
+
+            if self.workflow_state and (
+                self.workflow_state.user_can_cancel(self.request.user)
+            ):
+                actions.append("cancel-workflow")
+                if self.object and not self.object.workflow_in_progress:
+                    actions.append("restart-workflow")
+
+            if self.workflow_action_is_valid():
+                actions.append("workflow-action")
 
         return actions
 
@@ -264,6 +367,18 @@ class CreateEditViewOptionalFeaturesMixin:
             return None
         return reverse(self.unlock_url_name, args=[quote(self.object.pk)])
 
+    def get_workflow_history_url(self):
+        if not self.workflow_enabled or not self.workflow_history_url_name:
+            return None
+        return reverse(self.workflow_history_url_name, args=[quote(self.object.pk)])
+
+    def get_confirm_workflow_cancellation_url(self):
+        if not self.workflow_enabled or not self.confirm_workflow_cancellation_url_name:
+            return None
+        return reverse(
+            self.confirm_workflow_cancellation_url_name, args=[quote(self.object.pk)]
+        )
+
     def get_error_message(self):
         if self.locked_for_user:
             return capfirst(
@@ -279,7 +394,7 @@ class CreateEditViewOptionalFeaturesMixin:
         if self.view_name == "create":
             message = _("%(model_name)s '%(object)s' created.")
 
-        if self.draftstate_enabled and self.action == "publish":
+        if self.action == "publish":
             # Scheduled publishing
             if object.go_live_at and object.go_live_at > timezone.now():
                 message = _(
@@ -301,18 +416,33 @@ class CreateEditViewOptionalFeaturesMixin:
                 if self.view_name == "create":
                     message = _("%(model_name)s '%(object)s' created and published.")
 
+        if self.action == "submit":
+            message = _(
+                "%(model_name)s '%(object)s' has been submitted for moderation."
+            )
+
+            if self.view_name == "create":
+                message = _(
+                    "%(model_name)s '%(object)s' created and submitted for moderation."
+                )
+
+        if self.action == "restart-workflow":
+            message = _("Workflow on %(model_name)s '%(object)s' has been restarted.")
+
+        if self.action == "cancel-workflow":
+            message = _("Workflow on %(model_name)s '%(object)s' has been cancelled.")
+
         return message % {
             "model_name": capfirst(self.model._meta.verbose_name),
-            "object": object,
+            "object": get_latest_str(object),
         }
 
     def get_success_url(self):
-        if not self.draftstate_enabled or self.action == "publish":
-            return super().get_success_url()
-
-        # If DraftStateMixin is enabled and the action isn't publish,
-        # remain on the edit view
-        return self.get_edit_url()
+        if self.draftstate_enabled and self.action in ["create", "edit"]:
+            # If DraftStateMixin is enabled and the action is saving a draft,
+            # remain on the edit view
+            return self.get_edit_url()
+        return super().get_success_url()
 
     def save_instance(self):
         """
@@ -361,15 +491,55 @@ class CreateEditViewOptionalFeaturesMixin:
 
         return None
 
+    def submit_action(self):
+        if (
+            self.workflow_state
+            and self.workflow_state.status == WorkflowState.STATUS_NEEDS_CHANGES
+        ):
+            # If the workflow was in the needs changes state, resume the existing workflow on submission
+            self.workflow_state.resume(self.request.user)
+        else:
+            # Otherwise start a new workflow
+            self.workflow.start(self.object, self.request.user)
+
+        return None
+
+    def restart_workflow_action(self):
+        self.workflow_state.cancel(user=self.request.user)
+        self.workflow.start(self.object, self.request.user)
+        return None
+
+    def cancel_workflow_action(self):
+        self.workflow_state.cancel(user=self.request.user)
+        return None
+
+    def workflow_action_action(self):
+        extra_workflow_data_json = self.request.POST.get(
+            "workflow-action-extra-data", "{}"
+        )
+        extra_workflow_data = json.loads(extra_workflow_data_json)
+        self.object.current_workflow_task.on_action(
+            self.object.current_workflow_task_state,
+            self.request.user,
+            self.workflow_action,
+            **extra_workflow_data,
+        )
+        return None
+
+    def run_action_method(self):
+        action_method = getattr(self, self.action.replace("-", "_") + "_action", None)
+        if action_method:
+            return action_method()
+        return None
+
     def form_valid(self, form):
         self.form = form
         with transaction.atomic():
             self.object = self.save_instance()
 
-        if self.action == "publish":
-            response = self.publish_action()
-            if response is not None:
-                return response
+        response = self.run_action_method()
+        if response is not None:
+            return response
 
         response = self.save_action()
 
@@ -426,14 +596,16 @@ class CreateEditViewOptionalFeaturesMixin:
             "user_can_unlock": user_can_unlock,
         }
 
-        if not self.lock:
+        # Do not add lock message if the request method is not GET,
+        # as POST request may add success/validation error messages already
+        if not self.lock or self.request.method != "GET":
             return context
 
         lock_message = self.lock.get_message(self.request.user)
         if lock_message:
             if user_can_unlock:
                 lock_message = format_html(
-                    '{} <span class="buttons"><button type="button" class="button button-small button-secondary" data-action-lock-unlock data-url="{}">{}</button></span>',
+                    '{} <span class="buttons"><button type="button" class="button button-small button-secondary" data-action="w-action#post" data-controller="w-action" data-w-action-url-value="{}">{}</button></span>',
                     lock_message,
                     self.get_unlock_url(),
                     _("Unlock"),
@@ -441,7 +613,7 @@ class CreateEditViewOptionalFeaturesMixin:
 
             if user_can_unschedule:
                 lock_message = format_html(
-                    '{} <span class="buttons"><button type="button" class="button button-small button-secondary" data-action-lock-unlock data-url="{}">{}</button></span>',
+                    '{} <span class="buttons"><button type="button" class="button button-small button-secondary" data-action="w-action#post" data-controller="w-action" data-w-action-url-value="{}">{}</button></span>',
                     lock_message,
                     reverse(
                         self.revisions_unschedule_url_name,
@@ -462,7 +634,15 @@ class CreateEditViewOptionalFeaturesMixin:
         context.update(self.get_lock_context())
         context["revision_enabled"] = self.revision_enabled
         context["draftstate_enabled"] = self.draftstate_enabled
+        context["workflow_enabled"] = self.workflow_enabled
         context["live_last_updated_info"] = self.get_live_last_updated_info()
+        context["workflow_history_url"] = self.get_workflow_history_url()
+        context[
+            "confirm_workflow_cancellation_url"
+        ] = self.get_confirm_workflow_cancellation_url()
+        context["publishing_will_cancel_workflow"] = getattr(
+            settings, "WAGTAIL_WORKFLOW_CANCEL_ON_PUBLISH", True
+        ) and bool(self.workflow_tasks)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -471,6 +651,15 @@ class CreateEditViewOptionalFeaturesMixin:
         if not self.locked_for_user and form.is_valid():
             return self.form_valid(form)
         else:
+            # Even if the page is locked due to not having permissions,
+            # the original submitter can still cancel the workflow
+            if self.action == "cancel-workflow":
+                self.cancel_workflow_action()
+                messages.success(
+                    self.request,
+                    self.get_success_message(),
+                    buttons=self.get_success_buttons(),
+                )
             return self.form_invalid(form)
 
 

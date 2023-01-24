@@ -5,7 +5,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import permission_required
 from django.db import connection
-from django.db.models import Max, Q
+from django.db.models import Exists, IntegerField, Max, OuterRef, Q
+from django.db.models.functions import Cast
 from django.forms import Media
 from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
@@ -109,24 +110,41 @@ class PagesForModerationPanel(Component):
         return context
 
 
-class UserPagesInWorkflowModerationPanel(Component):
-    name = "user_pages_in_workflow_moderation"
-    template_name = "wagtailadmin/home/user_pages_in_workflow_moderation.html"
+class UserObjectsInWorkflowModerationPanel(Component):
+    name = "user_objects_in_workflow_moderation"
+    template_name = "wagtailadmin/home/user_objects_in_workflow_moderation.html"
     order = 210
 
     def get_context_data(self, parent_context):
         request = parent_context["request"]
         context = super().get_context_data(parent_context)
         if getattr(settings, "WAGTAIL_WORKFLOW_ENABLED", True):
+            # Need to cast the page ids to string because Postgres doesn't support
+            # implicit type casts when querying on GenericRelations. We also need
+            # to cast the object_id to integer when querying the pages for the same reason.
+            # https://code.djangoproject.com/ticket/16055
+            # Once the issue is resolved, this query can be removed and the
+            # filter can be changed to:
+            # Q(page__owner=request.user) | Q(requested_by=request.user)
+            pages_owned_by_user = Q(
+                base_content_type_id=get_default_page_content_type().id
+            ) & Exists(
+                Page.objects.filter(
+                    owner=request.user,
+                    id=Cast(OuterRef("object_id"), output_field=IntegerField()),
+                )
+            )
             # Find in progress workflow states which are either requested by the user or on pages owned by the user
             context["workflow_states"] = (
                 WorkflowState.objects.active()
-                .filter(Q(page__owner=request.user) | Q(requested_by=request.user))
+                .filter(pages_owned_by_user | Q(requested_by=request.user))
+                .prefetch_related(
+                    "content_object",
+                    "content_object__latest_revision",
+                )
                 .select_related(
-                    "page",
                     "current_task_state",
                     "current_task_state__task",
-                    "current_task_state__page_revision",
                 )
                 .order_by("-current_task_state__started_at")
             )
@@ -136,38 +154,55 @@ class UserPagesInWorkflowModerationPanel(Component):
         return context
 
 
-class WorkflowPagesToModeratePanel(Component):
-    name = "workflow_pages_to_moderate"
-    template_name = "wagtailadmin/home/workflow_pages_to_moderate.html"
+class WorkflowObjectsToModeratePanel(Component):
+    name = "workflow_objects_to_moderate"
+    template_name = "wagtailadmin/home/workflow_objects_to_moderate.html"
     order = 220
 
     def get_context_data(self, parent_context):
         request = parent_context["request"]
         context = super().get_context_data(parent_context)
-        if getattr(settings, "WAGTAIL_WORKFLOW_ENABLED", True):
-            states = (
-                TaskState.objects.reviewable_by(request.user)
-                .select_related(
-                    "page_revision",
-                    "task",
-                    "page_revision__user",
-                )
-                .order_by("-started_at")
-            )
-            context["states"] = [
-                (
-                    state,
-                    state.task.specific.get_actions(
-                        page=state.page_revision.content_object, user=request.user
-                    ),
-                    state.workflow_state.all_tasks_with_status(),
-                )
-                for state in states
-            ]
-        else:
-            context["states"] = []
+        context["states"] = []
         context["request"] = request
         context["csrf_token"] = parent_context["csrf_token"]
+
+        if not getattr(settings, "WAGTAIL_WORKFLOW_ENABLED", True):
+            return context
+
+        states = (
+            TaskState.objects.reviewable_by(request.user)
+            .select_related(
+                "revision",
+                "task",
+                "revision__user",
+            )
+            .order_by("-started_at")
+        )
+        for state in states:
+            obj = state.revision.content_object
+            actions = state.task.specific.get_actions(obj, request.user)
+            workflow_tasks = state.workflow_state.all_tasks_with_status()
+
+            url_name_prefix = "wagtailadmin_pages"
+            if not isinstance(obj, Page):
+                url_name_prefix = obj.get_admin_url_namespace()
+
+            workflow_action_url_name = f"{url_name_prefix}:workflow_action"
+            workflow_preview_url_name = None
+            if getattr(obj, "is_previewable", False):
+                workflow_preview_url_name = f"{url_name_prefix}:workflow_preview"
+
+            context["states"].append(
+                {
+                    "obj": obj,
+                    "task_state": state,
+                    "actions": actions,
+                    "workflow_tasks": workflow_tasks,
+                    "workflow_action_url_name": workflow_action_url_name,
+                    "workflow_preview_url_name": workflow_preview_url_name,
+                }
+            )
+
         return context
 
 
@@ -278,9 +313,9 @@ class HomeView(WagtailAdminTemplateMixin, TemplateView):
             SiteSummaryPanel(request),
             WhatsNewInWagtailVersionPanel(),
             UpgradeNotificationPanel(),
-            WorkflowPagesToModeratePanel(),
+            WorkflowObjectsToModeratePanel(),
             PagesForModerationPanel(),
-            UserPagesInWorkflowModerationPanel(),
+            UserObjectsInWorkflowModerationPanel(),
             RecentEditsPanel(),
             LockedPagesPanel(),
         ]

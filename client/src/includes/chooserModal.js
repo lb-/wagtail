@@ -228,6 +228,21 @@ class ChooserModalOnloadHandlerFactory {
 
     // Reinitialise any tooltips
     initTooltips();
+
+    this.updateMultipleChoiceSubmitEnabledState(modal);
+    $('[data-multiple-choice-select]', containerElement).on('change', () => {
+      this.updateMultipleChoiceSubmitEnabledState(modal);
+    });
+  }
+
+  updateMultipleChoiceSubmitEnabledState(modal) {
+    // update the enabled state of the multiple choice submit button depending on whether
+    // any items have been selected
+    if ($('[data-multiple-choice-select]:checked', modal.body).length) {
+      $('[data-multiple-choice-submit]', modal.body).removeAttr('disabled');
+    } else {
+      $('[data-multiple-choice-submit]', modal.body).attr('disabled', true);
+    }
   }
 
   modalHasTabs(modal) {
@@ -280,6 +295,8 @@ class ChooserModalOnloadHandlerFactory {
     this.initSearchController(modal);
     this.ajaxifyLinks(modal, modal.body);
     this.ajaxifyCreationForm(modal);
+    // Set up submissions of the "choose multiple items" form to open in the modal.
+    modal.ajaxifyForm($('form[data-multiple-choice-form]', modal.body));
   }
 
   onLoadChosenStep(modal, jsonData) {
@@ -313,6 +330,42 @@ class ChooserModalOnloadHandlerFactory {
 const chooserModalOnloadHandlers =
   new ChooserModalOnloadHandlerFactory().getOnLoadHandlers();
 
+class ChooserModal {
+  onloadHandlers = chooserModalOnloadHandlers;
+  chosenResponseName = 'chosen'; // identifier for the ModalWorkflow response that indicates an item was chosen
+
+  constructor(baseUrl) {
+    this.baseUrl = baseUrl;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getURL(opts) {
+    return this.baseUrl;
+  }
+
+  getURLParams(opts) {
+    const urlParams = {};
+    if (opts.multiple) {
+      urlParams.multiple = 1;
+    }
+    return urlParams;
+  }
+
+  open(opts, callback) {
+    // eslint-disable-next-line no-undef
+    ModalWorkflow({
+      url: this.getURL(opts || {}),
+      urlParams: this.getURLParams(opts || {}),
+      onload: this.onloadHandlers,
+      responses: {
+        [this.chosenResponseName]: (result) => {
+          callback(result);
+        },
+      },
+    });
+  }
+}
+
 export {
   validateCreationForm,
   submitCreationForm,
@@ -320,4 +373,5 @@ export {
   SearchController,
   ChooserModalOnloadHandlerFactory,
   chooserModalOnloadHandlers,
+  ChooserModal,
 };

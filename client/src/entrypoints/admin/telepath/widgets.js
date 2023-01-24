@@ -128,26 +128,6 @@ class Select extends Widget {
 }
 window.telepath.register('wagtail.widgets.Select', Select);
 
-class PageChooserFactory {
-  constructor(html, idPattern, config) {
-    this.html = html;
-    this.idPattern = idPattern;
-    this.config = config;
-  }
-
-  render(placeholder, name, id, initialState) {
-    var html = this.html.replace(/__NAME__/g, name).replace(/__ID__/g, id);
-    var dom = $(html);
-    $(placeholder).replaceWith(dom);
-    /* the PageChooser object also serves as the JS widget representation */
-    // eslint-disable-next-line no-undef
-    const chooser = new PageChooser(id, null, this.config);
-    chooser.setState(initialState);
-    return chooser;
-  }
-}
-window.telepath.register('wagtail.widgets.PageChooser', PageChooserFactory);
-
 class AdminAutoHeightTextInput extends Widget {
   render(placeholder, name, id, initialState, parentCapabilities) {
     const boundWidget = super.render(
@@ -180,7 +160,7 @@ class DraftailInsertBlockCommand {
     this.split = split;
 
     this.blockMax = addSibling.getBlockMax(blockDef.name);
-    this.icon = `#icon-${blockDef.meta.icon}`;
+    this.icon = blockDef.meta.icon;
     this.description = blockDef.meta.label;
     this.type = blockDef.name;
   }
@@ -197,9 +177,8 @@ class DraftailInsertBlockCommand {
   }
 
   onSelect({ editorState }) {
-    // Reset the current block to unstyled and empty before splitting, so we remove the command prompt if used.
     const result = window.draftail.splitState(
-      window.draftail.DraftUtils.resetBlockWithType(editorState, 'unstyled'),
+      window.draftail.DraftUtils.removeCommandPalettePrompt(editorState),
     );
     if (result.stateAfter.getCurrentContent().hasText()) {
       // There is content after the insertion point, so need to split the existing block.
@@ -241,12 +220,12 @@ class DraftailSplitCommand {
     this.description = gettext('Split block');
   }
 
-  icon = '#icon-cut';
+  icon = 'cut';
   type = 'split';
 
   onSelect({ editorState }) {
     const result = window.draftail.splitState(
-      window.draftail.DraftUtils.resetBlockWithType(editorState, 'unstyled'),
+      window.draftail.DraftUtils.removeCommandPalettePrompt(editorState),
     );
     // Run the split after a timeout to circumvent potential race condition.
     setTimeout(() => {
@@ -295,6 +274,7 @@ class BoundDraftailWidget {
     if (!value || !value.blocks) return '';
 
     let result = '';
+    // eslint-disable-next-line no-restricted-syntax
     for (const block of value.blocks) {
       if (block.text) {
         result += result ? ' ' + block.text : block.text;
@@ -346,7 +326,7 @@ class BoundDraftailWidget {
             new DraftailInsertBlockCommand(this, blockDef, addSibling, split),
         );
         return {
-          label: group || gettext('Blocks'),
+          label: group || gettext('StreamField blocks'),
           type: `streamfield-${group}`,
           items: blockControls,
         };
@@ -363,7 +343,6 @@ class BoundDraftailWidget {
 
     options.commands = [
       {
-        label: gettext('Rich text'),
         type: 'blockTypes',
       },
       {

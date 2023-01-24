@@ -17,7 +17,7 @@
                         {% trans 'Task' %}
                     </th>
                     <th>
-                        {% trans 'Page' %}
+                        {% trans 'Page/Snippet' %}
                     </th>
                     <th>
                         {% trans 'Status' %}
@@ -37,29 +37,35 @@
                             <b>{{ task_state.task }}</b>
                         </td>
                         <td>
-                            {% with task_state.workflow_state.page as page %}
-                                <a href="{% url 'wagtailadmin_pages:edit' page.id %}">
-                                    {{ page.specific_deferred.get_admin_display_title }}
+                            {% with task_state.workflow_state.content_object as object %}
+                                <a href="{% admin_edit_url object %}">
+                                    {% latest_str object %}
                                 </a>
                                 {% i18n_enabled as show_locale_labels %}
+                                <<<<<<< HEAD
                                 {% if show_locale_labels %}
                                     {% locale_label_from_id page.locale_id as locale_label %}
                                     {% status locale_label classname="status-tag--label" %}
-                                {% endif %}
-                            {% endwith %}
-                        </td>
-                        <td>
-                            <div class="status-tag primary">
-                                {{ task_state.get_status_display }}
-                            </div>
-                        </td>
-                        <td>{{ task_state.started_at }}</td>
-                        <td>{{ task_state.finished_at }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>{% blocktrans trimmed %}No pages have been submitted for moderation yet{% endblocktrans %}</p>
-    {% endif %}
-{% endblock %}
+                                    =======
+                                    {% if show_locale_labels and object.locale_id %}
+                                        {% locale_label_from_id object.locale_id as locale_label %}
+                                        <span class="status-tag status-tag--label">{{ locale_label }}</span>
+                                        >>>>>>> 8801a49da8d868b667832c3d49d26649f7101064
+                                    {% endif %}
+                                {% endwith %}
+                                </td>
+                                <td>
+                                    <div class="status-tag primary">
+                                        {{ task_state.get_status_display }}
+                                    </div>
+                                </td>
+                                <td>{{ task_state.started_at }}</td>
+                                <td>{{ task_state.finished_at }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>{% trans "No pages/snippets have been submitted for moderation yet" %}</p>
+                {% endif %}
+    {% endblock %}

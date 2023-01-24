@@ -1,3 +1,5 @@
+(performance_overview)=
+
 # Performance
 
 Wagtail is designed for speed, both in the editor interface and on the front-end, but if you want even better performance or you need to handle very high volumes of traffic, here are some tips on eking out the most from your installation.
@@ -62,7 +64,7 @@ To fully resolve the URL of a page, Wagtail requires information from a few diff
 
 The methods used to get the URL of a `Page` such as `Page.get_url` and `Page.get_full_url` optionally accept extra arguments for `request` and `current_site`. Passing these arguments enable much of underlying site-level URL information to be reused for the current request. In situations such as navigation menu generation, plus any links that appear in page content, providing `request` or `current_site` can result in a drastic reduction in the number of cache or database queries your site will generate for a given page load.
 
-When using the [`{% pageurl %}`](page_urls) template tag, the request is automatically passed in, so no further optimisation is needed.
+When using the [`{% pageurl %}`](pageurl_tag) or [`{% fullpageurl %}`](fullpageurl_tag) template tags, the request is automatically passed in, so no further optimisation is needed.
 
 ## Search
 

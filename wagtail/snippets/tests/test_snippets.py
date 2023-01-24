@@ -479,6 +479,23 @@ class TestSnippetListViewWithSearchableSnippet(TestCase, WagtailTestUtils):
         self.assertIn(self.snippet_b, items)
         self.assertIn(self.snippet_c, items)
 
+        # The search box should not raise an error
+        self.assertNotContains(response, "This field is required.")
+
+    def test_empty_q(self):
+        response = self.get({"q": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "wagtailsnippets/snippets/type_index.html")
+
+        # All snippets should be in items
+        items = list(response.context["page_obj"].object_list)
+        self.assertIn(self.snippet_a, items)
+        self.assertIn(self.snippet_b, items)
+        self.assertIn(self.snippet_c, items)
+
+        # The search box should not raise an error
+        self.assertNotContains(response, "This field is required.")
+
     def test_is_searchable(self):
         self.assertTrue(self.get().context["is_searchable"])
 
@@ -3049,7 +3066,7 @@ class TestScheduledForPublishLock(BaseTestSnippetEditView):
             args=[self.test_snippet.pk, self.latest_revision.pk],
         )
         self.assertTagInHTML(
-            f'<button data-action-lock-unlock data-url="{unschedule_url}">Cancel scheduled publish</button>',
+            f'<button data-action="w-action#post" data-controller="w-action" data-w-action-url-value="{unschedule_url}">Cancel scheduled publish</button>',
             html,
             count=1,
             allow_extra_attrs=True,
@@ -3115,7 +3132,7 @@ class TestScheduledForPublishLock(BaseTestSnippetEditView):
             args=[self.test_snippet.pk, self.latest_revision.pk],
         )
         self.assertTagInHTML(
-            f'<button data-action-lock-unlock data-url="{unschedule_url}">Cancel scheduled publish</button>',
+            f'<button data-action="w-action#post" data-controller="w-action" data-w-action-url-value="{unschedule_url}">Cancel scheduled publish</button>',
             html,
             count=0,
             allow_extra_attrs=True,
@@ -3146,11 +3163,10 @@ class TestScheduledForPublishLock(BaseTestSnippetEditView):
             count=1,
         )
 
-        # Should show the lock message
-        self.assertContains(
+        # Should not show the lock message, as we already have the error message
+        self.assertNotContains(
             response,
             "Draft state model 'I&#x27;ve been edited!' is locked and has been scheduled to go live at",
-            count=1,
         )
 
         # Should show the lock information in the status side panel
@@ -3171,15 +3187,15 @@ class TestScheduledForPublishLock(BaseTestSnippetEditView):
             allow_extra_attrs=True,
         )
 
-        # Should show button to cancel scheduled publishing
+        # Should not show button to cancel scheduled publishing as the lock message isn't shown
         unschedule_url = reverse(
             "wagtailsnippets_tests_draftstatemodel:revisions_unschedule",
             args=[self.test_snippet.pk, self.latest_revision.pk],
         )
         self.assertTagInHTML(
-            f'<button data-action-lock-unlock data-url="{unschedule_url}">Cancel scheduled publish</button>',
+            f'<button data-action="w-action#post" data-controller="w-action" data-w-action-url-value="{unschedule_url}">Cancel scheduled publish</button>',
             html,
-            count=1,
+            count=0,
             allow_extra_attrs=True,
         )
 
@@ -3803,7 +3819,7 @@ class TestSnippetChooserPanel(TestCase, WagtailTestUtils):
 
     def test_render_js(self):
         self.assertIn(
-            'new SnippetChooser("id_advert");',
+            'new SnippetChooser("id_advert", {"modalUrl": "/admin/snippets/choose/tests/advert/"});',
             self.snippet_chooser_panel.render_html(),
         )
 
@@ -4734,6 +4750,15 @@ class TestSnippetChooseWithSearchableSnippet(TestCase, WagtailTestUtils):
         self.assertIn(self.snippet_b, items)
         self.assertIn(self.snippet_c, items)
 
+    def test_partial_match(self):
+        response = self.get({"q": "hello wo"})
+
+        # should perform partial matching and return "Hello World"
+        items = list(response.context["items"].object_list)
+        self.assertNotIn(self.snippet_a, items)
+        self.assertNotIn(self.snippet_b, items)
+        self.assertIn(self.snippet_c, items)
+
 
 class TestSnippetChosen(TestCase, WagtailTestUtils):
     fixtures = ["test.json"]
@@ -5077,7 +5102,7 @@ class TestAdminSnippetChooserWidget(TestCase, WagtailTestUtils):
 
         js_args = SnippetChooserAdapter().js_args(widget)
 
-        self.assertEqual(len(js_args), 2)
+        self.assertEqual(len(js_args), 3)
         self.assertInHTML(
             '<input type="hidden" name="__NAME__" id="__ID__">', js_args[0]
         )
@@ -5386,7 +5411,7 @@ class TestSnippetChooserPanelWithCustomPrimaryKey(TestCase, WagtailTestUtils):
 
     def test_render_js(self):
         self.assertIn(
-            'new SnippetChooser("id_advertwithcustomprimarykey");',
+            'new SnippetChooser("id_advertwithcustomprimarykey", {"modalUrl": "/admin/snippets/choose/tests/advertwithcustomprimarykey/"});',
             self.snippet_chooser_panel.render_html(),
         )
 

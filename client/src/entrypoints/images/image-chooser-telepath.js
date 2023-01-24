@@ -1,9 +1,5 @@
-import { ChooserFactory } from '../../components/ChooserWidget';
+import { ImageChooserFactory } from '../../components/ChooserWidget/ImageChooserWidget';
 
-class ImageChooserFactory extends ChooserFactory {
-  // eslint-disable-next-line no-undef
-  widgetClass = ImageChooser;
-}
 window.telepath.register(
   'wagtail.images.widgets.ImageChooser',
   ImageChooserFactory,

@@ -32,6 +32,10 @@ global.wagtailConfig = {
   ACTIVE_LOCALE: 'en',
 };
 
+document.body.innerHTML = `<script id="wagtail-config">${JSON.stringify({
+  CSRF_TOKEN: 'potato',
+})}</script>`;
+
 global.wagtailVersion = '1.6a1';
 
 global.wagtail = {};
@@ -51,3 +55,6 @@ global.IMAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = { type: 'image' };
 global.PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = { type: 'page' };
 global.EMBED_CHOOSER_MODAL_ONLOAD_HANDLERS = { type: 'embed' };
 global.DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS = { type: 'document' };
+
+class PageChooserModal {}
+global.PageChooserModal = PageChooserModal;

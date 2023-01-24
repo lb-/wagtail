@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -19,6 +17,7 @@ class AdminImageChooser(BaseChooser):
     chooser_modal_url_name = "wagtailimages_chooser:choose"
     icon = "image"
     classname = "image-chooser"
+    js_constructor = "ImageChooser"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -39,9 +38,6 @@ class AdminImageChooser(BaseChooser):
         context["preview"] = value_data.get("preview", {})
         return context
 
-    def render_js_init(self, id_, name, value_data):
-        return "new ImageChooser({0});".format(json.dumps(id_))
-
     @property
     def media(self):
         return forms.Media(
@@ -59,6 +55,7 @@ class ImageChooserAdapter(BaseChooserAdapter):
     def media(self):
         return forms.Media(
             js=[
+                versioned_static("wagtailimages/js/image-chooser-modal.js"),
                 versioned_static("wagtailimages/js/image-chooser-telepath.js"),
             ]
         )

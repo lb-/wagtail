@@ -1,9 +1,11 @@
 import $ from 'jquery';
 import { cleanForSlug } from '../../utils/text';
 import { InlinePanel } from '../../components/InlinePanel';
+import { MultipleChooserPanel } from '../../components/MultipleChooserPanel';
 import { ngettext } from '../../utils/gettext';
 
 window.InlinePanel = InlinePanel;
+window.MultipleChooserPanel = MultipleChooserPanel;
 window.cleanForSlug = cleanForSlug;
 
 function initSlugAutoPopulate() {
@@ -133,10 +135,11 @@ window.updateFooterSaveWarning = (formDirty, commentsDirty) => {
   }
   clearTimeout(updateFooterTextTimeout);
   const updateWarnings = () => {
-    for (const warning of warnings) {
+    warnings.each((_, warning) => {
       const visible = typeVisibility[warning.dataset.unsavedType];
+      // eslint-disable-next-line no-param-reassign
       warning.hidden = !visible;
-    }
+    });
   };
   if (hiding) {
     // If hiding, we want to keep the text as-is before it disappears

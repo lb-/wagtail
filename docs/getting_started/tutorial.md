@@ -200,7 +200,7 @@ Edit `home/templates/home/home_page.html` to contain the following:
 
 ### Wagtail template tags
 
-In addition to Django's [template tags and filters](https://docs.djangoproject.com/en/3.1/ref/templates/builtins/),
+In addition to Django's [template tags and filters](https://docs.djangoproject.com/en/stable/ref/templates/builtins/),
 Wagtail provides a number of its own [template tags & filters](template_tags_and_filters)
 which can be loaded by including `{% load wagtailcore_tags %}` at the top of
 your template file.
@@ -694,14 +694,16 @@ Edit one of your `BlogPage` instances, and you should now be able to tag posts:
 To render tags on a `BlogPage`, add this to `blog_page.html`:
 
 ```html+django
-{% if page.tags.all.count %}
-    <div class="tags">
-        <h3>Tags</h3>
-        {% for tag in page.tags.all %}
-            <a href="{% slugurl 'tags' %}?tag={{ tag }}"><button type="button">{{ tag }}</button></a>
-        {% endfor %}
-    </div>
-{% endif %}
+{% with tags=page.tags.all %}
+    {% if tags %}
+        <div class="tags">
+            <h3>Tags</h3>
+            {% for tag in tags %}
+                <a href="{% slugurl 'tags' %}?tag={{ tag }}"><button type="button">{{ tag }}</button></a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 ```
 
 Notice that we're linking to pages here with the builtin `slugurl`

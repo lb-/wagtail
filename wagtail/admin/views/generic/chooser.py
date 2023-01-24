@@ -1,5 +1,8 @@
+import re
+import urllib.parse
+
 from django.conf import settings
-from django.contrib.admin.utils import unquote
+from django.contrib.admin.utils import quote, unquote
 from django.core.exceptions import (
     ImproperlyConfigured,
     ObjectDoesNotExist,
@@ -24,7 +27,7 @@ from wagtail.admin.forms.choosers import (
     SearchFilterMixin,
 )
 from wagtail.admin.modal_workflow import render_modal_workflow
-from wagtail.admin.ui.tables import Table, TitleColumn
+from wagtail.admin.ui.tables import Column, Table, TitleColumn
 from wagtail.coreutils import resolve_model_string
 from wagtail.models import CollectionMember, TranslatableMixin
 from wagtail.permission_policies import BlanketPermissionPolicy, ModelPermissionPolicy
@@ -66,7 +69,50 @@ class ModelLookupMixin:
             return resolve_model_string(self.model)
 
 
-class BaseChooseView(ModalPageFurnitureMixin, ModelLookupMixin, ContextMixin, View):
+class PreserveURLParametersMixin:
+    """
+    Adds support for passing designated URL parameters from the current request when constructing URLs
+    for links / form actions.
+    """
+
+    preserve_url_parameters = ["multiple"]
+
+    @cached_property
+    def _preserved_param_string(self):
+        params = {}
+        for param in self.preserve_url_parameters:
+            try:
+                params[param] = self.request.GET[param]
+            except KeyError:
+                pass
+
+        return urllib.parse.urlencode(params)
+
+    def append_preserved_url_parameters(self, url):
+        """
+        Given a base URL (which might already include URL parameters), append any URL parameters
+        from the preserve_url_parameters list that are present in the current request URL
+        """
+        if self._preserved_param_string:
+            if "?" in url:
+                url += "&" + self._preserved_param_string
+            else:
+                url += "?" + self._preserved_param_string
+
+        return url
+
+
+class CheckboxSelectColumn(Column):
+    cell_template_name = "wagtailadmin/generic/chooser/checkbox_select_cell.html"
+
+
+class BaseChooseView(
+    ModalPageFurnitureMixin,
+    ModelLookupMixin,
+    PreserveURLParametersMixin,
+    ContextMixin,
+    View,
+):
     """
     Provides common functionality for views that present a (possibly searchable / filterable) list
     of objects to choose from
@@ -75,6 +121,7 @@ class BaseChooseView(ModalPageFurnitureMixin, ModelLookupMixin, ContextMixin, Vi
     per_page = 10
     ordering = None
     chosen_url_name = None
+    chosen_multiple_url_name = None
     results_url_name = None
     icon = "snippet"
     page_title = _("Choose")
@@ -136,19 +183,48 @@ class BaseChooseView(ModalPageFurnitureMixin, ModelLookupMixin, ContextMixin, Vi
         return objects
 
     def get_results_url(self):
-        return reverse(self.results_url_name)
+        return self.append_preserved_url_parameters(reverse(self.results_url_name))
+
+    def get_chosen_multiple_url(self):
+        return self.append_preserved_url_parameters(
+            reverse(self.chosen_multiple_url_name)
+        )
+
+    @cached_property
+    def is_multiple_choice(self):
+        return self.request.GET.get("multiple")
 
     @property
     def columns(self):
-        return [
-            TitleColumn(
+        return [self.title_column]
+
+    @property
+    def title_column(self):
+        if self.is_multiple_choice:
+            return TitleColumn(
                 "title",
                 label=_("Title"),
                 accessor=str,
-                url_name=self.chosen_url_name,
+                label_prefix="chooser-modal-select",
+            )
+        else:
+            return TitleColumn(
+                "title",
+                label=_("Title"),
+                accessor=str,
+                get_url=(
+                    lambda obj: self.append_preserved_url_parameters(
+                        reverse(self.chosen_url_name, args=(quote(obj.pk),))
+                    )
+                ),
                 link_attrs={"data-chooser-modal-choice": True},
-            ),
-        ]
+            )
+
+    @property
+    def checkbox_column(self):
+        return CheckboxSelectColumn(
+            "select", label=_("Select"), width="1%", accessor="pk"
+        )
 
     def get_results_page(self, request):
         objects = self.get_object_list()
@@ -161,30 +237,45 @@ class BaseChooseView(ModalPageFurnitureMixin, ModelLookupMixin, ContextMixin, Vi
     def get(self, request):
         self.filter_form = self.get_filter_form()
         self.results = self.get_results_page(request)
-        self.table = Table(self.columns, self.results)
+
+        columns = self.columns
+        if self.is_multiple_choice:
+            columns.insert(0, self.checkbox_column)
+        self.table = Table(columns, self.results)
 
         return self.render_to_response()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        results_url = self.get_results_url()
+
+        # For result pagination links, we need a version of results_url with parameters removed,
+        # so that the pagination include can append its own parameters via the {% querystring %} template tag
+        results_pagination_url = re.sub(r"\?.*$", "", results_url)
+
         context.update(
             {
                 "results": self.results,
                 "table": self.table,
-                "results_url": self.get_results_url(),
+                "results_url": results_url,
+                "results_pagination_url": results_pagination_url,
                 "is_searching": self.filter_form.is_searching,
                 "is_filtering_by_collection": self.filter_form.is_filtering_by_collection,
+                "is_multiple_choice": self.is_multiple_choice,
                 "search_query": self.filter_form.search_query,
                 "can_create": self.can_create(),
             }
         )
+        if self.is_multiple_choice:
+            context["chosen_multiple_url"] = self.get_chosen_multiple_url()
         return context
 
     def render_to_response(self):
         raise NotImplementedError()
 
 
-class CreationFormMixin(ModelLookupMixin):
+class CreationFormMixin(ModelLookupMixin, PreserveURLParametersMixin):
     """
     Provides a form class for creating new objects
     """
@@ -246,7 +337,7 @@ class CreationFormMixin(ModelLookupMixin):
                 "%r must provide a create_url_name attribute or a get_create_url method"
                 % type(self)
             )
-        return reverse(self.create_url_name)
+        return self.append_preserved_url_parameters(reverse(self.create_url_name))
 
     def get_creation_form_context_data(self, form):
         return {
@@ -353,12 +444,10 @@ class ChosenResponseMixin:
             "edit_url": self.get_edit_item_url(item),
         }
 
-    def get_chosen_response(self, item):
+    def _wrap_chosen_response_data(self, response_data):
         """
-        Return the HTTP response to indicate that an object has been chosen
+        Wrap a response_data JSON payload in a modal workflow response
         """
-        response_data = self.get_chosen_response_data(item)
-
         return render_modal_workflow(
             self.request,
             None,
@@ -366,6 +455,23 @@ class ChosenResponseMixin:
             None,
             json_data={"step": self.chosen_response_name, "result": response_data},
         )
+
+    def get_multiple_chosen_response(self, items):
+        response_data = [self.get_chosen_response_data(item) for item in items]
+        return self._wrap_chosen_response_data(response_data)
+
+    def get_chosen_response(self, item):
+        """
+        Return the HTTP response to indicate that an object has been chosen
+        """
+        response_data = self.get_chosen_response_data(item)
+
+        if self.request.GET.get("multiple"):
+            # a multiple result was requested but we're only returning one,
+            # so wrap as a list
+            response_data = [response_data]
+
+        return self._wrap_chosen_response_data(response_data)
 
 
 class ChosenViewMixin(ModelLookupMixin):
@@ -387,6 +493,24 @@ class ChosenViewMixin(ModelLookupMixin):
 
 
 class ChosenView(ChosenViewMixin, ChosenResponseMixin, View):
+    pass
+
+
+class ChosenMultipleViewMixin(ModelLookupMixin):
+    """
+    A view that takes a list of 'id' URL parameters and returns a modal workflow response indicating
+    that those objects have been chosen
+    """
+
+    def get_objects(self, pks):
+        return self.model_class.objects.filter(pk__in=pks)
+
+    def get(self, request):
+        items = self.get_objects(request.GET.getlist("id"))
+        return self.get_multiple_chosen_response(items)
+
+
+class ChosenMultipleView(ChosenMultipleViewMixin, ChosenResponseMixin, View):
     pass
 
 

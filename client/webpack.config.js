@@ -40,10 +40,11 @@ module.exports = function exports(env, argv) {
       'draftail',
       'expanding-formset',
       'filtered-select',
-      'lock-unlock-action',
+      'icons',
       'modal-workflow',
       'page-chooser-modal',
       'page-chooser',
+      'page-chooser-telepath',
       'page-editor',
       'preview-panel',
       'privacy-switch',
@@ -112,14 +113,6 @@ module.exports = function exports(env, argv) {
     'scss',
     'panels',
     'streamfield.scss',
-  );
-  sassEntry[getOutputPath('admin', 'css', 'userbar')] = path.resolve(
-    'wagtail',
-    'admin',
-    'static_src',
-    'wagtailadmin',
-    'scss',
-    'userbar.scss',
   );
   sassEntry[getOutputPath('contrib/styleguide', 'css', 'styleguide')] =
     path.resolve(

@@ -27,7 +27,7 @@ from wagtail.admin.ui.tables import (
     UserColumn,
 )
 from wagtail.admin.views import generic
-from wagtail.admin.views.generic import lock
+from wagtail.admin.views.generic import history, lock, workflow
 from wagtail.admin.views.generic.permissions import PermissionCheckedMixin
 from wagtail.admin.views.generic.preview import PreviewOnCreate as PreviewOnCreateView
 from wagtail.admin.views.generic.preview import PreviewOnEdit as PreviewOnEditView
@@ -42,6 +42,7 @@ from wagtail.models import (
     LockableMixin,
     PreviewableMixin,
     RevisionMixin,
+    WorkflowMixin,
 )
 from wagtail.models.audit_log import ModelLogEntry
 from wagtail.permissions import ModelPermissionPolicy
@@ -302,6 +303,7 @@ class EditView(generic.CreateEditViewOptionalFeaturesMixin, generic.EditView):
     view_name = "edit"
     history_url_name = None
     preview_url_name = None
+    revisions_compare_url_name = None
     permission_required = "change"
     template_name = "wagtailsnippets/snippets/edit.html"
     error_message = gettext_lazy("The snippet could not be saved due to errors.")
@@ -354,6 +356,7 @@ class EditView(generic.CreateEditViewOptionalFeaturesMixin, generic.EditView):
                 "action_menu": action_menu,
                 "side_panels": side_panels,
                 "history_url": self.get_history_url(),
+                "revisions_compare_url_name": self.revisions_compare_url_name,
                 "media": media,
             }
         )
@@ -670,19 +673,73 @@ class RevisionsUnscheduleView(PermissionCheckedMixin, generic.RevisionsUnschedul
 class LockView(PermissionCheckedMixin, lock.LockView):
     permission_required = "lock"
 
+    def user_has_permission(self, permission):
+        if self.request.user.is_superuser:
+            return True
+
+        if permission == self.permission_required and isinstance(
+            self.object, WorkflowMixin
+        ):
+            current_workflow_task = self.object.current_workflow_task
+            if current_workflow_task:
+                return current_workflow_task.user_can_lock(
+                    self.object, self.request.user
+                )
+
+        return super().user_has_permission(permission)
+
 
 class UnlockView(PermissionCheckedMixin, lock.UnlockView):
     permission_required = "unlock"
 
     def user_has_permission(self, permission):
-        # Allow unlocking even if the user does not have the 'unlock' permission
-        # if they are the user who locked the object
-        if (
-            permission == self.permission_required
-            and self.object.locked_by_id == self.request.user.pk
-        ):
+        if self.request.user.is_superuser:
             return True
+
+        if permission == self.permission_required:
+            # Allow unlocking even if the user does not have the 'unlock' permission
+            # if they are the user who locked the object
+            if self.object.locked_by_id == self.request.user.pk:
+                return True
+
+            if isinstance(self.object, WorkflowMixin):
+                current_workflow_task = self.object.current_workflow_task
+                if current_workflow_task:
+                    return current_workflow_task.user_can_unlock(
+                        self.object, self.request.user
+                    )
+
         return super().user_has_permission(permission)
+
+
+class WorkflowActionView(workflow.WorkflowAction):
+    pass
+
+
+class CollectWorkflowActionDataView(workflow.CollectWorkflowActionData):
+    pass
+
+
+class ConfirmWorkflowCancellationView(workflow.ConfirmWorkflowCancellation):
+    pass
+
+
+class WorkflowStatusView(PermissionCheckedMixin, workflow.WorkflowStatus):
+    permission_required = "change"
+
+
+class WorkflowPreviewView(workflow.PreviewRevisionForTask):
+    pass
+
+
+class WorkflowHistoryView(PermissionCheckedMixin, history.WorkflowHistoryView):
+    permission_required = "change"
+
+
+class WorkflowHistoryDetailView(
+    PermissionCheckedMixin, history.WorkflowHistoryDetailView
+):
+    permission_required = "change"
 
 
 class SnippetViewSet(ViewSet):
@@ -750,11 +807,33 @@ class SnippetViewSet(ViewSet):
     #: The view class to use for unlocking a snippet; must be a subclass of ``wagtail.snippet.views.snippets.UnlockView``.
     unlock_view_class = UnlockView
 
+    #: The view class to use for performing a workflow action; must be a subclass of ``wagtail.snippet.views.snippets.WorkflowActionView``.
+    workflow_action_view_class = WorkflowActionView
+
+    #: The view class to use for performing a workflow action that returns the validated data in the response; must be a subclass of ``wagtail.snippet.views.snippets.CollectWorkflowActionDataView``.
+    collect_workflow_action_data_view_class = CollectWorkflowActionDataView
+
+    #: The view class to use for confirming the cancellation of a workflow; must be a subclass of ``wagtail.snippet.views.snippets.ConfirmWorkflowCancellationView``.
+    confirm_workflow_cancellation_view_class = ConfirmWorkflowCancellationView
+
+    #: The view class to use for rendering the workflow status modal; must be a subclass of ``wagtail.snippet.views.snippets.WorkflowStatusView``.
+    workflow_status_view_class = WorkflowStatusView
+
+    #: The view class to use for previewing a revision for a specific task; must be a subclass of ``wagtail.snippet.views.snippets.WorkflowPreviewView``.
+    workflow_preview_view_class = WorkflowPreviewView
+
+    #: The view class to use for the workflow history view; must be a subclass of ``wagtail.snippet.views.snippets.WorkflowHistoryView``.
+    workflow_history_view_class = WorkflowHistoryView
+
+    #: The view class to use for the workflow history detail view; must be a subclass of ``wagtail.snippet.views.snippets.WorkflowHistoryDetailView``.
+    workflow_history_detail_view_class = WorkflowHistoryDetailView
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
         self.preview_enabled = issubclass(self.model, PreviewableMixin)
         self.revision_enabled = issubclass(self.model, RevisionMixin)
         self.draftstate_enabled = issubclass(self.model, DraftStateMixin)
+        self.workflow_enabled = issubclass(self.model, WorkflowMixin)
         self.locking_enabled = issubclass(self.model, LockableMixin)
 
         if not self.list_display:
@@ -836,7 +915,12 @@ class SnippetViewSet(ViewSet):
             preview_url_name=self.get_url_name("preview_on_edit"),
             lock_url_name=self.get_url_name("lock"),
             unlock_url_name=self.get_url_name("unlock"),
+            revisions_compare_url_name=self.get_url_name("revisions_compare"),
             revisions_unschedule_url_name=self.get_url_name("revisions_unschedule"),
+            workflow_history_url_name=self.get_url_name("workflow_history"),
+            confirm_workflow_cancellation_url_name=self.get_url_name(
+                "confirm_workflow_cancellation"
+            ),
         )
 
     @property
@@ -889,8 +973,13 @@ class SnippetViewSet(ViewSet):
             preview_url_name=self.get_url_name("preview_on_edit"),
             lock_url_name=self.get_url_name("lock"),
             unlock_url_name=self.get_url_name("unlock"),
+            revisions_compare_url_name=self.get_url_name("revisions_compare"),
             revisions_unschedule_url_name=self.get_url_name("revisions_unschedule"),
             revisions_revert_url_name=self.get_url_name("revisions_revert"),
+            workflow_history_url_name=self.get_url_name("workflow_history"),
+            confirm_workflow_cancellation_url_name=self.get_url_name(
+                "confirm_workflow_cancellation"
+            ),
         )
 
     @property
@@ -944,6 +1033,58 @@ class SnippetViewSet(ViewSet):
             model=self.model,
             permission_policy=self.permission_policy,
             success_url_name=self.get_url_name("edit"),
+        )
+
+    @property
+    def workflow_action_view(self):
+        return self.workflow_action_view_class.as_view(
+            model=self.model,
+            redirect_url_name=self.get_url_name("edit"),
+            submit_url_name=self.get_url_name("workflow_action"),
+        )
+
+    @property
+    def collect_workflow_action_data_view(self):
+        return self.collect_workflow_action_data_view_class.as_view(
+            model=self.model,
+            redirect_url_name=self.get_url_name("edit"),
+            submit_url_name=self.get_url_name("collect_workflow_action_data"),
+        )
+
+    @property
+    def confirm_workflow_cancellation_view(self):
+        return self.confirm_workflow_cancellation_view_class.as_view(model=self.model)
+
+    @property
+    def workflow_status_view(self):
+        return self.workflow_status_view_class.as_view(
+            model=self.model,
+            permission_policy=self.permission_policy,
+            workflow_history_url_name=self.get_url_name("workflow_history"),
+            revisions_compare_url_name=self.get_url_name("revisions_compare"),
+        )
+
+    @property
+    def workflow_preview_view(self):
+        return self.workflow_preview_view_class.as_view(model=self.model)
+
+    @property
+    def workflow_history_view(self):
+        return self.workflow_history_view_class.as_view(
+            model=self.model,
+            permission_policy=self.permission_policy,
+            workflow_history_url_name=self.get_url_name("workflow_history"),
+            workflow_history_detail_url_name=self.get_url_name(
+                "workflow_history_detail"
+            ),
+        )
+
+    @property
+    def workflow_history_detail_view(self):
+        return self.workflow_history_detail_view_class.as_view(
+            model=self.model,
+            permission_policy=self.permission_policy,
+            workflow_history_url_name=self.get_url_name("workflow_history"),
         )
 
     @property
@@ -1030,6 +1171,49 @@ class SnippetViewSet(ViewSet):
                 path("lock/<str:pk>/", self.lock_view, name="lock"),
                 path("unlock/<str:pk>/", self.unlock_view, name="unlock"),
             ]
+
+        if self.workflow_enabled:
+            urlpatterns += [
+                path(
+                    "workflow/action/<str:pk>/<slug:action_name>/<int:task_state_id>/",
+                    self.workflow_action_view,
+                    name="workflow_action",
+                ),
+                path(
+                    "workflow/collect_action_data/<str:pk>/<slug:action_name>/<int:task_state_id>/",
+                    self.collect_workflow_action_data_view,
+                    name="collect_workflow_action_data",
+                ),
+                path(
+                    "workflow/confirm_cancellation/<str:pk>/",
+                    self.confirm_workflow_cancellation_view,
+                    name="confirm_workflow_cancellation",
+                ),
+                path(
+                    "workflow/status/<str:pk>/",
+                    self.workflow_status_view,
+                    name="workflow_status",
+                ),
+                path(
+                    "workflow_history/<str:pk>/",
+                    self.workflow_history_view,
+                    name="workflow_history",
+                ),
+                path(
+                    "workflow_history/<str:pk>/detail/<int:workflow_state_id>/",
+                    self.workflow_history_detail_view,
+                    name="workflow_history_detail",
+                ),
+            ]
+
+            if self.preview_enabled:
+                urlpatterns += [
+                    path(
+                        "workflow/preview/<str:pk>/<int:task_id>/",
+                        self.workflow_preview_view,
+                        name="workflow_preview",
+                    ),
+                ]
 
         legacy_redirects = [
             # legacy URLs that could potentially collide if the pk matches one of the reserved names above

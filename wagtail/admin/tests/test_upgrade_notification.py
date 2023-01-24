@@ -1,12 +1,12 @@
 from django.test import RequestFactory, TestCase, override_settings
 
 from wagtail.admin.views.home import UpgradeNotificationPanel
-from wagtail.tests.utils import WagtailTestUtils
+from wagtail.test.utils import WagtailTestUtils
 
 
 class TestUpgradeNotificationPanel(TestCase, WagtailTestUtils):
-    DATA_ATTRIBUTE_UPGRADE_CHECK = "data-upgrade"
-    DATA_ATTRIBUTE_UPGRADE_CHECK_LTS = "data-upgrade-lts-only"
+    DATA_ATTRIBUTE_UPGRADE_CHECK = "data-w-upgrade"
+    DATA_ATTRIBUTE_UPGRADE_CHECK_LTS = "data-w-upgrade-lts-only"
 
     @classmethod
     def setUpTestData(cls):

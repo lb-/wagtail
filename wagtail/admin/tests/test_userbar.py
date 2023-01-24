@@ -146,6 +146,25 @@ class TestUserbarTag(TestCase, WagtailTestUtils):
         # Make sure nothing was rendered
         self.assertEqual(content, "")
 
+    def test_userbar_accessibility_configuration(self):
+        template = Template("{% load wagtailuserbar %}{% wagtailuserbar %}")
+        content = template.render(
+            Context(
+                {
+                    PAGE_TEMPLATE_VAR: self.homepage,
+                    "request": self.dummy_request(self.user),
+                }
+            )
+        )
+
+        # Should include the configuration as a JSON script with the specific id
+        self.assertIn(
+            '<script id="accessibility-axe-configuration" type="application/json">',
+            content,
+        )
+        # Should include the custom error message
+        self.assertIn("Empty heading found", content)
+
 
 class TestUserbarFrontend(TestCase, WagtailTestUtils):
     def setUp(self):
@@ -197,7 +216,7 @@ class TestUserbarAddLink(TestCase, WagtailTestUtils):
         )
         needle = f"""
             <a href="{expected_url}" target="_parent" role="menuitem">
-                <svg class="icon icon-plus wagtail-action-icon" aria-hidden="true">
+                <svg class="icon icon-plus w-action-icon" aria-hidden="true">
                     <use href="#icon-plus"></use>
                 </svg>
                 Add a child page
@@ -238,7 +257,7 @@ class TestUserbarModeration(TestCase, WagtailTestUtils):
         expected_approve_html = """
             <form action="/admin/pages/moderation/{}/approve/" target="_parent" method="post">
                 <input type="hidden" name="csrfmiddlewaretoken">
-                <div class="wagtail-action">
+                <div class="w-action">
                     <input type="submit" value="Approve" class="button" />
                 </div>
             </form>
@@ -250,7 +269,7 @@ class TestUserbarModeration(TestCase, WagtailTestUtils):
         expected_reject_html = """
             <form action="/admin/pages/moderation/{}/reject/" target="_parent" method="post">
                 <input type="hidden" name="csrfmiddlewaretoken">
-                <div class="wagtail-action">
+                <div class="w-action">
                     <input type="submit" value="Reject" class="button" />
                 </div>
             </form>

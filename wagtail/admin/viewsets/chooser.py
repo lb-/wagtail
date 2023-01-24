@@ -31,6 +31,10 @@ class ChooserViewSet(ViewSet):
 
     per_page = 10  #: Number of results to show per page
 
+    #: A list of URL query parameters that should be passed on unmodified as part of any links or
+    #: form submissions within the chooser modal workflow.
+    preserve_url_parameters = ["multiple"]
+
     #: The view class to use for the overall chooser modal; must be a subclass of ``wagtail.admin.views.generic.chooser.ChooseView``.
     choose_view_class = chooser_views.ChooseView
 
@@ -39,6 +43,9 @@ class ChooserViewSet(ViewSet):
 
     #: The view class used after an item has been chosen; must be a subclass of ``wagtail.admin.views.generic.chooser.ChosenView``.
     chosen_view_class = chooser_views.ChosenView
+
+    #: The view class used after multiple items have been chosen; must be a subclass of ``wagtail.admin.views.generic.chooser.ChosenMultipleView``.
+    chosen_multiple_view_class = chooser_views.ChosenMultipleView
 
     #: The view class used to handle submissions of the 'create' form; must be a subclass of ``wagtail.admin.views.generic.chooser.CreateView``.
     create_view_class = chooser_views.CreateView
@@ -85,6 +92,7 @@ class ChooserViewSet(ViewSet):
         return self.choose_view_class.as_view(
             model=self.model,
             chosen_url_name=self.get_url_name("chosen"),
+            chosen_multiple_url_name=self.get_url_name("chosen_multiple"),
             results_url_name=self.get_url_name("choose_results"),
             create_url_name=self.get_url_name("create"),
             icon=self.icon,
@@ -98,6 +106,7 @@ class ChooserViewSet(ViewSet):
             create_action_label=self.create_action_label,
             create_action_clicked_label=self.create_action_clicked_label,
             permission_policy=self.permission_policy,
+            preserve_url_parameters=self.preserve_url_parameters,
         )
 
     @property
@@ -105,6 +114,7 @@ class ChooserViewSet(ViewSet):
         return self.choose_results_view_class.as_view(
             model=self.model,
             chosen_url_name=self.get_url_name("chosen"),
+            chosen_multiple_url_name=self.get_url_name("chosen_multiple"),
             results_url_name=self.get_url_name("choose_results"),
             per_page=self.per_page,
             creation_form_class=self.creation_form_class,
@@ -113,11 +123,18 @@ class ChooserViewSet(ViewSet):
             create_action_label=self.create_action_label,
             create_action_clicked_label=self.create_action_clicked_label,
             permission_policy=self.permission_policy,
+            preserve_url_parameters=self.preserve_url_parameters,
         )
 
     @property
     def chosen_view(self):
         return self.chosen_view_class.as_view(
+            model=self.model,
+        )
+
+    @property
+    def chosen_multiple_view(self):
+        return self.chosen_multiple_view_class.as_view(
             model=self.model,
         )
 
@@ -132,6 +149,7 @@ class ChooserViewSet(ViewSet):
             create_action_label=self.create_action_label,
             create_action_clicked_label=self.create_action_clicked_label,
             permission_policy=self.permission_policy,
+            preserve_url_parameters=self.preserve_url_parameters,
         )
 
     @cached_property
@@ -201,6 +219,7 @@ class ChooserViewSet(ViewSet):
             path("", self.choose_view, name="choose"),
             path("results/", self.choose_results_view, name="choose_results"),
             path("chosen/<str:pk>/", self.chosen_view, name="chosen"),
+            path("chosen-multiple/", self.chosen_multiple_view, name="chosen_multiple"),
             path("create/", self.create_view, name="create"),
         ]
 

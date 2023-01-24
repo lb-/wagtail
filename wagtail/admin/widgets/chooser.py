@@ -101,6 +101,7 @@ class BaseChooser(widgets.Input):
     icon = None
     classname = None
     model = None
+    js_constructor = "Chooser"
 
     # when looping over form fields, this one should appear in visible_fields, not hidden_fields
     # despite the underlying input being type="hidden"
@@ -231,8 +232,20 @@ class BaseChooser(widgets.Input):
         out = "{0}<script>{1}</script>".format(widget_html, js)
         return mark_safe(out)
 
+    @property
+    def base_js_init_options(self):
+        """The set of options to pass to the JS initialiser that are constant every time this widget
+        instance is rendered (i.e. do not vary based on id / name / value)"""
+        return {
+            "modalUrl": self.get_chooser_modal_url(),
+        }
+
+    def get_js_init_options(self, id_, name, value_data):
+        return {**self.base_js_init_options}
+
     def render_js_init(self, id_, name, value_data):
-        return "new Chooser({0});".format(json.dumps(id_))
+        opts = self.get_js_init_options(id_, name, value_data)
+        return f"new {self.js_constructor}({json.dumps(id_)}, {json.dumps(opts)});"
 
     @cached_property
     def media(self):
@@ -250,6 +263,7 @@ class BaseChooserAdapter(WidgetAdapter):
         return [
             widget.render_html("__NAME__", None, attrs={"id": "__ID__"}),
             widget.id_for_label("__ID__"),
+            widget.base_js_init_options,
         ]
 
     @cached_property
@@ -272,6 +286,7 @@ class AdminPageChooser(BaseChooser):
     chooser_modal_url_name = "wagtailadmin_choose_page"
     icon = "doc-empty-inverse"
     classname = "page-chooser"
+    js_constructor = "PageChooser"
 
     def __init__(
         self, target_models=None, can_choose_root=False, user_perms=None, **kwargs
@@ -319,13 +334,14 @@ class AdminPageChooser(BaseChooser):
         ]
 
     @property
-    def client_options(self):
+    def base_js_init_options(self):
         # a JSON-serializable representation of the configuration options needed for the
         # client-side behaviour of this widget
         return {
-            "model_names": self.model_names,
-            "can_choose_root": self.can_choose_root,
-            "user_perms": self.user_perms,
+            "modelNames": self.model_names,
+            "canChooseRoot": self.can_choose_root,
+            "userPerms": self.user_perms,
+            **super().base_js_init_options,
         }
 
     def get_instance(self, value):
@@ -342,13 +358,13 @@ class AdminPageChooser(BaseChooser):
         data["parent_id"] = parent_page.pk if parent_page else None
         return data
 
-    def render_js_init(self, id_, name, value_data):
+    def get_js_init_options(self, id_, name, value_data):
+        opts = super().get_js_init_options(id_, name, value_data)
         value_data = value_data or {}
-        return "new PageChooser({id}, {parent}, {options});".format(
-            id=json.dumps(id_),
-            parent=json.dumps(value_data.get("parent_id")),
-            options=json.dumps(self.client_options),
-        )
+        parent_id = value_data.get("parent_id")
+        if parent_id is not None:
+            opts["parentId"] = parent_id
+        return opts
 
     @property
     def media(self):
@@ -360,15 +376,17 @@ class AdminPageChooser(BaseChooser):
         )
 
 
-class PageChooserAdapter(WidgetAdapter):
+class PageChooserAdapter(BaseChooserAdapter):
     js_constructor = "wagtail.widgets.PageChooser"
 
-    def js_args(self, widget):
-        return [
-            widget.render_html("__NAME__", None, attrs={"id": "__ID__"}),
-            widget.id_for_label("__ID__"),
-            widget.client_options,
-        ]
+    @cached_property
+    def media(self):
+        return forms.Media(
+            js=[
+                versioned_static("wagtailadmin/js/page-chooser-modal.js"),
+                versioned_static("wagtailadmin/js/page-chooser-telepath.js"),
+            ]
+        )
 
 
 class AdminPageMoveChooser(AdminPageChooser):
@@ -384,13 +402,11 @@ class AdminPageMoveChooser(AdminPageChooser):
         )
 
     @property
-    def client_options(self):
+    def base_js_init_options(self):
         return {
-            "model_names": self.model_names,
-            "can_choose_root": self.can_choose_root,
-            "user_perms": self.user_perms,
-            "target_pages": self.pages_to_move,
-            "match_subclass": False,
+            "targetPages": self.pages_to_move,
+            "matchSubclass": False,
+            **super().base_js_init_options,
         }
 
 

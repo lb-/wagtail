@@ -3,7 +3,7 @@
 ## On your server
 
 Wagtail is straightforward to deploy on modern Linux-based distributions, and should run with any of the combinations detailed in Django's [deployment documentation](django:howto/deployment/index).
-See the section on [performance](performance) for the non-Python services we recommend.
+See the section on [performance](performance_overview) for the non-Python services we recommend.
 
 ## On Divio Cloud
 
@@ -12,8 +12,6 @@ With a free account, you can create a Wagtail project. Choose from a:
 
 -   [site based on the Wagtail Bakery project](https://www.divio.com/wagtail/), or
 -   [brand new Wagtail project](https://control.divio.com/control/project/create) (see the [how to get started notes](https://docs.divio.com/en/latest/introduction/wagtail/)).
-
-Divio Cloud also hosts a [live Wagtail Bakery demo](https://www.divio.com/wagtail/) (no account required).
 
 ## On PythonAnywhere
 
@@ -70,7 +68,7 @@ If you would like to serve your images from a separate asset server or CDN, you 
 Document serving is controlled by the [WAGTAILDOCS_SERVE_METHOD](wagtaildocs_serve_method) method.
 When using `FileSystemStorage`, documents are stored in a `documents` subdirectory within your site's `MEDIA_ROOT`.
 If all your documents are public, you can set the `WAGTAILDOCS_SERVE_METHOD` to `direct` and configure your web server to serve the files itself.
-However, if you use Wagtail's [Collection Privacy settings](collection_privacy_settings) to restrict access to some or all of your documents, you may or may not want to configure your web server to serve the documents directly.
+However, if you use Wagtail's [Collection Privacy settings](https://guide.wagtail.org/en-latest/how-to/managing-collections/#privacy-settings) to restrict access to some or all of your documents, you may or may not want to configure your web server to serve the documents directly.
 The default setting is `redirect` which allows Wagtail to perform any configured privacy checks before offloading serving the actual document to your web server or CDN.
 This means that Wagtail constructs document links that pass through Wagtail, but the final url in the user's browser is served directly by your web server.
 If a user bookmarks this url, they will be able to access the file without passing through Wagtail's privacy checks.
@@ -82,7 +80,9 @@ If you are serving documents from the cloud and need to enforce privacy settings
 Be aware that setting up remote storage will not entirely offload file handling tasks from the application server - some Wagtail functionality requires files to be read back by the application server.
 In particular, original image files need to be read back whenever a new resized rendition is created, and documents may be configured to be served through a Django view in order to enforce permission checks (see [WAGTAILDOCS_SERVE_METHOD](wagtaildocs_serve_method)).
 
-Note that the django-storages Amazon S3 backends (`storages.backends.s3boto.S3BotoStorage` and `storages.backends.s3boto3.S3Boto3Storage`) **do not correctly handle duplicate filenames** in their default configuration. When using these backends, `AWS_S3_FILE_OVERWRITE` must be set to `False`.
+```{note}
+The django-storages Amazon S3 backends (`storages.backends.s3boto.S3BotoStorage` and `storages.backends.s3boto3.S3Boto3Storage`) **do not correctly handle duplicate filenames** in their default configuration. When using these backends, `AWS_S3_FILE_OVERWRITE` must be set to `False`.
+```
 
 If you are also serving Wagtail's static files from remote storage (using Django's [STATICFILES_STORAGE](https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-STATICFILES_STORAGE) setting), you'll need to ensure that it is configured to serve [CORS HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), as current browsers will reject remotely-hosted font files that lack a valid header. For Amazon S3, refer to the documentation [Setting Bucket and Object Access Permissions](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-permissions.html), or (for the `storages.backends.s3boto.S3Boto3Storage` backend only) add the following to your Django settings:
 

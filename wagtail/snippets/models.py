@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from django.contrib.admin.utils import quote
 from django.contrib.auth import get_permission_codename
 from django.contrib.auth.models import Permission
@@ -11,7 +13,7 @@ from django.utils.module_loading import import_string
 from wagtail.admin.checks import check_panels_in_model
 from wagtail.admin.forms.models import register_form_field_override
 from wagtail.admin.viewsets import viewsets
-from wagtail.models import DraftStateMixin, LockableMixin, ReferenceIndex
+from wagtail.models import DraftStateMixin, LockableMixin, ReferenceIndex, WorkflowMixin
 
 from .widgets import AdminSnippetChooser
 
@@ -30,6 +32,21 @@ DEFERRED_REGISTRATIONS = []
 
 def get_snippet_models():
     return SNIPPET_MODELS
+
+
+@lru_cache(maxsize=None)
+def get_workflow_enabled_models():
+    return [model for model in SNIPPET_MODELS if issubclass(model, WorkflowMixin)]
+
+
+def get_editable_models(user):
+    from wagtail.snippets.permissions import get_permission_name
+
+    return [
+        model
+        for model in SNIPPET_MODELS
+        if user.has_perm(get_permission_name("change", model))
+    ]
 
 
 class SnippetAdminURLFinder:

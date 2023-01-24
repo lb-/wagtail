@@ -9,6 +9,7 @@ from django.contrib.auth.models import AnonymousUser, Permission
 from django.core import checks
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils.html import json_script
 from freezegun import freeze_time
 from pytz import utc
@@ -947,7 +948,7 @@ class TestPageChooserPanel(TestCase):
 
     def test_render_js_init(self):
         result = self.page_chooser_panel.render_html()
-        expected_js = 'new PageChooser("{id}", {parent}, {{"model_names": ["{model}"], "can_choose_root": false, "user_perms": null}});'.format(
+        expected_js = 'new PageChooser("{id}", {{"modelNames": ["{model}"], "canChooseRoot": false, "userPerms": null, "modalUrl": "/admin/choose-page/", "parentId": {parent}}});'.format(
             id="id_page", model="wagtailcore.page", parent=self.events_index_page.id
         )
 
@@ -969,7 +970,7 @@ class TestPageChooserPanel(TestCase):
         result = page_chooser_panel.render_html()
 
         # the canChooseRoot flag on PageChooser should now be true
-        expected_js = 'new PageChooser("{id}", {parent}, {{"model_names": ["{model}"], "can_choose_root": true, "user_perms": null}});'.format(
+        expected_js = 'new PageChooser("{id}", {{"modelNames": ["{model}"], "canChooseRoot": true, "userPerms": null, "modalUrl": "/admin/choose-page/", "parentId": {parent}}});'.format(
             id="id_page", model="wagtailcore.page", parent=self.events_index_page.id
         )
         self.assertIn(expected_js, result)
@@ -1025,7 +1026,7 @@ class TestPageChooserPanel(TestCase):
         )
 
         result = page_chooser_panel.render_html()
-        expected_js = 'new PageChooser("{id}", {parent}, {{"model_names": ["{model}"], "can_choose_root": false, "user_perms": null}});'.format(
+        expected_js = 'new PageChooser("{id}", {{"modelNames": ["{model}"], "canChooseRoot": false, "userPerms": null, "modalUrl": "/admin/choose-page/", "parentId": {parent}}});'.format(
             id="id_page", model="tests.eventpage", parent=self.events_index_page.id
         )
 
@@ -1045,7 +1046,7 @@ class TestPageChooserPanel(TestCase):
         )
 
         result = page_chooser_panel.render_html()
-        expected_js = 'new PageChooser("{id}", {parent}, {{"model_names": ["{model}"], "can_choose_root": false, "user_perms": null}});'.format(
+        expected_js = 'new PageChooser("{id}", {{"modelNames": ["{model}"], "canChooseRoot": false, "userPerms": null, "modalUrl": "/admin/choose-page/", "parentId": {parent}}});'.format(
             id="id_page", model="tests.eventpage", parent=self.events_index_page.id
         )
 
@@ -1744,3 +1745,25 @@ class TestPublishingPanel(TestCase, WagtailTestUtils):
 
         self.assertIn("go_live_at", form.base_fields)
         self.assertIn("expire_at", form.base_fields)
+
+
+class TestMultipleChooserPanel(TestCase, WagtailTestUtils):
+    fixtures = ["test.json"]
+
+    def setUp(self):
+        # Find root page
+        self.root_page = Page.objects.get(id=2)
+
+        # Login
+        self.user = self.login()
+
+    def test_can_render_panel(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "gallerypage", self.root_page.id),
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="gallery_images-TOTAL_FORMS"')
+        self.assertContains(response, 'chooserFieldName: "image"')

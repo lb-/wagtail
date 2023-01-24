@@ -179,7 +179,7 @@ class LandingPage(Page):
 
 ### Page URLs
 
-The most common method of retrieving page URLs is by using the `{% pageurl %}` template tag. Since it's called from a template, `pageurl` automatically includes the optimizations mentioned below. For more information, see [pageurl](pageurl_tag).
+The most common method of retrieving page URLs is by using the [`{% pageurl %}`](pageurl_tag) or [`{% fullpageurl %}`](fullpageurl_tag) template tags. Since it's called from a template, these automatically includes the optimizations mentioned below.
 
 Page models also include several low-level methods for overriding or accessing page URLs.
 
@@ -384,7 +384,7 @@ The first argument must match the value of the `related_name` attribute of the `
 
 ## Working with pages
 
-Wagtail uses Django's [multi-table inheritance](https://docs.djangoproject.com/en/3.1/topics/db/models/#multi-table-inheritance) feature to allow multiple page models to be used in the same tree.
+Wagtail uses Django's [multi-table inheritance](https://docs.djangoproject.com/en/stable/topics/db/models/#multi-table-inheritance) feature to allow multiple page models to be used in the same tree.
 
 Each page is added to both Wagtail's built-in {class}`~wagtail.models.Page` model as well as its user-defined model (such as the `BlogPage` model created earlier).
 

@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Count, OuterRef
 from django.db.models.functions import Lower
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,6 +19,7 @@ from wagtail.admin import messages
 from wagtail.admin.auth import PermissionPolicyChecker
 from wagtail.admin.forms.workflows import (
     TaskChooserSearchForm,
+    WorkflowContentTypeForm,
     WorkflowPagesFormSet,
     get_task_form_class,
     get_workflow_edit_handler,
@@ -31,9 +33,11 @@ from wagtail.models import (
     TaskState,
     UserPagePermissionsProxy,
     Workflow,
+    WorkflowContentType,
     WorkflowState,
 )
 from wagtail.permissions import task_permission_policy, workflow_permission_policy
+from wagtail.snippets.models import get_workflow_enabled_models
 from wagtail.workflows import get_task_types
 
 task_permission_checker = PermissionPolicyChecker(task_permission_policy)
@@ -58,11 +62,16 @@ class Index(IndexView):
         queryset = super().get_queryset()
         if not self.show_disabled():
             queryset = queryset.filter(active=True)
+        content_types = WorkflowContentType.objects.filter(
+            workflow=OuterRef("pk")
+        ).values_list("pk", flat=True)
+        queryset = queryset.annotate(content_types=Count(content_types))
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["showing_disabled"] = self.show_disabled()
+        context["workflow_enabled_models"] = get_workflow_enabled_models()
         return context
 
 
@@ -94,6 +103,12 @@ class Create(CreateView):
         else:
             return WorkflowPagesFormSet(instance=self.object, prefix="pages")
 
+    def get_content_type_form(self):
+        if self.request.method == "POST":
+            return WorkflowContentTypeForm(self.request.POST, workflow=self.object)
+        else:
+            return WorkflowContentTypeForm(workflow=self.object)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         form = context["form"]
@@ -104,6 +119,8 @@ class Create(CreateView):
 
         context["edit_handler"] = bound_panel
         context["pages_formset"] = pages_formset
+        context["has_workflow_enabled_models"] = bool(get_workflow_enabled_models())
+        context["content_type_form"] = self.get_content_type_form()
         context["media"] = form.media + bound_panel.media + pages_formset.media
         return context
 
@@ -114,8 +131,10 @@ class Create(CreateView):
             self.object = self.save_instance()
 
             pages_formset = self.get_pages_formset()
-            if pages_formset.is_valid():
+            content_type_form = self.get_content_type_form()
+            if pages_formset.is_valid() and content_type_form.is_valid():
                 pages_formset.save()
+                content_type_form.save()
 
                 success_message = self.get_success_message(self.object)
                 if success_message is not None:
@@ -170,6 +189,12 @@ class Edit(EditView):
         else:
             return WorkflowPagesFormSet(instance=self.get_object(), prefix="pages")
 
+    def get_content_type_form(self):
+        if self.request.method == "POST":
+            return WorkflowContentTypeForm(self.request.POST, workflow=self.object)
+        else:
+            return WorkflowContentTypeForm(workflow=self.object)
+
     def get_paginated_pages(self):
         # Get the (paginated) list of Pages to which this Workflow is assigned.
         pages = Page.objects.filter(workflowpage__workflow=self.get_object())
@@ -188,6 +213,8 @@ class Edit(EditView):
         context["edit_handler"] = bound_panel
         context["pages"] = self.get_paginated_pages()
         context["pages_formset"] = pages_formset
+        context["has_workflow_enabled_models"] = bool(get_workflow_enabled_models())
+        context["content_type_form"] = self.get_content_type_form()
         context["can_disable"] = (
             self.permission_policy is None
             or self.permission_policy.user_has_permission(self.request.user, "delete")
@@ -211,12 +238,14 @@ class Edit(EditView):
             self.object = self.save_instance()
             successful = True
 
-            # Save pages formset
-            # Note: The pages formset is hidden when the page is inactive
+            # Save pages formset and content type form
+            # Note: These are hidden when the workflow is inactive
             if self.object.active:
                 pages_formset = self.get_pages_formset()
-                if pages_formset.is_valid():
+                content_type_form = self.get_content_type_form()
+                if pages_formset.is_valid() and content_type_form.is_valid():
                     pages_formset.save()
+                    content_type_form.save()
                 else:
                     transaction.set_rollback(True)
                     successful = False
@@ -258,15 +287,16 @@ class Disable(DeleteView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         states_in_progress = WorkflowState.objects.filter(
-            status=WorkflowState.STATUS_IN_PROGRESS
+            workflow=self.object, status=WorkflowState.STATUS_IN_PROGRESS
         ).count()
-        context["warning_message"] = ngettext(
-            "This workflow is in progress on %(states_in_progress)d page. Disabling this workflow will cancel moderation on this page.",
-            "This workflow is in progress on %(states_in_progress)d pages. Disabling this workflow will cancel moderation on these pages.",
-            states_in_progress,
-        ) % {
-            "states_in_progress": states_in_progress,
-        }
+        if states_in_progress:
+            context["warning_message"] = ngettext(
+                "This workflow is in progress on %(states_in_progress)d page/snippet. Disabling this workflow will cancel moderation on this page/snippet.",
+                "This workflow is in progress on %(states_in_progress)d pages/snippets. Disabling this workflow will cancel moderation on these pages/snippets.",
+                states_in_progress,
+            ) % {
+                "states_in_progress": states_in_progress,
+            }
         return context
 
     def delete_action(self):
@@ -500,7 +530,7 @@ class EditTask(EditView):
             or self.permission_policy.user_has_permission(self.request.user, "create")
         ) and not self.object.active
 
-        # TODO: add warning msg when there are pages currently on this task in a workflow, add interaction like resetting task state when saved
+        # TODO: add warning msg when there are pages/snippets currently on this task in a workflow, add interaction like resetting task state when saved
         return context
 
     @property
@@ -525,13 +555,14 @@ class DisableTask(DeleteView):
         states_in_progress = TaskState.objects.filter(
             status=TaskState.STATUS_IN_PROGRESS, task=self.get_object().pk
         ).count()
-        context["warning_message"] = ngettext(
-            "This task is in progress on %(states_in_progress)d page. Disabling this task will cause it to be skipped in the moderation workflow and not be listed for selection when editing a workflow.",
-            "This task is in progress on %(states_in_progress)d pages. Disabling this task will cause it to be skipped in the moderation workflow and not be listed for selection when editing a workflow.",
-            states_in_progress,
-        ) % {
-            "states_in_progress": states_in_progress,
-        }
+        if states_in_progress:
+            context["warning_message"] = ngettext(
+                "This task is in progress on %(states_in_progress)d page/snippet. Disabling this task will cause it to be skipped in the moderation workflow and not be listed for selection when editing a workflow.",
+                "This task is in progress on %(states_in_progress)d pages/snippets. Disabling this task will cause it to be skipped in the moderation workflow and not be listed for selection when editing a workflow.",
+                states_in_progress,
+            ) % {
+                "states_in_progress": states_in_progress,
+            }
         return context
 
     @property

@@ -60,8 +60,10 @@
                 trigger: 'hover',
                 placement: 'bottom',
             });
-
-            LockUnlockAction('{{ csrf_token|escapejs }}', '{{ action_url }}');
         });
     </script>
+
+    {% if workflow_enabled %}
+        {% include "wagtailadmin/shared/_workflow_init.html" %}
+    {% endif %}
 {% endblock %}

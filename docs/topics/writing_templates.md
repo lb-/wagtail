@@ -60,7 +60,7 @@ Any file within the static folder should be inserted into your HTML using the `{
 
 ### User images
 
-Images uploaded to a Wagtail site by its users (as opposed to a developer's static files, mentioned above) go into the image library and from there are added to pages via the [page editor interface](inserting_images).
+Images uploaded to a Wagtail site by its users (as opposed to a developer's static files, mentioned above) go into the image library and from there are added to pages via the page editor interface.
 
 Unlike other CMSs, adding images to a page does not involve choosing a "version" of the image to use. Wagtail has no predefined image "formats" or "sizes". Instead, the template developer defines image manipulation to occur _on the fly_ when the image is requested, via a special syntax within the template.
 
@@ -173,6 +173,20 @@ A `fallback` keyword argument can be provided - this can be a URL string, a name
 {% endfor %}
 ```
 
+(fullpageurl_tag)=
+
+### `fullpageurl`
+
+Takes a Page object and returns its absolute URL (`http://example.com/foo/bar/`).
+
+```html+django
+{% load wagtailcore_tags %}
+...
+<meta property="og:url" content="{% fullpageurl page %}" />
+```
+
+Much like `pageurl`, a `fallback` keyword argument may be provided.
+
 (slugurl_tag)=
 
 ### `slugurl`
@@ -223,7 +237,7 @@ This tag provides a contextual flyout menu for logged-in users. The menu gives e
 
 This tag may be used on standard Django views, without page object. The user bar will contain one item pointing to the admin.
 
-We recommend putting the tag near the top of the `<body>` element to allow keyboard users to reach it. You should consider putting the tag after any `[skip links](https://webaim.org/techniques/skipnav/)` but before the navigation and main content of your page.
+We recommend putting the tag near the top of the `<body>` element to allow keyboard users to reach it. You should consider putting the tag after any [skip links](https://webaim.org/techniques/skipnav/)` but before the navigation and main content of your page.
 
 ```html+django
 {% load wagtailuserbar %}
@@ -254,11 +268,10 @@ By default, the User Bar appears in the bottom right of the browser window, inse
 The userbar can be positioned where it works best with your design. Alternatively, you can position it with a CSS rule in your own CSS files, for example:
 
 ```css
-.wagtail-userbar {
-    top: 200px !important;
-    left: 10px !important;
+wagtail-userbar::part(userbar) {
+    bottom: 30px;
 }
-```
+``` 
 
 ## Varying output between preview and live
 

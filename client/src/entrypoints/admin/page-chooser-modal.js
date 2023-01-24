@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import { ChooserModal } from '../../includes/chooserModal';
 import { initTooltips } from '../../includes/initTooltips';
 
 /* global wagtail */
@@ -29,6 +30,9 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
 
     /* save initial page browser HTML, so that we can restore it if the search box gets cleared */
     const initialPageResultsHtml = $('.page-results', modal.body).html();
+
+    // Set up submissions of the "choose multiple items" form to open in the modal.
+    modal.ajaxifyForm($('form[data-multiple-choice-form]', modal.body));
 
     let request;
 
@@ -98,6 +102,16 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
       });
     }
 
+    function updateMultipleChoiceSubmitEnabledState() {
+      // update the enabled state of the multiple choice submit button depending on whether
+      // any items have been selected
+      if ($('[data-multiple-choice-select]:checked', modal.body).length) {
+        $('[data-multiple-choice-submit]', modal.body).removeAttr('disabled');
+      } else {
+        $('[data-multiple-choice-submit]', modal.body).attr('disabled', true);
+      }
+    }
+
     function ajaxifyBrowseResults() {
       /* Set up page navigation links to open in the modal */
       $(
@@ -125,6 +139,11 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
       });
 
       wagtail.ui.initDropDowns();
+
+      updateMultipleChoiceSubmitEnabledState();
+      $('[data-multiple-choice-select]', modal.body).on('change', () => {
+        updateMultipleChoiceSubmitEnabledState();
+      });
     }
     ajaxifyBrowseResults();
     initTooltips();
@@ -192,6 +211,10 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
     modal.respond('pageChosen', jsonData.result);
     modal.close();
   },
+  page_chosen(modal, jsonData) {
+    modal.respond('pageChosen', jsonData.result);
+    modal.close();
+  },
   confirm_external_to_internal(modal, jsonData) {
     // eslint-disable-next-line func-names, prefer-arrow-callback
     $('[data-action-confirm]', modal.body).on('click', function () {
@@ -208,3 +231,35 @@ const PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = {
   },
 };
 window.PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS = PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS;
+
+class PageChooserModal extends ChooserModal {
+  onloadHandlers = PAGE_CHOOSER_MODAL_ONLOAD_HANDLERS;
+  chosenResponseName = 'pageChosen';
+
+  getURL(opts) {
+    let url = super.getURL();
+    if (opts.parentId) {
+      url += opts.parentId + '/';
+    }
+    return url;
+  }
+
+  getURLParams(opts) {
+    const urlParams = super.getURLParams(opts);
+    urlParams.page_type = opts.modelNames.join(',');
+    if (opts.targetPages) {
+      urlParams.target_pages = opts.targetPages;
+    }
+    if (opts.matchSubclass) {
+      urlParams.match_subclass = opts.matchSubclass;
+    }
+    if (opts.canChooseRoot) {
+      urlParams.can_choose_root = 'true';
+    }
+    if (opts.userPerms) {
+      urlParams.user_perms = opts.userPerms;
+    }
+    return urlParams;
+  }
+}
+window.PageChooserModal = PageChooserModal;

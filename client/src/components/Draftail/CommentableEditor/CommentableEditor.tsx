@@ -19,7 +19,6 @@ import {
   RichUtils,
   SelectionState,
 } from 'draft-js';
-import type { DraftEditorLeaf } from 'draft-js/lib/DraftEditorLeaf.react';
 import { filterInlineStyles } from 'draftjs-filters';
 import React, {
   MutableRefObject,
@@ -36,6 +35,9 @@ import type { CommentApp } from '../../CommentApp/main';
 import { gettext } from '../../../utils/gettext';
 
 import Icon from '../../Icon/Icon';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const DraftEditorLeaf = require('draft-js/lib/DraftEditorLeaf.react');
 
 const { isOptionKeyCommand } = KeyBindingUtil;
 
@@ -415,7 +417,8 @@ export function findLeastCommonCommentId(block: ContentBlock, offset: number) {
   const styleCount = styles.count();
   if (styleCount === 0) {
     return null;
-  } else if (styleCount > 1) {
+  }
+  if (styleCount > 1) {
     // We're dealing with overlapping comments.
     // Find the least frequently occurring style and use that - this isn't foolproof, but in
     // most cases should ensure that all comments have at least one clickable section. This
@@ -452,7 +455,7 @@ export function findLeastCommonCommentId(block: ContentBlock, offset: number) {
 
 interface DecoratorProps {
   contentState: ContentState;
-  children?: Array<DraftEditorLeaf>;
+  children?: Array<typeof DraftEditorLeaf>;
 }
 
 function getCommentDecorator(commentApp: CommentApp) {
@@ -888,7 +891,8 @@ function CommentableEditor({
                 return {
                   backgroundColor: background,
                 };
-              } else if (numStyles > 1) {
+              }
+              if (numStyles > 1) {
                 // Otherwise if we're in a region with overlapping comments, use a different colour than usual
                 // to indicate that
                 background = overlappingHighlight;

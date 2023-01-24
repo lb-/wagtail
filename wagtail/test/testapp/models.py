@@ -25,6 +25,7 @@ from wagtail.admin.panels import (
     HelpPanel,
     InlinePanel,
     MultiFieldPanel,
+    MultipleChooserPanel,
     ObjectList,
     PublishingPanel,
     TabbedInterface,
@@ -32,6 +33,7 @@ from wagtail.admin.panels import (
 from wagtail.blocks import (
     CharBlock,
     FieldBlock,
+    ListBlock,
     RawHTMLBlock,
     RichTextBlock,
     StreamBlock,
@@ -69,6 +71,7 @@ from wagtail.models import (
     RevisionMixin,
     Task,
     TranslatableMixin,
+    WorkflowMixin,
 )
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
@@ -1005,7 +1008,7 @@ class RevisableGrandChildModel(RevisableChildModel):
 
 
 # Models with DraftStateMixin
-class DraftStateModel(LockableMixin, DraftStateMixin, RevisionMixin, models.Model):
+class DraftStateModel(DraftStateMixin, LockableMixin, RevisionMixin, models.Model):
     text = models.TextField()
 
     panels = [
@@ -1100,6 +1103,48 @@ class LockableModel(LockableMixin, models.Model):
 
 
 register_snippet(LockableModel)
+
+
+# Models with WorkflowMixin
+# Note: do not use Workflow in the model name to avoid incorrect counts in tests
+# that look for the word "workflow"
+
+
+class ModeratedModel(WorkflowMixin, DraftStateMixin, RevisionMixin, models.Model):
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+
+
+register_snippet(ModeratedModel)
+
+
+# Snippet with all mixins enabled
+
+
+class FullFeaturedSnippet(
+    PreviewableMixin,
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    models.Model,
+):
+    text = models.TextField()
+
+    def __str__(self):
+        return self.text
+
+    def get_preview_template(self, request, mode_name):
+        return "tests/previewable_model.html"
+
+    class Meta:
+        verbose_name = "full-featured snippet"
+        verbose_name_plural = "full-featured snippets"
+
+
+register_snippet(FullFeaturedSnippet)
 
 
 class StandardIndex(Page):
@@ -1413,6 +1458,10 @@ class StreamPage(Page):
                         ("author", CharBlock()),
                     ]
                 ),
+            ),
+            (
+                "title_list",
+                ListBlock(CharBlock()),
             ),
         ],
         use_json_field=False,
@@ -2000,3 +2049,20 @@ class ModelWithNullableParentalKey(models.Model):
 
     page = ParentalKey(Page, blank=True, null=True)
     content = RichTextField()
+
+
+class GalleryPage(Page):
+    content_panels = Page.content_panels + [
+        MultipleChooserPanel("gallery_images", chooser_field_name="image")
+    ]
+
+
+class GalleryPageImage(Orderable):
+    page = ParentalKey(
+        "tests.GalleryPage", related_name="gallery_images", on_delete=models.CASCADE
+    )
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        on_delete=models.CASCADE,
+        related_name="+",
+    )

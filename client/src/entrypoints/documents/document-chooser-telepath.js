@@ -1,9 +1,5 @@
-import { ChooserFactory } from '../../components/ChooserWidget';
+import { DocumentChooserFactory } from '../../components/ChooserWidget/DocumentChooserWidget';
 
-class DocumentChooserFactory extends ChooserFactory {
-  // eslint-disable-next-line no-undef
-  widgetClass = DocumentChooser;
-}
 window.telepath.register(
   'wagtail.documents.widgets.DocumentChooser',
   DocumentChooserFactory,

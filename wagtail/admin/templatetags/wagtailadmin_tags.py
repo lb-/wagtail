@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from urllib.parse import urljoin
+from warnings import warn
 
 from django import template
 from django.conf import settings
@@ -25,13 +26,18 @@ from django.utils.timesince import timesince
 from django.utils.translation import gettext_lazy as _
 
 from wagtail import hooks
+from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.localization import get_js_translation_strings
 from wagtail.admin.menu import admin_menu
 from wagtail.admin.navigation import get_explorable_root_page
 from wagtail.admin.search import admin_search_areas
 from wagtail.admin.staticfiles import versioned_static as versioned_static_func
 from wagtail.admin.ui import sidebar
-from wagtail.admin.utils import get_admin_base_url, get_valid_next_url_from_request
+from wagtail.admin.utils import (
+    get_admin_base_url,
+    get_latest_str,
+    get_valid_next_url_from_request,
+)
 from wagtail.admin.views.bulk_action.registry import bulk_action_registry
 from wagtail.admin.widgets import ButtonWithDropdown, PageListingButton
 from wagtail.coreutils import camelcase_to_underscore
@@ -154,6 +160,57 @@ def page_permissions(context, page):
     what actions the current logged-in user can perform on the given page.
     """
     return _get_user_page_permissions(context).for_page(page)
+
+
+@register.simple_tag
+def is_page(obj):
+    """
+    Usage: {% is_page obj as is_page %}
+    Sets the variable 'is_page' to True if the given object is a Page instance,
+    False otherwise. Useful in shared templates that accept both Page and
+    non-Page objects (e.g. snippets with the optional features enabled).
+    """
+    return isinstance(obj, Page)
+
+
+@register.simple_tag(takes_context=True)
+def admin_edit_url(context, obj, user=None):
+    """
+    Usage: {% admin_edit_url obj user %}
+    Returns the URL of the edit view for the given object and user using the
+    registered AdminURLFinder for the object. The AdminURLFinder instance is
+    cached in the context for the duration of the page request.
+    The user argument is optional and defaults to request.user if request is
+    available in the context.
+    """
+    if not user and "request" in context:
+        user = context["request"].user
+    if "admin_url_finder" not in context:
+        context["admin_url_finder"] = AdminURLFinder(user)
+    return context["admin_url_finder"].get_edit_url(obj)
+
+
+@register.simple_tag
+def admin_url_name(obj, action):
+    """
+    Usage: {% admin_url_name obj action %}
+    Returns the URL name of the given action for the given object, e.g.
+    'wagtailadmin_pages:edit' for a Page object and 'edit' action.
+    Works with pages and snippets only.
+    """
+    if isinstance(obj, Page):
+        return f"wagtailadmin_pages:{action}"
+    return obj.get_admin_url_namespace() + f":{action}"
+
+
+@register.simple_tag
+def latest_str(obj):
+    """
+    Usage: {% latest_str obj %}
+    Returns the latest string representation of an object, making use of the
+    latest revision where available to reflect draft changes.
+    """
+    return get_latest_str(obj)
 
 
 @register.simple_tag
@@ -589,6 +646,22 @@ def bulk_action_choices(context, app_label, model_name):
     return {"buttons": bulk_action_buttons}
 
 
+@register.inclusion_tag("wagtailadmin/shared/avatar.html")
+def avatar(user=None, classname=None, size=None, tooltip=None):
+    """
+    Displays a user avatar using the avatar template
+    Usage:
+    {% load wagtailadmin_tags %}
+    ...
+    {% avatar user=request.user size='small' tooltip='JaneDoe' %}
+    :param user: the user to get avatar information from (User)
+    :param size: default None (None|'small'|'large'|'square')
+    :param tooltip: Optional tooltip to display under the avatar (string)
+    :return: Rendered template snippet
+    """
+    return {"user": user, "classname": classname, "size": size, "tooltip": tooltip}
+
+
 @register.simple_tag
 def message_level_tag(message):
     """
@@ -685,6 +758,17 @@ def icon(name=None, classname=None, title=None, wrapped=False, class_name=None):
     """
     if not name:
         raise ValueError("You must supply an icon name")
+
+    if class_name:
+        from wagtail.utils.deprecation import RemovedInWagtail50Warning
+
+        warn(
+            (
+                "Icon template tag `class_name` has been renamed to `classname`, please adopt the new usage instead. "
+                f'Replace `{{% icon ... class_name="{class_name}" %}}` with `{{% icon ... classname="{class_name}" %}}`'
+            ),
+            category=RemovedInWagtail50Warning,
+        )
 
     return {
         "name": name,

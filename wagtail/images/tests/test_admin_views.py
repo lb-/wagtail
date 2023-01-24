@@ -44,6 +44,16 @@ class TestImageIndexView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtailimages/images/index.html")
         self.assertContains(response, "Add an image")
+        # The search box should not raise an error
+        self.assertNotContains(response, "This field is required.")
+
+    def test_empty_q(self):
+        response = self.get({"q": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["query_string"], "")
+        self.assertContains(response, "Add an image")
+        # The search box should not raise an error
+        self.assertNotContains(response, "This field is required.")
 
     def test_search(self):
         response = self.get({"q": "Hello"})
@@ -1480,6 +1490,57 @@ class TestImageChooserChosenView(TestCase, WagtailTestUtils):
 
         response_json = json.loads(response.content.decode())
         self.assertEqual(response_json["step"], "chosen")
+        self.assertEqual(response_json["result"]["title"], "Test image")
+
+    def test_with_multiple_flag(self):
+        # if 'multiple' is passed as a URL param, the result should be returned as a single-item list
+        response = self.get(params={"multiple": 1})
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "chosen")
+        self.assertEqual(len(response_json["result"]), 1)
+        self.assertEqual(response_json["result"][0]["title"], "Test image")
+
+
+class TestImageChooserChosenMultipleView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+        # Create an image to edit
+        self.image1 = Image.objects.create(
+            title="Test image",
+            file=get_test_image_file(),
+        )
+        self.image2 = Image.objects.create(
+            title="Another test image",
+            file=get_test_image_file(),
+        )
+
+        self.image3 = Image.objects.create(
+            title="Unchosen test image",
+            file=get_test_image_file(),
+        )
+
+    def get(self, params={}):
+        return self.client.get(
+            "%s?id=%d&id=%d"
+            % (
+                reverse("wagtailimages_chooser:chosen_multiple"),
+                self.image1.pk,
+                self.image2.pk,
+            )
+        )
+
+    def test_get(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json["step"], "chosen")
+        self.assertEqual(len(response_json["result"]), 2)
+        titles = {item["title"] for item in response_json["result"]}
+        self.assertEqual(titles, {"Test image", "Another test image"})
 
 
 class TestImageChooserSelectFormatView(TestCase, WagtailTestUtils):
@@ -1717,8 +1778,9 @@ class TestImageChooserUploadView(TestCase, WagtailTestUtils):
         new_image = Image.objects.get(title="Test duplicate image")
         existing_image = Image.objects.get(title="Test image")
 
-        choose_new_image_action = reverse(
-            "wagtailimages_chooser:select_format", args=(new_image.id,)
+        choose_new_image_action = (
+            reverse("wagtailimages_chooser:select_format", args=(new_image.id,))
+            + "?select_format=true"
         )
         self.assertEqual(
             response.context["confirm_duplicate_upload_action"], choose_new_image_action
@@ -1732,6 +1794,7 @@ class TestImageChooserUploadView(TestCase, WagtailTestUtils):
                     "next": reverse(
                         "wagtailimages_chooser:select_format", args=(existing_image.id,)
                     )
+                    + "?select_format=true"
                 }
             )
         )

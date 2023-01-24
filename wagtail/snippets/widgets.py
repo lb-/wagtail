@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
@@ -17,6 +15,7 @@ class AdminSnippetChooser(BaseChooser):
     display_title_key = "string"
     icon = "snippet"
     classname = "snippet-chooser"
+    js_constructor = "SnippetChooser"
 
     def __init__(self, model, **kwargs):
         self.model = model
@@ -45,14 +44,10 @@ class AdminSnippetChooser(BaseChooser):
             else:
                 raise
 
-    def render_js_init(self, id_, name, value_data):
-        return "new SnippetChooser({id});".format(id=json.dumps(id_))
-
     @cached_property
     def media(self):
         return forms.Media(
             js=[
-                versioned_static("wagtailadmin/js/chooser-modal.js"),
                 versioned_static("wagtailsnippets/js/snippet-chooser.js"),
             ]
         )
