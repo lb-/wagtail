@@ -2,6 +2,10 @@ import { Application, Controller } from '@hotwired/stimulus';
 import { gettext } from '../utils/gettext';
 
 /**
+ * Adds the ability for a button element to indicate that, when clicked, it
+ * will be processing for a short time and cannot be clicked again.
+ *
+ * @example
  * <button
  *   type="submit"
  *   class="button button-longrunning"
@@ -15,7 +19,7 @@ import { gettext } from '../utils/gettext';
  *  <em data-w-loader-target="label">{% trans 'Sign in' %}</em>
  * </button>
  */
-export class LoaderController extends Controller {
+export class LoaderController extends Controller<HTMLButtonElement> {
   static classes = ['active'];
   static targets = ['label'];
   static values = {
@@ -27,12 +31,12 @@ export class LoaderController extends Controller {
 
   declare activeClass: string;
   declare activeValue: string;
-  declare loadingValue: boolean;
   declare durationSecondsValue: number;
-  declare labelTarget: HTMLElement;
   declare hasActiveClass: boolean;
   declare hasLabelTarget: boolean;
+  declare labelTarget: HTMLElement;
   declare labelValue: string;
+  declare loadingValue: boolean;
   timer?: number;
 
   static afterLoad(identifier: string, application: Application) {
