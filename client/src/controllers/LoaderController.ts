@@ -73,10 +73,6 @@ export class LoaderController extends Controller<HTMLButtonElement> {
   }
 
   activate() {
-    this.labelValue = this.hasLabelTarget
-      ? (this.labelTarget.textContent as string)
-      : (this.element.textContent as string);
-
     // If client-side validation is active on this form, and is going to block submission of the
     // form, don't activate the spinner
     const form = this.element.closest('form');
@@ -99,33 +95,34 @@ export class LoaderController extends Controller<HTMLButtonElement> {
 
       const durationMs = this.durationSecondsValue * 1000;
 
-      this.timer = window.setTimeout(() => this.reset(), durationMs);
+      this.timer = window.setTimeout(() => {
+        this.loadingValue = false;
+      }, durationMs);
     });
   }
 
   loadingValueChanged(isLoading: boolean) {
+    this.labelValue =
+      this.labelValue || this.hasLabelTarget
+        ? (this.labelTarget.textContent as string)
+        : (this.element.textContent as string);
+
     const activeClass = this.hasActiveClass
       ? this.activeClass
       : 'button-longrunning-active';
+
     this.element.classList.toggle(activeClass, isLoading);
 
     if (isLoading) {
       // Disabling button must be done last: disabled buttons can't be
       // modified in the normal way, it would seem.
       this.element.setAttribute('disabled', '');
-    }
-
-    if (!isLoading) {
+    } else {
       this.element.removeAttribute('disabled');
-    }
-  }
 
-  reset() {
-    const originalText = this.labelValue;
-    this.loadingValue = false;
-
-    if (this.activeValue && this.hasLabelTarget) {
-      this.labelTarget.textContent = originalText;
+      if (this.activeValue && this.hasLabelTarget) {
+        this.labelTarget.textContent = this.labelValue;
+      }
     }
   }
 
