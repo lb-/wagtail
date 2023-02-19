@@ -14,7 +14,7 @@ from wagtail.test.testapp.models import SimplePage
 from wagtail.test.utils import WagtailTestUtils
 
 
-class TestBulkDelete(TestCase, WagtailTestUtils):
+class TestBulkDelete(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -153,7 +153,7 @@ class TestBulkDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the child pages to be deleted are gone
@@ -206,7 +206,7 @@ class TestBulkDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the child pages to be deleted are gone
@@ -268,7 +268,7 @@ class TestBulkDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the child pages to be deleted are gone

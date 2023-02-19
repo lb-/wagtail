@@ -6,6 +6,7 @@ maxdepth: 2
 ---
 images/index
 documents/index
+icons
 embeds
 add_to_django_project
 deploying
@@ -22,4 +23,5 @@ boundblocks_and_values
 multi_site_multi_instance_multi_tenancy
 formbuilder_routablepage_redirect
 streamfield_migrations
+reference_index
 ```

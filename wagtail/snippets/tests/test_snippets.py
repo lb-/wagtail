@@ -23,7 +23,7 @@ from taggit.models import Tag
 from wagtail import hooks
 from wagtail.admin.admin_url_finder import AdminURLFinder
 from wagtail.admin.forms import WagtailAdminModelForm
-from wagtail.admin.panels import FieldPanel, ObjectList, Panel, get_edit_handler
+from wagtail.admin.panels import FieldPanel, ObjectList, get_edit_handler
 from wagtail.blocks.field_block import FieldBlockAdapter
 from wagtail.models import Locale, ModelLogEntry, Page, ReferenceIndex, Revision
 from wagtail.signals import published, unpublished
@@ -33,7 +33,6 @@ from wagtail.snippets.action_menu import (
 )
 from wagtail.snippets.blocks import SnippetChooserBlock
 from wagtail.snippets.models import SNIPPET_MODELS, register_snippet
-from wagtail.snippets.views.snippets import get_snippet_edit_handler
 from wagtail.snippets.widgets import (
     AdminSnippetChooser,
     SnippetChooserAdapter,
@@ -69,10 +68,9 @@ from wagtail.test.testapp.models import (
 )
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.timestamps import rendered_timestamp, submittable_timestamp
-from wagtail.utils.deprecation import RemovedInWagtail50Warning
 
 
-class TestSnippetIndexView(TestCase, WagtailTestUtils):
+class TestSnippetIndexView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -100,7 +98,7 @@ class TestSnippetIndexView(TestCase, WagtailTestUtils):
         self.assertContains(self.get(), "Adverts")
 
 
-class TestSnippetListView(TestCase, WagtailTestUtils):
+class TestSnippetListView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
         user_model = get_user_model()
@@ -214,7 +212,7 @@ class TestSnippetListView(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
-class TestLocaleSelectorOnList(TestCase, WagtailTestUtils):
+class TestLocaleSelectorOnList(WagtailTestUtils, TestCase):
     def setUp(self):
         self.fr_locale = Locale.objects.create(language_code="fr")
         self.user = self.login()
@@ -289,7 +287,7 @@ class TestLocaleSelectorOnList(TestCase, WagtailTestUtils):
         )
 
 
-class TestModelOrdering(TestCase, WagtailTestUtils):
+class TestModelOrdering(WagtailTestUtils, TestCase):
     def setUp(self):
         for i in range(1, 10):
             AdvertWithTabbedInterface.objects.create(text="advert %d" % i)
@@ -311,7 +309,7 @@ class TestModelOrdering(TestCase, WagtailTestUtils):
         self.assertEqual(response.context["items"][0].text, "aaaadvert")
 
 
-class TestListViewOrdering(TestCase, WagtailTestUtils):
+class TestListViewOrdering(WagtailTestUtils, TestCase):
     @classmethod
     def setUpTestData(cls):
         for i in range(1, 10):
@@ -453,7 +451,7 @@ class TestListViewOrdering(TestCase, WagtailTestUtils):
         self.assertContains(response, list_url + "?ordering=live")
 
 
-class TestSnippetListViewWithSearchableSnippet(TestCase, WagtailTestUtils):
+class TestSnippetListViewWithSearchableSnippet(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -518,7 +516,7 @@ class TestSnippetListViewWithSearchableSnippet(TestCase, WagtailTestUtils):
         self.assertIn(self.snippet_c, items)
 
 
-class TestSnippetListViewWithFilterSet(TestCase, WagtailTestUtils):
+class TestSnippetListViewWithFilterSet(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -619,7 +617,7 @@ class TestSnippetListViewWithFilterSet(TestCase, WagtailTestUtils):
         )
 
 
-class TestListViewWithCustomColumns(TestCase, WagtailTestUtils):
+class TestListViewWithCustomColumns(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -655,7 +653,7 @@ class TestListViewWithCustomColumns(TestCase, WagtailTestUtils):
         self.assertTagInHTML("<th>", html, count=5, allow_extra_attrs=True)
 
 
-class TestSnippetCreateView(TestCase, WagtailTestUtils):
+class TestSnippetCreateView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -912,7 +910,7 @@ class TestSnippetCreateView(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
-class TestLocaleSelectorOnCreate(TestCase, WagtailTestUtils):
+class TestLocaleSelectorOnCreate(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -940,7 +938,7 @@ class TestLocaleSelectorOnCreate(TestCase, WagtailTestUtils):
         self.assertNotContains(response, "Switch locales")
 
 
-class TestCreateDraftStateSnippet(TestCase, WagtailTestUtils):
+class TestCreateDraftStateSnippet(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -966,7 +964,7 @@ class TestCreateDraftStateSnippet(TestCase, WagtailTestUtils):
         # The publish button should have name="action-publish"
         self.assertContains(
             response,
-            '<button type="submit" name="action-publish" value="action-publish" class="button action-save button-longrunning" data-clicked-text="Publishing…">',
+            '<button\n    type="submit"\n    name="action-publish"\n    value="action-publish"\n    class="button action-save button-longrunning"\n    data-controller="w-progress"\n    data-action="w-progress#activate"\n',
         )
         # The status side panel should not be shown
         self.assertNotContains(
@@ -1287,7 +1285,7 @@ class TestCreateDraftStateSnippet(TestCase, WagtailTestUtils):
         self.assertEqual(snippet.status_string, "scheduled")
 
 
-class BaseTestSnippetEditView(TestCase, WagtailTestUtils):
+class BaseTestSnippetEditView(WagtailTestUtils, TestCase):
     def get_edit_url(self):
         snippet = self.test_snippet
         app_label = snippet._meta.app_label
@@ -1663,7 +1661,7 @@ class TestEditDraftStateSnippet(BaseTestSnippetEditView):
         # The publish button should have name="action-publish"
         self.assertContains(
             response,
-            '<button type="submit" name="action-publish" value="action-publish" class="button action-save button-longrunning" data-clicked-text="Publishing…">',
+            '<button\n    type="submit"\n    name="action-publish"\n    value="action-publish"\n    class="button action-save button-longrunning"\n    data-controller="w-progress"\n    data-action="w-progress#activate"\n',
         )
 
         # The status side panel should show "No publishing schedule set" info
@@ -3200,7 +3198,7 @@ class TestScheduledForPublishLock(BaseTestSnippetEditView):
         )
 
 
-class TestSnippetUnschedule(TestCase, WagtailTestUtils):
+class TestSnippetUnschedule(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
         self.test_snippet = DraftStateCustomPrimaryKeyModel.objects.create(
@@ -3340,7 +3338,7 @@ class TestSnippetUnschedule(TestCase, WagtailTestUtils):
         )
 
 
-class TestSnippetUnpublish(TestCase, WagtailTestUtils):
+class TestSnippetUnpublish(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
         self.snippet = DraftStateCustomPrimaryKeyModel.objects.create(
@@ -3544,7 +3542,7 @@ class TestSnippetUnpublish(TestCase, WagtailTestUtils):
         self.assertEqual(self.snippet.status_string, "live")
 
 
-class TestSnippetDelete(TestCase, WagtailTestUtils):
+class TestSnippetDelete(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -3705,7 +3703,7 @@ class TestSnippetDelete(TestCase, WagtailTestUtils):
         self.assertFalse(Advert.objects.filter(pk=advert.pk).exists())
 
 
-class TestSnippetDeleteMultipleWithOne(TestCase, WagtailTestUtils):
+class TestSnippetDeleteMultipleWithOne(WagtailTestUtils, TestCase):
     # test deletion of one snippet using the delete-multiple URL
     # behaviour should mimic the TestSnippetDelete but with different URl structure
     fixtures = ["test.json"]
@@ -3732,7 +3730,7 @@ class TestSnippetDeleteMultipleWithOne(TestCase, WagtailTestUtils):
         self.assertEqual(Advert.objects.filter(text="test_advert").count(), 0)
 
 
-class TestSnippetDeleteMultipleWithThree(TestCase, WagtailTestUtils):
+class TestSnippetDeleteMultipleWithThree(WagtailTestUtils, TestCase):
     # test deletion of three snippets using the delete-multiple URL
     fixtures = ["test.json"]
 
@@ -3767,7 +3765,7 @@ class TestSnippetDeleteMultipleWithThree(TestCase, WagtailTestUtils):
         self.assertEqual(Advert.objects.filter(text="test_advert").count(), 0)
 
 
-class TestSnippetChooserPanel(TestCase, WagtailTestUtils):
+class TestSnippetChooserPanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -3890,7 +3888,7 @@ class TestUsedBy(TestCase):
         self.assertIsInstance(advert.get_usage()[0][1][0], ReferenceIndex)
 
 
-class TestSnippetUsageView(TestCase, WagtailTestUtils):
+class TestSnippetUsageView(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -3985,7 +3983,7 @@ class TestSnippetUsageView(TestCase, WagtailTestUtils):
         self.assertContains(response, "(Private page)")
 
 
-class TestSnippetHistory(TestCase, WagtailTestUtils):
+class TestSnippetHistory(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def get(self, snippet, params={}):
@@ -4122,7 +4120,7 @@ class TestSnippetHistory(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
 
 
-class TestSnippetRevisions(TestCase, WagtailTestUtils):
+class TestSnippetRevisions(WagtailTestUtils, TestCase):
     @property
     def revert_url(self):
         return self.get_url(
@@ -4219,7 +4217,7 @@ class TestSnippetRevisions(TestCase, WagtailTestUtils):
         # The publish button should have name="action-publish"
         self.assertContains(
             response,
-            '<button type="submit" name="action-publish" value="action-publish" class="button action-save button-longrunning warning" data-clicked-text="Publishing…">',
+            '<button\n    type="submit"\n    name="action-publish"\n    value="action-publish"\n    class="button action-save button-longrunning warning"\n    data-controller="w-progress"\n    data-action="w-progress#activate"\n',
         )
 
         # Should not show the Unpublish action menu item
@@ -4418,7 +4416,7 @@ class TestSnippetRevisions(TestCase, WagtailTestUtils):
         self.assertEqual(self.snippet.live_revision, self.snippet.latest_revision)
 
 
-class TestCompareRevisions(TestCase, WagtailTestUtils):
+class TestCompareRevisions(WagtailTestUtils, TestCase):
     # Actual tests for the comparison classes can be found in test_compare.py
 
     def setUp(self):
@@ -4491,7 +4489,7 @@ class TestCompareRevisions(TestCase, WagtailTestUtils):
         )
 
 
-class TestCompareRevisionsWithPerUserPanels(TestCase, WagtailTestUtils):
+class TestCompareRevisionsWithPerUserPanels(WagtailTestUtils, TestCase):
     def setUp(self):
         self.snippet = RevisableChildModel.objects.create(
             text="Foo bar", secret_text="Secret text"
@@ -4543,7 +4541,7 @@ class TestCompareRevisionsWithPerUserPanels(TestCase, WagtailTestUtils):
         self.assertNotContains(response, "unseen note")
 
 
-class TestSnippetChoose(TestCase, WagtailTestUtils):
+class TestSnippetChoose(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4641,7 +4639,7 @@ class TestSnippetChoose(TestCase, WagtailTestUtils):
         self.assertEqual(response.context["items"][0].text, "English snippet")
 
 
-class TestSnippetChooseResults(TestCase, WagtailTestUtils):
+class TestSnippetChooseResults(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4666,7 +4664,7 @@ class TestSnippetChooseResults(TestCase, WagtailTestUtils):
         )
 
 
-class TestSnippetChooseStatus(TestCase, WagtailTestUtils):
+class TestSnippetChooseStatus(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -4703,7 +4701,7 @@ class TestSnippetChooseStatus(TestCase, WagtailTestUtils):
         )
 
 
-class TestSnippetChooseWithSearchableSnippet(TestCase, WagtailTestUtils):
+class TestSnippetChooseWithSearchableSnippet(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -4760,7 +4758,7 @@ class TestSnippetChooseWithSearchableSnippet(TestCase, WagtailTestUtils):
         self.assertIn(self.snippet_c, items)
 
 
-class TestSnippetChosen(TestCase, WagtailTestUtils):
+class TestSnippetChosen(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4783,7 +4781,7 @@ class TestSnippetChosen(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 404)
 
 
-class TestAddOnlyPermissions(TestCase, WagtailTestUtils):
+class TestAddOnlyPermissions(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4843,7 +4841,7 @@ class TestAddOnlyPermissions(TestCase, WagtailTestUtils):
         self.assertRedirects(response, reverse("wagtailadmin_home"))
 
 
-class TestEditOnlyPermissions(TestCase, WagtailTestUtils):
+class TestEditOnlyPermissions(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4903,7 +4901,7 @@ class TestEditOnlyPermissions(TestCase, WagtailTestUtils):
         self.assertRedirects(response, reverse("wagtailadmin_home"))
 
 
-class TestDeleteOnlyPermissions(TestCase, WagtailTestUtils):
+class TestDeleteOnlyPermissions(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -4965,7 +4963,7 @@ class TestDeleteOnlyPermissions(TestCase, WagtailTestUtils):
         )
 
 
-class TestSnippetEditHandlers(TestCase, WagtailTestUtils):
+class TestSnippetEditHandlers(WagtailTestUtils, TestCase):
     def test_standard_edit_handler(self):
         edit_handler = get_edit_handler(StandardSnippet)
         form_class = edit_handler.get_form_class()
@@ -4978,18 +4976,8 @@ class TestSnippetEditHandlers(TestCase, WagtailTestUtils):
         self.assertTrue(issubclass(form_class, WagtailAdminModelForm))
         self.assertTrue(issubclass(form_class, FancySnippetForm))
 
-    def test_get_snippet_edit_handler(self):
-        # TODO: Remove in Wagtail 5.0
-        with self.assertWarnsMessage(
-            RemovedInWagtail50Warning,
-            "The get_snippet_edit_handler function has been moved to wagtail.admin.panels.get_edit_handler",
-        ):
-            edit_handler = get_snippet_edit_handler(StandardSnippet)
-        self.assertIsNotNone(edit_handler)
-        self.assertIsInstance(edit_handler, Panel)
 
-
-class TestInlinePanelMedia(TestCase, WagtailTestUtils):
+class TestInlinePanelMedia(WagtailTestUtils, TestCase):
     """
     Test that form media required by InlinePanels is correctly pulled in to the edit page
     """
@@ -5096,7 +5084,7 @@ class TestSnippetChooserBlock(TestCase):
         self.assertListEqual(list(block.extract_references(None)), [])
 
 
-class TestAdminSnippetChooserWidget(TestCase, WagtailTestUtils):
+class TestAdminSnippetChooserWidget(WagtailTestUtils, TestCase):
     def test_adapt(self):
         widget = AdminSnippetChooser(Advert)
 
@@ -5110,7 +5098,7 @@ class TestAdminSnippetChooserWidget(TestCase, WagtailTestUtils):
         self.assertEqual(js_args[1], "__ID__")
 
 
-class TestSnippetListViewWithCustomPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetListViewWithCustomPrimaryKey(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -5145,7 +5133,7 @@ class TestSnippetListViewWithCustomPrimaryKey(TestCase, WagtailTestUtils):
         self.assertIn(self.snippet_c, items)
 
 
-class TestSnippetViewWithCustomPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetViewWithCustomPrimaryKey(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -5357,7 +5345,7 @@ class TestSnippetChooserBlockWithCustomPrimaryKey(TestCase):
         self.assertIsNone(nonrequired_block.clean(None))
 
 
-class TestSnippetChooserPanelWithCustomPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetChooserPanelWithCustomPrimaryKey(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -5426,7 +5414,7 @@ class TestSnippetChooserPanelWithCustomPrimaryKey(TestCase, WagtailTestUtils):
         self.assertEqual(widget.model, AdvertWithCustomPrimaryKey)
 
 
-class TestSnippetChooseWithCustomPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetChooseWithCustomPrimaryKey(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -5454,7 +5442,7 @@ class TestSnippetChooseWithCustomPrimaryKey(TestCase, WagtailTestUtils):
         self.assertEqual(response.context["items"][0].text, "advert 1")
 
 
-class TestSnippetChosenWithCustomPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetChosenWithCustomPrimaryKey(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -5475,7 +5463,7 @@ class TestSnippetChosenWithCustomPrimaryKey(TestCase, WagtailTestUtils):
         self.assertEqual(response_json["step"], "chosen")
 
 
-class TestSnippetChosenWithCustomUUIDPrimaryKey(TestCase, WagtailTestUtils):
+class TestSnippetChosenWithCustomUUIDPrimaryKey(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -5496,7 +5484,7 @@ class TestSnippetChosenWithCustomUUIDPrimaryKey(TestCase, WagtailTestUtils):
         self.assertEqual(response_json["step"], "chosen")
 
 
-class TestPanelConfigurationChecks(TestCase, WagtailTestUtils):
+class TestPanelConfigurationChecks(WagtailTestUtils, TestCase):
     def setUp(self):
         self.warning_id = "wagtailadmin.W002"
 

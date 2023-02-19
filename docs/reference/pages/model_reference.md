@@ -480,10 +480,6 @@ The `locale` and `translation_key` fields have a unique key constraint to preven
 `PreviewableMixin` is a mixin class that can be added to any non-page Django model to allow previewing its instances.
 Pages already include this mixin, so there is no need to add it.
 
-```{versionadded} 4.0
-The class is added to allow snippets to have live preview in the editor. See [](wagtailsnippets_making_snippets_previewable) for more details.
-```
-
 ### Methods and properties
 
 ```{eval-rst}
@@ -506,10 +502,6 @@ The class is added to allow snippets to have live preview in the editor. See [](
 
 `RevisionMixin` is an abstract model that can be added to any non-page Django model to allow saving revisions of its instances.
 Pages already include this mixin, so there is no need to add it.
-
-```{versionadded} 4.0
-The model is added to allow snippets to save revisions, revert to a previous revision, and compare changes between revisions. See [](wagtailsnippets_saving_revisions_of_snippets) for more details.
-```
 
 ### Database fields
 
@@ -542,10 +534,6 @@ The model is added to allow snippets to save revisions, revert to a previous rev
 
 `DraftStateMixin` is an abstract model that can be added to any non-page Django model to allow its instances to have unpublished changes.
 This mixin requires {class}`~wagtail.models.RevisionMixin` to be applied. Pages already include this mixin, so there is no need to add it.
-
-```{versionadded} 4.0
-The model is added to allow snippets to have changes that are not immediately reflected to the instance. See [](wagtailsnippets_saving_draft_changes_of_snippets) for more details.
-```
 
 ### Database fields
 
@@ -683,10 +671,6 @@ Every time a page is edited, a new `Revision` is created and saved to the databa
 -   The content of the page is JSON-serialisable and stored in the {attr}`~Revision.content` field.
 -   You can retrieve a `Revision` as an instance of the object's model by calling the {meth}`~Revision.as_object` method.
 
-```{versionchanged} 4.0
-The model has been renamed from ``PageRevision`` to ``Revision`` and it now references the ``Page`` model using a {class}`~django.contrib.contenttypes.fields.GenericForeignKey`.
-```
-
 ### Database fields
 
 ```{eval-rst}
@@ -739,11 +723,6 @@ The model has been renamed from ``PageRevision`` to ``Revision`` and it now refe
         (dict)
 
         The JSON content for the object at the time the revision was created.
-
-        .. versionchanged:: 3.0
-
-          The field has been renamed from ``content_json`` to ``content`` and it now uses :class:`~django.db.models.JSONField` instead of
-          :class:`~django.db.models.TextField`.
 ```
 
 ### Managers
@@ -773,10 +752,6 @@ The model has been renamed from ``PageRevision`` to ``Revision`` and it now refe
 
             Revision.page_revisions.all()
 
-        .. versionadded:: 4.0
-
-            This manager is added as a shorthand to retrieve page revisions.
-
     .. attribute:: submitted_revisions
 
         This manager extends the default manager and is used to retrieve all of the ``Revision`` objects that are awaiting moderator approval.
@@ -797,10 +772,6 @@ The model has been renamed from ``PageRevision`` to ``Revision`` and it now refe
     .. automethod:: as_object
 
         This method retrieves this revision as an instance of its object's specific class. If the revision belongs to a page, it will be an instance of the :class:`~wagtail.models.Page`'s specific subclass.
-
-        .. versionchanged:: 4.0
-
-            This method has been renamed from ``as_page_object()`` to ``as_object()``.
 
     .. automethod:: approve_moderation
 
@@ -1278,11 +1249,6 @@ An abstract base class that represents a record of an action performed on an obj
 
         The JSON representation of any additional details for each action.
         For example source page id and title when copying from a page. Or workflow id/name and next step id/name on a workflow transition
-
-        .. versionchanged:: 3.0
-
-          The field has been renamed from ``data_json`` to ``data`` and it now uses :class:`~django.db.models.JSONField` instead of
-          :class:`~django.db.models.TextField`.
 
     .. attribute:: timestamp
 

@@ -35,6 +35,7 @@ from wagtail.test.testapp.models import (
     EventPageCarouselItem,
     FilePage,
     ManyToManyBlogPage,
+    PageChooserModel,
     SimplePage,
     SingleEventPage,
     StandardIndex,
@@ -46,7 +47,7 @@ from wagtail.test.utils.timestamps import rendered_timestamp, submittable_timest
 from wagtail.users.models import UserProfile
 
 
-class TestPageEdit(TestCase, WagtailTestUtils):
+class TestPageEdit(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -156,10 +157,30 @@ class TestPageEdit(TestCase, WagtailTestUtils):
         )
         self.assertNotContains(response, "data-form-side-explorer")
 
+        # test that usage info is shown
+        self.assertContains(response, "Referenced 0 times")
+        self.assertContains(
+            response, reverse("wagtailadmin_pages:usage", args=(self.event_page.id,))
+        )
+
         # test that AdminURLFinder returns the edit view for the page
         url_finder = AdminURLFinder(self.user)
         expected_url = "/admin/pages/%d/edit/" % self.event_page.id
         self.assertEqual(url_finder.get_edit_url(self.event_page), expected_url)
+
+    def test_usage_count_information_shown(self):
+        PageChooserModel.objects.create(page=self.event_page)
+
+        # Tests that the edit page loads
+        response = self.client.get(
+            reverse("wagtailadmin_pages:edit", args=(self.event_page.id,))
+        )
+
+        # test that usage info is shown
+        self.assertContains(response, "Referenced 1 time")
+        self.assertContains(
+            response, reverse("wagtailadmin_pages:usage", args=(self.event_page.id,))
+        )
 
     @override_settings(WAGTAIL_WORKFLOW_ENABLED=False)
     def test_workflow_buttons_not_shown_when_workflow_disabled(self):
@@ -711,7 +732,7 @@ class TestPageEdit(TestCase, WagtailTestUtils):
             "content": "Some content",
             "slug": "hello-world",
             "action-publish": "Publish",
-            "go_live_at": "",
+            "go_live_at": go_live_at,
         }
         response = self.client.post(
             reverse("wagtailadmin_pages:edit", args=(self.child_page.id,)), post_data
@@ -880,7 +901,7 @@ class TestPageEdit(TestCase, WagtailTestUtils):
             "content": "Some content",
             "slug": "hello-world",
             "action-publish": "Publish",
-            "go_live_at": "",
+            "go_live_at": go_live_at,
         }
         response = self.client.post(
             reverse("wagtailadmin_pages:edit", args=(self.child_page.id,)), post_data
@@ -1314,6 +1335,13 @@ class TestPageEdit(TestCase, WagtailTestUtils):
         self.assertTemplateUsed(response, "tests/simple_page.html")
         self.assertContains(response, "I&#39;ve been edited!", html=True)
 
+        # Should not show edit link in the userbar
+        # https://github.com/wagtail/wagtail/issues/8765
+        self.assertNotContains(response, "Edit this page")
+        self.assertNotContains(
+            response, reverse("wagtailadmin_pages:edit", args=(self.child_page.id,))
+        )
+
     def test_preview_on_edit_no_session_key(self):
         preview_url = reverse(
             "wagtailadmin_pages:preview_on_edit", args=(self.child_page.id,)
@@ -1622,18 +1650,18 @@ class TestPageEdit(TestCase, WagtailTestUtils):
             )
 
         publish_button = """
-            <button type="submit" name="action-publish" value="action-publish" class="button button-longrunning " data-clicked-text="Publishing…">
+            <button type="submit" name="action-publish" value="action-publish" class="button button-longrunning " data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Publishing…">
                 <svg class="icon icon-upload button-longrunning__icon" aria-hidden="true"><use href="#icon-upload"></use></svg>
 
-                <svg class="icon icon-spinner icon" aria-hidden="true"><use href="#icon-spinner"></use></svg><em>Publish</em>
+                <svg class="icon icon-spinner icon" aria-hidden="true"><use href="#icon-spinner"></use></svg><em data-w-progress-target="label">Publish</em>
             </button>
         """
         save_button = """
-            <button type="submit" class="button action-save button-longrunning " data-clicked-text="Saving…" >
+            <button type="submit" class="button action-save button-longrunning " data-controller="w-progress" data-action="w-progress#activate" data-w-progress-active-value="Saving…" >
                 <svg class="icon icon-draft button-longrunning__icon" aria-hidden="true"><use href="#icon-draft"></use></svg>
 
                 <svg class="icon icon-spinner icon" aria-hidden="true"><use href="#icon-spinner"></use></svg>
-                <em>Save draft</em>
+                <em data-w-progress-target="label">Save draft</em>
             </button>
         """
 
@@ -1751,13 +1779,13 @@ class TestPageEdit(TestCase, WagtailTestUtils):
         # as when running it within the full test suite
         self.client.get(reverse("wagtailadmin_pages:edit", args=(self.event_page.id,)))
 
-        with self.assertNumQueries(40):
+        with self.assertNumQueries(41):
             self.client.get(
                 reverse("wagtailadmin_pages:edit", args=(self.event_page.id,))
             )
 
 
-class TestPageEditReordering(TestCase, WagtailTestUtils):
+class TestPageEditReordering(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -1879,7 +1907,7 @@ class TestPageEditReordering(TestCase, WagtailTestUtils):
         self.check_order(response, ["abcdefg", "1234567", "7654321"])
 
 
-class TestIssue197(TestCase, WagtailTestUtils):
+class TestIssue197(WagtailTestUtils, TestCase):
     def test_issue_197(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -1918,7 +1946,7 @@ class TestIssue197(TestCase, WagtailTestUtils):
         self.assertIn("world", page.tags.slugs())
 
 
-class TestChildRelationsOnSuperclass(TestCase, WagtailTestUtils):
+class TestChildRelationsOnSuperclass(WagtailTestUtils, TestCase):
     # In our test models we define AdvertPlacement as a child relation on the Page model.
     # Here we check that this behaves correctly when exposed on the edit form of a Page
     # subclass (StandardIndex here).
@@ -2082,7 +2110,7 @@ class TestChildRelationsOnSuperclass(TestCase, WagtailTestUtils):
         self.assertContains(response, "alwaysDirty: true")
 
 
-class TestIssue2492(TestCase, WagtailTestUtils):
+class TestIssue2492(WagtailTestUtils, TestCase):
     """
     The publication submission message generation was performed using
     the Page class, as opposed to the specific_class for that Page.
@@ -2146,7 +2174,7 @@ class TestIssue2492(TestCase, WagtailTestUtils):
             break
 
 
-class TestIssue3982(TestCase, WagtailTestUtils):
+class TestIssue3982(WagtailTestUtils, TestCase):
     """
     Pages that are not associated with a site, and thus do not have a live URL,
     should not display a "View live" link in the flash message after being
@@ -2253,7 +2281,7 @@ class TestIssue3982(TestCase, WagtailTestUtils):
         )
 
     def _approve_page(self, parent):
-        response = self.client.post(
+        self.client.post(
             reverse("wagtailadmin_pages:add", args=("tests", "simplepage", parent.pk)),
             {
                 "title": "Hello, world!",
@@ -2305,7 +2333,7 @@ class TestIssue3982(TestCase, WagtailTestUtils):
         )
 
 
-class TestParentalM2M(TestCase, WagtailTestUtils):
+class TestParentalM2M(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -2483,7 +2511,7 @@ class TestParentalM2M(TestCase, WagtailTestUtils):
         self.assertIn(self.men_with_beards_category, updated_page.categories.all())
 
 
-class TestValidationErrorMessages(TestCase, WagtailTestUtils):
+class TestValidationErrorMessages(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -2622,7 +2650,7 @@ class TestValidationErrorMessages(TestCase, WagtailTestUtils):
         )
 
 
-class TestNestedInlinePanel(TestCase, WagtailTestUtils):
+class TestNestedInlinePanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -2726,7 +2754,7 @@ class TestNestedInlinePanel(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
-class TestLocaleSelector(TestCase, WagtailTestUtils):
+class TestLocaleSelector(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -2793,7 +2821,7 @@ class TestLocaleSelector(TestCase, WagtailTestUtils):
         self.assertNotContains(response, f'href="{edit_translation_url}"')
 
 
-class TestPageSubscriptionSettings(TestCase, WagtailTestUtils):
+class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -2913,7 +2941,7 @@ class TestPageSubscriptionSettings(TestCase, WagtailTestUtils):
         self.assertFalse(PageSubscription.objects.get().comment_notifications)
 
 
-class TestCommenting(TestCase, WagtailTestUtils):
+class TestCommenting(WagtailTestUtils, TestCase):
     """
     Tests both the comment notification and audit logging logic of the edit page view.
     """

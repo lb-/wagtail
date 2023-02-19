@@ -1,7 +1,55 @@
 Changelog
 =========
 
-4.2 (xx.xx.xxxx) - IN DEVELOPMENT
+5.0 (xx.xx.xxxx) - IN DEVELOPMENT
+~~~~~~~~~~~~~~~~
+
+ * Add `WAGTAILIMAGES_EXTENSIONS` setting to restrict image uploads to specific file types (Aman Pandey, Ananjan-R)
+ * Update user list column level to `Access level` to be easier to understand (Vallabh Tiwari)
+ * Migrate `.button-longrunning` behaviour to a Stimulus controller with support for custom label element & duration (Loveth Omokaro)
+ * Implement new simplified userbar designs (Albina Starykova)
+ * Add more Axe rules to the accessibility checker (Albina Starykova)
+ * Add usage view for pages (Sage Abdullah)
+ * Fix: Ensure `label_format` on StructBlock gracefully handles missing variables (Aadi jindal)
+ * Fix: Adopt a no-JavaScript and more accessible solution for the 'Reset to default' switch to Gravatar when editing user profile (Loveth Omokaro)
+ * Fix: Ensure `Site.get_site_root_paths` works on cache backends that do not preserve Python objects (Jaap Roes)
+ * Fix: Ignore right clicks on side panel resizer (Sage Abdullah)
+ * Fix: Resize in the correct direction for RTL languages with the side panel resizer (Sage Abdullah)
+ * Fix: Support creating `StructValue` copies (Tidiane Dia)
+ * Fix: Fix image uploads on storage backends that require file pointer to be at the start of the file (Matt Westcott)
+ * Fix: Fix "Edit this page" missing from userbar (Satvik Vashisht)
+ * Fix: No longer allow invalid duplicate site hostname creation as hostnames and domain names are a case insensitive (Coen van der Kamp)
+ * Fix: Image and Document multiple upload update forms now correctly use the progress button (longrunning) behaviour when clicked (Loveth Omokaro)
+ * Docs: Add code block to make it easier to understand contribution docs (Suyash Singh)
+ * Docs: Add new "Icons" page for icons customisation and reuse across the admin interface (Coen van der Kamp)
+ * Docs: Fix broken formatting for MultiFieldPanel / FieldRowPanel permission kwarg docs (Matt Westcott)
+ * Docs: Add helpful troubleshooting links and refine wording for getting started with development (Loveth Omokaro)
+ * Docs: Ensure search autocomplete overlay on mobile does not overflow the viewport (Ayman Makroo)
+ * Docs: Improve documentation for InlinePanel (Vallabh Tiwari)
+ * Maintenance: Removed features deprecated in Wagtail 3.0 and 4.0 (Matt Westcott)
+ * Maintenance: Update djhtml (html formatting) library to v 1.5.2 (Loveth Omokaro)
+ * Maintenance: Re-enable `strictPropertyInitialization` in tsconfig (Thibaud Colas)
+ * Maintenance: Refactor accessibility checker userbar item (Albina Starykova)
+ * Maintenance: Removed unused `Page.get_static_site_paths` method (Yosr Karoui)
+ * Maintenance: Provisional Django 5.0 compatibility fixes (Sage Abdullah)
+ * Maintenance: Add unit tests for `CollapseAll` and `MinimapItem` components (Albina Starykova)
+ * Maintenance: Code quality fixes (GLEF1X)
+ * Maintenance: Refactor image / document / snippet usage views into a shared generic view (Sage Abdullah)
+ * Maintenance: Rename the Stimulus `AutoFieldController` to the less confusing `SubmitController` (Loveth Omokaro)
+ * Maintenance: Replace `script` tags with `template` tag for image/document bulk uploads (Rishabh Kumar Bahukhandi)
+ * Maintenance: Remove unneeded float styles on 404 page (Fabien Le Frapper)
+ * Maintenance: Convert userbar implementation to TypeScript (Albina Starykova)
+
+
+4.2.1 (xx.xx.xxxx) - IN DEVELOPMENT
+~~~~~~~~~~~~~~~~~~
+
+ * Fix: Support creating `StructValue` copies (Tidiane Dia)
+ * Fix: Fix image uploads on storage backends that require file pointer to be at the start of the file (Matt Westcott)
+ * Fix: Fix "Edit this page" missing from userbar (Satvik Vashisht)
+
+
+4.2 (06.02.2023)
 ~~~~~~~~~~~~~~~~
 
  * Added StreamField data migration helpers (Sandil Ranasinghe, Jacob Topp-Mugglestone, Joshua Munn, Karl Hobley)
@@ -9,7 +57,7 @@ Changelog
  * Added ability to submit snippets for moderation with `WorkflowMixin` (Sage Abdullah)
  * Create `{% fullpageurl %}` tag for getting the absolute URL of a page (Jake Howard)
  * Added `MultipleChooserPanel`, a variant of `InlinePanel` with improved editor experience when inserting multiple linked objects (Matt Westcott)
- * Test assertion util `WagtailPageTestCase.assertCanCreate` now supports the kwarg `publish=True` to check publish redirection (Harry Percival, Akua Dokua Asiedu)
+ * Test assertion util `WagtailPageTestCase.assertCanCreate` now supports the kwarg `publish=True` to determine whether to publish the page (Harry Percival, Akua Dokua Asiedu, Matt Westcott)
  * Ensure that the `rebuild_references_index` command can run without console output if called with `--verbosity 0` (Omerzahid Ali, Aman Pandey)
  * Add full support for secondary buttons with icons in the Wagtail design system - `button bicolor button--icon button-secondary` including the `button-small` variant (Seremba Patrick)
  * Add `purge_embeds` management command to delete all the cached embed objects in the database (Aman Pandey)
@@ -87,6 +135,10 @@ Changelog
  * Fix: Search bar in chooser modals now performs autocomplete searches under PostgreSQL (Matt Westcott)
  * Fix: Server-side document filenames are preserved when replacing a document file (Suyash Singh, Matt Westcott)
  * Fix: Add missing wagtailadmin_tags in `workflow_state_approved.html` template (Alex Tomkins)
+ * Fix: Do not show bulk actions checkbox in page type usage view (Sage Abdullah)
+ * Fix: Prevent account name from overflowing the sidebar (Aman Pandey)
+ * Fix: Ensure edit form is displayed as unlocked immediately after cancelling a workflow (Sage Abdullah)
+ * Fix: Prevent `latest_revision` pointer from being copied over when copying translatable snippets for translation (Sage Abdullah)
  * Docs: Add custom permissions section to permissions documentation page (Dan Hayden)
  * Docs: Add documentation for how to get started with contributing translations for the Wagtail admin (Ogunbanjo Oluwadamilare)
  * Docs: Officially recommend `fnm` over `nvm` in development documentation (LB (Ben) Johnston)
@@ -105,6 +157,9 @@ Changelog
  * Docs: Document the policy needed to create invalidations in CloudFront (Jake Howard)
  * Docs: Document how to add permission restriction to a report view (Rishabh jain)
  * Docs: Add example for how to configure API `renderer_classes` (Aman Pandey)
+ * Docs: Document potential data loss for BaseLogEntry migration in 3.0 (Sage Abdullah)
+ * Docs: Add documentation for the reference index mechanism (Daniel Kirkham)
+ * Docs: Remove confusing `SettingsPanel` reference in the page editing `TabbedInterface` example as `SettingsPanel` no longer shows anything as of 4.1 (Kenny Wolf, Julian Bigler)
  * Maintenance: Switch to using Willow instead of Pillow for images (Darrel O'Pry)
  * Maintenance: Remove unsquashed `testapp` migrations (Matt Westcott)
  * Maintenance: Upgrade to Node 18 for frontend build tooling (LB (Ben) Johnston)
@@ -145,7 +200,17 @@ Changelog
  * Maintenance: Replace repeated HTML `avatar` component with a template tag include `{% avatar ... %}` throughout the admin interface (Aman Pandey)
 
 
-4.1.2 (xx.xx.xxxx) - IN DEVELOPMENT
+4.1.3 (xx.xx.xxxx) - IN DEVELOPMENT
+~~~~~~~~~~~~~~~~~~
+
+ * Fix: Add right-to-left (RTL) support for the following form components: Switch, Minimap, live preview (Thibaud Colas)
+ * Fix: Improve right-to-left (RTL) positioning for the following components: Page explorer, Sidebar sub-menu, rich text tooltips, rich text toolbar trigger, editor section headers (Thibaud Colas)
+ * Fix: Ensure links within help blocks meet colour contrast guidelines for accessibility (Theresa Okoro)
+ * Fix: Support creating `StructValue` copies (Tidiane Dia)
+ * Fix: Fix "Edit this page" missing from userbar (Satvik Vashisht)
+
+
+4.1.2 (06.02.2023)
 ~~~~~~~~~~~~~~~~~~
 
  * Fix: Make "Cancel scheduled publish" button correctly redirect back to the edit view (Sage Abdullah)
@@ -157,6 +222,12 @@ Changelog
  * Fix: Use the correct padding for autocomplete block picker (Umar Farouk Yunusa)
  * Fix: Fix horizontal positioning of rich text inline toolbar (Thibaud Colas)
  * Fix: Close the userbar when clicking its toggle (Albina Starykova)
+ * Fix: Do not show bulk actions checkbox in page type usage view (Sage Abdullah)
+ * Fix: Prevent account name from overflowing the sidebar (Aman Pandey)
+ * Fix: Ensure edit form is displayed as unlocked immediately after cancelling a workflow (Sage Abdullah)
+ * Fix: Prevent `latest_revision` pointer from being copied over when copying translatable snippets for translation (Sage Abdullah)
+ * Docs: Document potential data loss for BaseLogEntry migration in 3.0 (Sage Abdullah)
+ * Docs: Add documentation for the reference index mechanism (Daniel Kirkham)
 
 
 4.1.1 (11.11.2022)

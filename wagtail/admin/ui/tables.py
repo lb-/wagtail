@@ -155,7 +155,7 @@ class TitleColumn(Column):
 
     def get_cell_context_data(self, instance, parent_context):
         context = super().get_cell_context_data(instance, parent_context)
-        context["link_attrs"] = self.link_attrs.copy()
+        context["link_attrs"] = self.get_link_attrs(instance, parent_context)
         context["link_attrs"]["href"] = context["link_url"] = self.get_link_url(
             instance, parent_context
         )
@@ -163,6 +163,9 @@ class TitleColumn(Column):
             context["link_attrs"]["class"] = self.link_classname
         context["label_id"] = self.get_label_id(instance, parent_context)
         return context
+
+    def get_link_attrs(self, instance, parent_context):
+        return self.link_attrs.copy()
 
     def get_link_url(self, instance, parent_context):
         if self._get_url_func:
@@ -272,6 +275,32 @@ class BulkActionsCheckboxColumn(Column):
     def get_cell_context_data(self, instance, parent_context):
         context = super().get_cell_context_data(instance, parent_context)
         context["obj"] = context["instance"]
+        return context
+
+
+class ReferencesColumn(Column):
+    cell_template_name = "wagtailadmin/tables/references_cell.html"
+
+    def __init__(
+        self,
+        name,
+        label=None,
+        accessor=None,
+        classname=None,
+        sort_key=None,
+        width=None,
+        get_url=None,
+    ):
+        super().__init__(name, label, accessor, classname, sort_key, width)
+        self._get_url_func = get_url
+
+    def get_edit_url(self, instance):
+        if self._get_url_func:
+            return self._get_url_func(instance)
+
+    def get_cell_context_data(self, instance, parent_context):
+        context = super().get_cell_context_data(instance, parent_context)
+        context["edit_url"] = self.get_edit_url(instance)
         return context
 
 

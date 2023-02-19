@@ -27,10 +27,10 @@ from wagtail.images.tests.utils import get_test_image_file
 from wagtail.models import Locale
 from wagtail.test.utils import WagtailTestUtils
 from wagtail.users.models import UserProfile
-from wagtail.utils.deprecation import RemovedInWagtail50Warning
+from wagtail.utils.deprecation import RemovedInWagtail60Warning
 
 
-class TestAvatarTemplateTag(TestCase, WagtailTestUtils):
+class TestAvatarTemplateTag(WagtailTestUtils, TestCase):
     def setUp(self):
         # Create a user
         self.test_user = self.create_user(
@@ -604,7 +604,7 @@ class IconTagTest(TestCase):
         """
 
         with self.assertWarnsMessage(
-            RemovedInWagtail50Warning,
+            RemovedInWagtail60Warning,
             (
                 "Icon template tag `class_name` has been renamed to `classname`, "
                 "please adopt the new usage instead. Replace "

@@ -2,7 +2,6 @@ import datetime
 import unittest
 from unittest.mock import Mock
 
-import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
@@ -739,9 +738,7 @@ class TestServeView(TestCase):
         # Explicitly clear the cache of site root paths. Normally this would be kept
         # in sync by the Site.save logic, but this is bypassed when the database is
         # rolled back between tests using transactions.
-        from django.core.cache import cache
-
-        cache.delete("wagtail_site_root_paths")
+        Site.clear_site_root_paths_cache()
 
         # also need to clear urlresolver caches before/after tests, because we override
         # ROOT_URLCONF in some tests here
@@ -838,64 +835,6 @@ class TestServeView(TestCase):
         self.assertContains(response, "bad googlebot no cookie")
 
 
-class TestStaticSitePaths(TestCase):
-    def setUp(self):
-        self.root_page = Page.objects.get(id=1)
-
-        # For simple tests
-        self.home_page = self.root_page.add_child(
-            instance=SimplePage(title="Homepage", slug="home2", content="hello")
-        )
-        self.about_page = self.home_page.add_child(
-            instance=SimplePage(title="About us", slug="about", content="hello")
-        )
-        self.contact_page = self.home_page.add_child(
-            instance=SimplePage(title="Contact", slug="contact", content="hello")
-        )
-
-        # For custom tests
-        self.event_index = self.root_page.add_child(
-            instance=EventIndex(title="Events", slug="events")
-        )
-        for i in range(20):
-            self.event_index.add_child(
-                instance=EventPage(
-                    title="Event " + str(i),
-                    slug="event" + str(i),
-                    location="the moon",
-                    audience="public",
-                    cost="free",
-                    date_from="2001-01-01",
-                )
-            )
-
-    def test_local_static_site_paths(self):
-        paths = list(self.about_page.get_static_site_paths())
-
-        self.assertEqual(paths, ["/"])
-
-    def test_child_static_site_paths(self):
-        paths = list(self.home_page.get_static_site_paths())
-
-        self.assertEqual(paths, ["/", "/about/", "/contact/"])
-
-    def test_custom_static_site_paths(self):
-        paths = list(self.event_index.get_static_site_paths())
-
-        # Event index path
-        expected_paths = ["/"]
-
-        # One path for each page of results
-        expected_paths.extend(["/" + str(i + 1) + "/" for i in range(5)])
-
-        # One path for each event page
-        expected_paths.extend(["/event" + str(i) + "/" for i in range(20)])
-
-        paths.sort()
-        expected_paths.sort()
-        self.assertEqual(paths, expected_paths)
-
-
 class TestMovePage(TestCase):
     fixtures = ["test.json"]
 
@@ -980,12 +919,12 @@ class TestLiveRevision(TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 page.last_published_at,
-                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
             # first_published_at should not change
             self.assertEqual(
                 page.first_published_at,
-                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
         else:
             self.assertEqual(
@@ -998,7 +937,9 @@ class TestLiveRevision(TestCase):
                 # convert the "2014-01-01T12:00:00.000Z" in the test fixture to a naive local time
                 page.first_published_at,
                 timezone.make_naive(
-                    datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc)
+                    datetime.datetime(
+                        2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
+                    )
                 ),
             )
 
@@ -1019,18 +960,20 @@ class TestLiveRevision(TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 page.first_published_at,
-                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
             self.assertEqual(
                 page.last_published_at,
-                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
         else:
             self.assertEqual(
                 # convert the "2014-01-01T12:00:00.000Z" in the test fixture to a naive local time
                 page.first_published_at,
                 timezone.make_naive(
-                    datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc)
+                    datetime.datetime(
+                        2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
+                    )
                 ),
             )
             self.assertEqual(
@@ -1058,11 +1001,11 @@ class TestLiveRevision(TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 new_about_us.first_published_at,
-                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
             self.assertEqual(
                 new_about_us.last_published_at,
-                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2017, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
         else:
             self.assertEqual(
@@ -1094,7 +1037,7 @@ class TestLiveRevision(TestCase):
         about_us = SimplePage.objects.get(url_path="/home/about-us/")
         if settings.USE_TZ:
             about_us.go_live_at = datetime.datetime(
-                2018, 1, 1, 12, 0, 0, tzinfo=pytz.utc
+                2018, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
             )
         else:
             about_us.go_live_at = datetime.datetime(2018, 1, 1, 12, 0, 0)
@@ -1109,23 +1052,27 @@ class TestLiveRevision(TestCase):
         if settings.USE_TZ:
             self.assertEqual(
                 about_us.first_published_at,
-                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
             self.assertEqual(
                 about_us.last_published_at,
-                datetime.datetime(2014, 2, 1, 12, 0, 0, tzinfo=pytz.utc),
+                datetime.datetime(2014, 2, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
             )
         else:
             self.assertEqual(
                 about_us.first_published_at,
                 timezone.make_naive(
-                    datetime.datetime(2014, 1, 1, 12, 0, 0, tzinfo=pytz.utc)
+                    datetime.datetime(
+                        2014, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
+                    )
                 ),
             )
             self.assertEqual(
                 about_us.last_published_at,
                 timezone.make_naive(
-                    datetime.datetime(2014, 2, 1, 12, 0, 0, tzinfo=pytz.utc)
+                    datetime.datetime(
+                        2014, 2, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
+                    )
                 ),
             )
 
@@ -1530,7 +1477,9 @@ class TestCopyPage(TestCase):
 
         # Set the created_at of the revision to a time in the past
         revision = christmas_event.get_latest_revision()
-        revision.created_at = datetime.datetime(2014, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+        revision.created_at = datetime.datetime(
+            2014, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
         revision.save()
 
         # Copy it
@@ -1552,7 +1501,7 @@ class TestCopyPage(TestCase):
         if settings.USE_TZ:
             christmas_event.save_revision(
                 approved_go_live_at=datetime.datetime(
-                    2014, 9, 16, 9, 12, 00, tzinfo=pytz.utc
+                    2014, 9, 16, 9, 12, 00, tzinfo=datetime.timezone.utc
                 )
             )
         else:
@@ -1571,7 +1520,7 @@ class TestCopyPage(TestCase):
                 christmas_event.revisions.order_by("created_at")
                 .first()
                 .approved_go_live_at,
-                datetime.datetime(2014, 9, 16, 9, 12, 00, tzinfo=pytz.utc),
+                datetime.datetime(2014, 9, 16, 9, 12, 00, tzinfo=datetime.timezone.utc),
             )
         else:
             self.assertEqual(
@@ -2840,7 +2789,7 @@ class TestCopyForTranslation(TestCase):
         self.assertEqual(fr_eventindex.alias_of, self.en_eventindex)
 
 
-class TestSubpageTypeBusinessRules(TestCase, WagtailTestUtils):
+class TestSubpageTypeBusinessRules(WagtailTestUtils, TestCase):
     def test_allowed_subpage_models(self):
         # SimplePage does not define any restrictions on subpage types
         # SimplePage is a valid subpage of SimplePage

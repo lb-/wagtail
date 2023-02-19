@@ -69,7 +69,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
             )
             raise self.failureException(msg)
 
-    def assertCanCreate(self, parent, child_model, data, msg=None, publish=False):
+    def assertCanCreate(self, parent, child_model, data, msg=None, publish=True):
         """
         Assert that a child of the given Page type can be created under the
         parent, using the supplied POST data.
@@ -363,7 +363,7 @@ class WagtailPageTestCase(WagtailTestUtils, TestCase):
             data_to_post["action-publish"] = ""
 
         try:
-            response = self.client.post(path, data_to_post)
+            self.client.post(path, data_to_post)
         except Exception as e:
             msg = self._formatMessage(
                 msg,

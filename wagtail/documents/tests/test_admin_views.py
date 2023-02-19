@@ -22,7 +22,7 @@ from wagtail.test.testapp.models import (
 from wagtail.test.utils import WagtailTestUtils
 
 
-class TestDocumentIndexView(TestCase, WagtailTestUtils):
+class TestDocumentIndexView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -30,15 +30,35 @@ class TestDocumentIndexView(TestCase, WagtailTestUtils):
         return self.client.get(reverse("wagtaildocs:index"), params)
 
     def test_simple(self):
+        models.Document.objects.create(title="Hello document")
+        models.Document.objects.create(title="Bonjour document")
+
         response = self.get()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "wagtaildocs/documents/index.html")
         self.assertContains(response, "Add a document")
+        self.assertContains(response, "Hello document")
+        self.assertContains(response, "Bonjour document")
 
     def test_search(self):
+        models.Document.objects.create(title="Hello document")
+        models.Document.objects.create(title="Bonjour document")
+
         response = self.get({"q": "Hello"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["query_string"], "Hello")
+        self.assertContains(response, "Hello document")
+        self.assertNotContains(response, "Bonjour document")
+
+    def test_empty_q(self):
+        models.Document.objects.create(title="Hello document")
+        models.Document.objects.create(title="Bonjour document")
+
+        response = self.get({"q": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "This field is required.")
+        self.assertContains(response, "Hello document")
+        self.assertContains(response, "Bonjour document")
 
     def make_docs(self):
         for i in range(50):
@@ -150,7 +170,7 @@ class TestDocumentIndexView(TestCase, WagtailTestUtils):
         )
 
 
-class TestDocumentListingResultsView(TestCase, WagtailTestUtils):
+class TestDocumentListingResultsView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -169,7 +189,7 @@ class TestDocumentListingResultsView(TestCase, WagtailTestUtils):
         )
 
 
-class TestDocumentAddView(TestCase, WagtailTestUtils):
+class TestDocumentAddView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -307,7 +327,7 @@ class TestDocumentAddView(TestCase, WagtailTestUtils):
         )
 
 
-class TestDocumentAddViewWithLimitedCollectionPermissions(TestCase, WagtailTestUtils):
+class TestDocumentAddViewWithLimitedCollectionPermissions(WagtailTestUtils, TestCase):
     def setUp(self):
         add_doc_permission = Permission.objects.get(
             content_type__app_label="wagtaildocs", codename="add_document"
@@ -383,7 +403,7 @@ class TestDocumentAddViewWithLimitedCollectionPermissions(TestCase, WagtailTestU
         )
 
 
-class TestDocumentEditView(TestCase, WagtailTestUtils):
+class TestDocumentEditView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -632,7 +652,7 @@ class TestDocumentEditView(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAILDOCS_DOCUMENT_MODEL="tests.CustomDocument")
-class TestDocumentEditViewWithCustomDocumentModel(TestCase, WagtailTestUtils):
+class TestDocumentEditViewWithCustomDocumentModel(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -689,7 +709,7 @@ class TestDocumentEditViewWithCustomDocumentModel(TestCase, WagtailTestUtils):
         )
 
 
-class TestDocumentDeleteView(TestCase, WagtailTestUtils):
+class TestDocumentDeleteView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -744,7 +764,7 @@ class TestDocumentDeleteView(TestCase, WagtailTestUtils):
         self.assertContains(response, "Used 0 times")
 
 
-class TestMultipleDocumentUploader(TestCase, WagtailTestUtils):
+class TestMultipleDocumentUploader(WagtailTestUtils, TestCase):
     """
     This tests the multiple document upload views located in wagtaildocs/views/multiple.py
     """
@@ -1418,7 +1438,7 @@ class TestMultipleCustomDocumentUploaderWithRequiredField(TestMultipleDocumentUp
         self.assertTrue(response_json["success"])
 
 
-class TestDocumentChooserView(TestCase, WagtailTestUtils):
+class TestDocumentChooserView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
 
@@ -1576,7 +1596,7 @@ class TestDocumentChooserView(TestCase, WagtailTestUtils):
         self.assertContains(response, "<td>Root</td>")
 
 
-class TestDocumentChooserChosenView(TestCase, WagtailTestUtils):
+class TestDocumentChooserChosenView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -1592,7 +1612,7 @@ class TestDocumentChooserChosenView(TestCase, WagtailTestUtils):
         self.assertEqual(response_json["step"], "chosen")
 
 
-class TestDocumentChooserUploadView(TestCase, WagtailTestUtils):
+class TestDocumentChooserUploadView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -1655,7 +1675,7 @@ class TestDocumentChooserUploadView(TestCase, WagtailTestUtils):
         )
 
 
-class TestDocumentChooserUploadViewWithLimitedPermissions(TestCase, WagtailTestUtils):
+class TestDocumentChooserUploadViewWithLimitedPermissions(WagtailTestUtils, TestCase):
     def setUp(self):
         add_doc_permission = Permission.objects.get(
             content_type__app_label="wagtaildocs", codename="add_document"
@@ -1728,7 +1748,7 @@ class TestDocumentChooserUploadViewWithLimitedPermissions(TestCase, WagtailTestU
         self.assertEqual(doc.get().collection, self.evil_plans_collection)
 
 
-class TestUsageCount(TestCase, WagtailTestUtils):
+class TestUsageCount(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1762,7 +1782,7 @@ class TestUsageCount(TestCase, WagtailTestUtils):
         self.assertContains(response, "Used 0 times")
 
 
-class TestGetUsage(TestCase, WagtailTestUtils):
+class TestGetUsage(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1863,7 +1883,7 @@ class TestGetUsage(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 302)
 
 
-class TestEditOnlyPermissions(TestCase, WagtailTestUtils):
+class TestEditOnlyPermissions(WagtailTestUtils, TestCase):
     def setUp(self):
         # Build a fake file
         fake_file = get_test_document_file()
@@ -1989,7 +2009,7 @@ class TestEditOnlyPermissions(TestCase, WagtailTestUtils):
             collection=self.evil_plans_collection,
             permission=add_permission,
         )
-        response = self.client.post(
+        self.client.post(
             reverse("wagtaildocs:edit", args=(self.document.id,)),
             {
                 "title": "Test document changed!",

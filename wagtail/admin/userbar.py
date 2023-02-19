@@ -38,19 +38,39 @@ class AccessibilityItem(BaseItem):
                 "runOnly": {
                     "type": "rule",
                     "values": [
+                        "button-name",
                         "empty-heading",
+                        "empty-table-header",
+                        "frame-title",
                         "heading-order",
+                        "input-button-name",
+                        "link-name",
                         "p-as-heading",
                     ],
                 }
             },
             # Wagtail-specific translatable custom error messages.
             "messages": {
+                "button-name": _(
+                    "Button text is empty. Use meaningful text for screen reader users."
+                ),
                 "empty-heading": _(
-                    "Empty heading found. Use meaningful text in headings."
+                    "Empty heading found. Use meaningful text for screen reader users."
+                ),
+                "empty-table-header": _(
+                    "Table header text is empty. Use meaningful text for screen reader users."
+                ),
+                "frame-title": _(
+                    "Empty frame title found. Use a meaningful title for screen reader users."
                 ),
                 "heading-order": _(
                     "Incorrect heading hierarchy. Avoid skipping levels."
+                ),
+                "input-button-name": _(
+                    "Input button text is empty. Use meaningful text for screen reader users."
+                ),
+                "link-name": _(
+                    "Link text is empty. Use meaningful text for screen reader users."
                 ),
                 "p-as-heading": _(
                     "Misusing paragraphs as headings. Use proper heading tags."
@@ -140,7 +160,7 @@ class EditPageItem(BaseItem):
         # Don't render if request is a preview. This is to avoid confusion that
         # might arise when the user clicks edit on a preview.
         try:
-            if request.is_preview:
+            if request.is_preview and request.is_editing:
                 return ""
         except AttributeError:
             pass

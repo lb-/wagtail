@@ -19,14 +19,14 @@ Alternatively, you can install [Node.js](https://nodejs.org/) directly, ensure y
 
 You will also need to install the **libjpeg** and **zlib** libraries, if you haven't done so already - see Pillow's [platform-specific installation instructions](https://pillow.readthedocs.io/en/stable/installation.html#external-libraries).
 
-Clone a copy of [the Wagtail codebase](https://github.com/wagtail/wagtail):
+Fork the [the Wagtail codebase](https://github.com/wagtail/wagtail) and clone the forked copy:
 
 ```sh
-git clone https://github.com/wagtail/wagtail.git
+git clone https://github.com/username/wagtail.git
 cd wagtail
 ```
 
-**With your preferred virtualenv activated,** install the Wagtail package in development mode with the included testing and documentation dependencies:
+**With your preferred [virtualenv activated](virtual_environment_creation),** install the Wagtail package in development mode with the included testing and documentation dependencies:
 
 ```sh
 pip install -e ."[testing,docs]" -U
@@ -44,7 +44,13 @@ Compile the assets:
 npm run build
 ```
 
-Any Wagtail sites you start up in this virtualenv will now run against this development instance of Wagtail. We recommend using the [Wagtail Bakery demo site](https://github.com/wagtail/bakerydemo/) as a basis for developing Wagtail. Keep in mind that the setup steps for a Wagtail site may include installing a release version of Wagtail, which will override the development version you've just set up. In this case, you should install the site before running the `pip install -e` step, or re-run that step after the site is installed.
+Any Wagtail sites you start up in this virtualenv will now run against this development instance of Wagtail. We recommend using the [Wagtail Bakery demo site](https://github.com/wagtail/bakerydemo/) as a basis for developing Wagtail. Keep in mind that the setup steps for a Wagtail site may include installing a release version of Wagtail, which will override the development version you've just set up. In this case, to install the local Wagtail development instance in your virtualenv for your Wagtail site:
+
+```sh
+pip install -e path/to/wagtail"[testing, docs]" -U
+```
+
+Here, `path/to/wagtail` is the path to your local Wagtail copy.
 
 (development_on_windows)=
 
@@ -84,7 +90,7 @@ an argument to `runtests.py` or `tox`:
 python runtests.py wagtail
 
 # Running in a specified Tox environment
-tox -e py39-dj32-sqlite-noelasticsearch wagtail
+tox -e py39-dj32-sqlite-noelasticsearch -- wagtail
 
 # See a list of available Tox environments
 tox -l
@@ -98,7 +104,7 @@ an argument to `runtests.py`
 python runtests.py wagtail.tests.test_blocks.TestIntegerBlock
 
 # Running in a specified Tox environment
-tox -e py39-dj32-sqlite-noelasticsearch wagtail.tests.test_blocks.TestIntegerBlock
+tox -e py39-dj32-sqlite-noelasticsearch -- wagtail.tests.test_blocks.TestIntegerBlock
 ```
 
 ### Running migrations for the test app models
@@ -194,7 +200,7 @@ npm --prefix client/tests/integration install
 npm run test:integration
 ```
 
-Integration tests target `http://localhost:8000` by default. Use the `TEST_ORIGIN` environment variable to use a different port, or test a remote Wagtail instance: `TEST_ORIGIN=http://localhost:9000 npm run test:integration`.
+Integration tests target `http://127.0.0.1:8000` by default. Use the `TEST_ORIGIN` environment variable to use a different port, or test a remote Wagtail instance: `TEST_ORIGIN=http://127.0.0.1:9000 npm run test:integration`.
 
 ### Browser and device support
 

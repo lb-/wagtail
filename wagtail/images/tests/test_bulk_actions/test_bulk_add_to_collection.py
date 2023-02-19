@@ -11,7 +11,7 @@ Image = get_image_model()
 test_file = get_test_image_file()
 
 
-class TestBulkAddImagesToCollection(TestCase, WagtailTestUtils):
+class TestBulkAddImagesToCollection(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
         self.root_collection = Collection.get_first_root_node()
@@ -57,7 +57,7 @@ class TestBulkAddImagesToCollection(TestCase, WagtailTestUtils):
                 "<li>{image_title}</li>".format(image_title=image.title), html
             )
 
-        response = self.client.post(self.url, self.post_data)
+        self.client.post(self.url, self.post_data)
 
         # Images should not be moved to new collection
         for image in self.images:

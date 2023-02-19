@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from functools import wraps
 from unittest import mock
 
@@ -12,7 +12,6 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils.html import json_script
 from freezegun import freeze_time
-from pytz import utc
 
 from wagtail.admin.forms import WagtailAdminModelForm, WagtailAdminPageForm
 from wagtail.admin.panels import (
@@ -369,7 +368,7 @@ class TestExtractPanelDefinitionsFromModelClass(TestCase):
         )
 
 
-class TestTabbedInterface(TestCase, WagtailTestUtils):
+class TestTabbedInterface(WagtailTestUtils, TestCase):
     def setUp(self):
         self.request = RequestFactory().get("/")
         user = self.create_superuser(username="admin")
@@ -1070,7 +1069,7 @@ class TestPageChooserPanel(TestCase):
         self.assertRaises(ImproperlyConfigured, panel.get_form_options)
 
 
-class TestInlinePanel(TestCase, WagtailTestUtils):
+class TestInlinePanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1287,7 +1286,7 @@ class TestInlinePanelGetComparison(TestCase):
         page = Page.objects.get(id=4).specific
         comparison = (
             page.get_edit_handler()
-            .bind_to(instance=page, request=self.request)
+            .get_bound_panel(instance=page, request=self.request)
             .get_comparison()
         )
 
@@ -1381,7 +1380,7 @@ There are no tabs on non-Page model editing within InlinePanels.""",
         delattr(EventPageSpeaker, "content_panels")
 
 
-class TestCommentPanel(TestCase, WagtailTestUtils):
+class TestCommentPanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1614,7 +1613,8 @@ class TestCommentPanel(TestCase, WagtailTestUtils):
 
         if settings.USE_TZ:
             self.assertEqual(
-                resolved_comment.resolved_at, datetime(2017, 1, 1, 12, 0, 0, tzinfo=utc)
+                resolved_comment.resolved_at,
+                datetime(2017, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
             )
         else:
             self.assertEqual(
@@ -1696,7 +1696,7 @@ class TestCommentPanel(TestCase, WagtailTestUtils):
         # The existing reply was from the same user, so should be deletable
 
 
-class TestPublishingPanel(TestCase, WagtailTestUtils):
+class TestPublishingPanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1747,7 +1747,7 @@ class TestPublishingPanel(TestCase, WagtailTestUtils):
         self.assertIn("expire_at", form.base_fields)
 
 
-class TestMultipleChooserPanel(TestCase, WagtailTestUtils):
+class TestMultipleChooserPanel(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):

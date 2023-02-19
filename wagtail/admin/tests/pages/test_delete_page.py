@@ -12,7 +12,7 @@ from wagtail.test.testapp.models import SimplePage, StandardChild, StandardIndex
 from wagtail.test.utils import WagtailTestUtils
 
 
-class TestPageDelete(TestCase, WagtailTestUtils):
+class TestPageDelete(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -58,7 +58,7 @@ class TestPageDelete(TestCase, WagtailTestUtils):
         self.assertTrue(SimplePage.objects.filter(id=self.child_page.id).exists())
 
         # And admin should be able to delete page without any confirmation
-        response = self.client.post(
+        self.client.post(
             reverse("wagtailadmin_pages:delete", args=(self.child_page.id,))
         )
         # Check that page is deleted
@@ -178,7 +178,7 @@ class TestPageDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the page is gone
@@ -221,7 +221,7 @@ class TestPageDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the page is gone
@@ -266,7 +266,7 @@ class TestPageDelete(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
         # Check that the page is gone

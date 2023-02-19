@@ -24,10 +24,6 @@ This is the base URL used by the Wagtail admin site. It is typically used for ge
 
 If this setting is not present, Wagtail will try to fall back to `request.site.root_url` or to the request's host name.
 
-```{versionchanged} 3.0
-This setting was previously named ``BASE_URL`` and was undocumented, using ``BASE_URL`` will be removed in a future release.
-```
-
 (append_slash)=
 
 ## Append Slash
@@ -360,6 +356,17 @@ This setting allows image renditions to be stored using an alternative storage b
 
 Custom storage classes should subclass `django.core.files.storage.Storage`. See the {doc}`Django file storage API <django:ref/files/storage>`.
 
+### `WAGTAILIMAGES_EXTENSIONS`
+
+```python
+WAGTAILIMAGES_EXTENSIONS = ['png', 'jpg']
+```
+
+A list of allowed image extensions that will be validated during image uploading.
+If this isn't supplied, all of GIF, JPG, JPEG, PNG, WEBP are allowed.
+Warning: this doesn't always ensure that the uploaded file is valid as files can
+be renamed to have an extension no matter what data they contain.
+
 ## Documents
 
 ### `WAGTAILDOCS_DOCUMENT_MODEL`
@@ -387,7 +394,7 @@ You can use it to specify or override the widgets to use in the admin form.
 WAGTAILDOCS_SERVE_METHOD = 'redirect'
 ```
 
-Determines how document downloads will be linked to and served. Normally, requests for documents are sent through a Django view, to perform privacy checks (see [Collection Privacy settings](https://guide.wagtail.org/en-latest/how-to/managing-collections/#privacy-settings)) and potentially other housekeeping tasks such as hit counting. To fully protect against users bypassing this check, it needs to happen in the same request where the document is served; however, this incurs a performance hit as the document then needs to be served by the Django server. In particular, this cancels out much of the benefit of hosting documents on external storage, such as S3 or a CDN.
+Determines how document downloads will be linked to and served. Normally, requests for documents are sent through a Django view, to perform privacy checks (see [Collection Privacy settings](https://guide.wagtail.org/en-latest/how-to-guides/manage-collections/#privacy-settings)) and potentially other housekeeping tasks such as hit counting. To fully protect against users bypassing this check, it needs to happen in the same request where the document is served; however, this incurs a performance hit as the document then needs to be served by the Django server. In particular, this cancels out much of the benefit of hosting documents on external storage, such as S3 or a CDN.
 
 For this reason, Wagtail provides a number of serving methods which trade some of the strictness of the permission check for performance:
 

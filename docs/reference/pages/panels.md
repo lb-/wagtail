@@ -47,23 +47,11 @@ Here are some Wagtail-specific types that you might include as fields in your mo
 
     .. attribute:: FieldPanel.disable_comments (optional)
 
-        This allows you to prevent a field level comment button showing for this panel if set to ``True``. See `Commenting <https://guide.wagtail.org/en-latest/how-to/creating-and-editing-pages/#commenting>`_.
+        This allows you to prevent a field level comment button showing for this panel if set to ``True``. See `Create and edit comments <https://guide.wagtail.org/en-latest/how-to-guides/manage-pages/#create-and-edit-comments>`_.
 
     .. attribute:: FieldPanel.permission (optional)
 
         Allows a field to be selectively shown to users with sufficient permission. Accepts a permission codename such as ``'myapp.change_blog_category'`` - if the logged-in user does not have that permission, the field will be omitted from the form. See Django's documentation on :ref:`custom permissions <django:custom-permissions>` for details on how to set permissions up; alternatively, if you want to set a field as only available to superusers, you can use any arbitrary string (such as ``'superuser'``) as the codename, since superusers automatically pass all permission tests.
-```
-
-### StreamFieldPanel
-
-```{eval-rst}
-.. class:: StreamFieldPanel(field_name, classname=None, widget=None)
-
-    Deprecated; use ``FieldPanel`` instead.
-
-    .. versionchanged:: 3.0
-
-       ``StreamFieldPanel`` is no longer required for ``StreamField``.
 ```
 
 ### MultiFieldPanel
@@ -86,24 +74,97 @@ Here are some Wagtail-specific types that you might include as fields in your mo
         Help text to be displayed against the panel.
 
     .. attribute:: MultiFieldPanel.permission (optional)
-        Allows a panel to be selectively shown to users with sufficient permission. Accepts a permission codename such as ``'myapp.change_blog_category'`` - if the logged-in user does not have that permission, the field will be omitted from the form.
-        Similar to `FieldPanel.permission`
-        The panel group will not be visible if the permission check does not pass.
+
+        Allows a panel to be selectively shown to users with sufficient permission. Accepts a permission codename such as ``'myapp.change_blog_category'`` - if the logged-in user does not have that permission, the panel will be omitted from the form. Similar to ``FieldPanel.permission``.
 ```
+
+(inline_panels)=
 
 ### InlinePanel
 
 ```{eval-rst}
 .. class:: InlinePanel(relation_name, panels=None, classname='', heading='', label='', help_text='', min_num=None, max_num=None)
 
-    This panel allows for the creation of a "cluster" of related objects over a join to a separate model, such as a list of related links or slides to an image carousel.
-```
+    This panel allows for the creation of a "cluster" of related objects over a join to a separate model, such as a list of related links or slides to an image carousel. For a full explanation on the usage of ``InlinePanel``, see :ref:`inline_models`.
 
-This is a powerful but complex feature which will take some space to cover, so we'll skip over it for now. For a full explanation on the usage of `InlinePanel`, see {ref}`inline_panels`.
+    .. attribute:: InlinePanel.relation_name
+
+        The related_name label given to the cluster’s ParentalKey relation.
+
+    .. attribute:: InlinePanel.panels (optional)
+
+        The list of panels that will make up the child object's form. If not specified here, the `panels` definition on the child model will be used.
+
+    .. attribute:: InlinePanel.classname (optional)
+
+        A class to apply to the InlinePanel as a whole.
+
+    .. attribute:: InlinePanel.heading
+
+        A heading for the panel in the Wagtail editor.
+
+    .. attribute:: InlinePanel.label
+
+        Text for the add button and heading for child panels. Used as the heading when ``heading`` is not present.
+
+    .. attribute:: InlinePanel.help_text (optional)
+
+        Help text to be displayed in the Wagtail editor.
+
+    .. attribute:: InlinePanel.min_num (optional)
+
+        Minimum number of forms a user must submit.
+
+    .. attribute:: InlinePanel.max_num (optional)
+
+        Maximum number of forms a user must submit.
+
+```
 
 #### Collapsing InlinePanels to save space
 
 Note that you can use `classname="collapsed"` to load the panel collapsed under its heading in order to save space in the Wagtail admin.
+
+
+(multiple_chooser_panel)=
+
+### MultipleChooserPanel
+
+```{versionadded} 4.2
+The `MultipleChooserPanel` panel type was added.
+```
+
+```{eval-rst}
+.. class:: MultipleChooserPanel(relation_name, chooser_field_name=None, panels=None, classname='', heading='', label='', help_text='', min_num=None, max_num=None)
+```
+
+This is a variant of `InlinePanel` that improves the editing experience when the main feature of the child panel is a chooser for a `ForeignKey` relation (usually to an image, document, snippet or another page). Rather than the "Add" button inserting a new form to be filled in individually, it immediately opens up the chooser interface for that related object, in a mode that allows multiple items to be selected. The user is then returned to the main edit form with the appropriate number of child panels added and pre-filled.
+
+`MultipleChooserPanel` accepts an additional required argument `chooser_field_name`, specifying the name of the `ForeignKey` relation that the chooser is linked to.
+
+For example, given a child model that provies a gallery of images on `BlogPage`:
+
+```python
+class BlogPageGalleryImage(Orderable):
+    page = ParentalKey(BlogPage, on_delete=models.CASCADE, related_name='gallery_images')
+    image = models.ForeignKey(
+        'wagtailimages.Image', on_delete=models.CASCADE, related_name='+'
+    )
+    caption = models.CharField(blank=True, max_length=250)
+
+    panels = [
+        FieldPanel('image'),
+        FieldPanel('caption'),
+    ]
+```
+
+The `MultipleChooserPanel` definition on `BlogPage` would be:
+
+```python
+        MultipleChooserPanel(
+            'gallery_images', label="Gallery images", chooser_field_name="image"
+        )
+```
 
 ### FieldRowPanel
 
@@ -127,9 +188,8 @@ Note that you can use `classname="collapsed"` to load the panel collapsed under 
         Help text to be displayed against the panel.
 
     .. attribute:: FieldRowPanel.permission (optional)
-        Allows a panel to be selectively shown to users with sufficient permission. Accepts a permission codename such as ``'myapp.change_blog_category'`` - if the logged-in user does not have that permission, the field will be omitted from the form.
-        Similar to `FieldPanel.permission`
-        The panel group will not be visible if the permission check does not pass.
+
+        Allows a panel to be selectively shown to users with sufficient permission. Accepts a permission codename such as ``'myapp.change_blog_category'`` - if the logged-in user does not have that permission, the panel will be omitted from the form. Similar to ``FieldPanel.permission``.
 ```
 
 ### HelpPanel
@@ -187,24 +247,6 @@ Note that you can use `classname="collapsed"` to load the panel collapsed under 
         PageChooserPanel('related_page', ['demo.PublisherPage', 'demo.AuthorPage'])
 
     Passing ``can_choose_root=True`` will allow the editor to choose the tree root as a page. Normally this would be undesirable, since the tree root is never a usable page, but in some specialised cases it may be appropriate; for example, a page with an automatic "related articles" feed could use a PageChooserPanel to select which subsection articles will be taken from, with the root corresponding to 'everywhere'.
-
-    .. versionchanged:: 3.0
-
-       ``FieldPanel`` now also provides a page chooser interface for foreign keys to page models. ``PageChooserPanel`` is only required when specifying the ``page_type`` or ``can_choose_root`` parameters.
-```
-
-### ImageChooserPanel
-
-```{eval-rst}
-.. module:: wagtail.images.edit_handlers
-
-.. class:: ImageChooserPanel(field_name)
-
-    Deprecated; use ``FieldPanel`` instead.
-
-    .. versionchanged:: 3.0
-
-       ``ImageChooserPanel`` is no longer required to obtain an image chooser interface.
 ```
 
 ### FormSubmissionsPanel
@@ -228,34 +270,6 @@ Note that you can use `classname="collapsed"` to load the panel collapsed under 
             ]
 ```
 
-### DocumentChooserPanel
-
-```{eval-rst}
-.. module:: wagtail.documents.edit_handlers
-
-.. class:: DocumentChooserPanel(field_name)
-
-    Deprecated; use ``FieldPanel`` instead.
-
-    .. versionchanged:: 3.0
-
-       ``DocumentChooserPanel`` is no longer required to obtain a document chooser interface.
-```
-
-### SnippetChooserPanel
-
-```{eval-rst}
-.. module:: wagtail.snippets.edit_handlers
-
-.. class:: SnippetChooserPanel(field_name, snippet_type=None)
-
-    Deprecated; use ``FieldPanel`` instead.
-
-    .. versionchanged:: 3.0
-
-       ``SnippetChooserPanel`` is no longer required to obtain a document chooser interface.
-```
-
 ## Field Customisation
 
 By adding CSS classes to your panel definitions or adding extra parameters to your field definitions, you can control much of how your fields will display in the Wagtail page editing interface. Wagtail's page editing interface takes much of its behaviour from Django's admin, so you may find many options for customisation covered there.
@@ -268,10 +282,6 @@ Use `classname="title"` to make Page's built-in title field stand out with more 
 (collapsible)=
 
 ### Collapsible
-
-```{versionchanged} 4.0
-All panels are now collapsible by default.
-```
 
 Using `classname="collapsed"` will load the editor page with the panel collapsed under its heading.
 
@@ -333,94 +343,3 @@ To make input or chooser selection mandatory for a field, add [`blank=False`](dj
 
 Without a panel definition, a default form field (without label) will be used to represent your fields. If you intend to hide a field on the Wagtail page editor, define the field with [`editable=False`](django.db.models.Field.editable).
 
-(inline_panels)=
-
-## Inline Panels and Model Clusters
-
-The `django-modelcluster` module allows for streamlined relation of extra models to a Wagtail page via a ForeignKey-like relationship called `ParentalKey`. Normally, your related objects "cluster" would need to be created beforehand (or asynchronously) before being linked to a Page; however, objects related to a Wagtail page via `ParentalKey` can be created on-the-fly and saved to a draft revision of a `Page` object.
-
-Let's look at the example of adding related links to a [`Page`](wagtail.models.Page)-derived model. We want to be able to add as many as we like, assign an order, and do all of this without leaving the page editing screen.
-
-```python
-from wagtail.models import Orderable, Page
-from modelcluster.fields import ParentalKey
-
-# The abstract model for related links, complete with panels
-class RelatedLink(models.Model):
-    title = models.CharField(max_length=255)
-    link_external = models.URLField("External link", blank=True)
-
-    panels = [
-        FieldPanel('title'),
-        FieldPanel('link_external'),
-    ]
-
-    class Meta:
-        abstract = True
-
-# The real model which combines the abstract model, an
-# Orderable helper class, and what amounts to a ForeignKey link
-# to the model we want to add related links to (BookPage)
-class BookPageRelatedLinks(Orderable, RelatedLink):
-    page = ParentalKey('demo.BookPage', on_delete=models.CASCADE, related_name='related_links')
-
-class BookPage(Page):
-    # ...
-
-    content_panels = Page.content_panels + [
-        InlinePanel('related_links', heading="Related Links", label="Related link"),
-    ]
-```
-
-The `RelatedLink` class is a vanilla Django abstract model. The `BookPageRelatedLinks` model extends it with capability for being ordered in the Wagtail interface via the `Orderable` class as well as adding a `page` property which links the model to the `BookPage` model we're adding the related links objects to. Finally, in the panel definitions for `BookPage`, we'll add an [`InlinePanel`](wagtail.admin.panels.InlinePanel) to provide an interface for it all. Let's look again at the parameters that [`InlinePanel`](wagtail.admin.panels.InlinePanel) accepts:
-
-```python
-InlinePanel(relation_name, panels=None, heading='', label='', help_text='', min_num=None, max_num=None)
-```
-
-The `relation_name` is the `related_name` label given to the cluster's `ParentalKey` relation. You can add the `panels` manually or make them part of the cluster model. `heading` and `help_text` provide a heading and caption, respectively, for the Wagtail editor. `label` sets the text on the add button and child panels, and is used as the heading when `heading` is not present. Finally, `min_num` and `max_num` allow you to set the minimum/maximum number of forms that the user must submit.
-
-For another example of using model clusters, see {ref}`tagging`.
-
-For more on `django-modelcluster`, visit
-[the django-modelcluster github project page](https://github.com/wagtail/django-modelcluster)
-
-(multiple_chooser_panel)=
-
-### MultipleChooserPanel
-
-```{versionadded} 4.2
-The `MultipleChooserPanel` panel type was added.
-```
-
-```{eval-rst}
-.. class:: MultipleChooserPanel(relation_name, chooser_field_name=None, panels=None, classname='', heading='', label='', help_text='', min_num=None, max_num=None)
-```
-
-This is a variant of `InlinePanel` that improves the editing experience when the main feature of the child panel is a chooser for a `ForeignKey` relation (usually to an image, document, snippet or another page). Rather than the "Add" button inserting a new form to be filled in individually, it immediately opens up the chooser interface for that related object, in a mode that allows multiple items to be selected. The user is then returned to the main edit form with the appropriate number of child panels added and pre-filled.
-
-`MultipleChooserPanel` accepts an additional required argument `chooser_field_name`, specifying the name of the `ForeignKey` relation that the chooser is linked to.
-
-For example, given a child model that provies a gallery of images on `BlogPage`:
-
-```python
-class BlogPageGalleryImage(Orderable):
-    page = ParentalKey(BlogPage, on_delete=models.CASCADE, related_name='gallery_images')
-    image = models.ForeignKey(
-        'wagtailimages.Image', on_delete=models.CASCADE, related_name='+'
-    )
-    caption = models.CharField(blank=True, max_length=250)
-
-    panels = [
-        FieldPanel('image'),
-        FieldPanel('caption'),
-    ]
-```
-
-the `MultipleChooserPanel` definition on `BlogPage` would be:
-
-```python
-        MultipleChooserPanel(
-            'gallery_images', label="Gallery images", chooser_field_name="image"
-        )
-```

@@ -22,7 +22,6 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
-from django.core.cache import cache
 from django.core.exceptions import (
     ImproperlyConfigured,
     PermissionDenied,
@@ -91,10 +90,7 @@ from wagtail.signals import (
     workflow_submitted,
 )
 from wagtail.url_routing import RouteResult
-from wagtail.utils.deprecation import (
-    RemovedInWagtail50Warning,
-    RemovedInWagtail60Warning,
-)
+from wagtail.utils.deprecation import RemovedInWagtail60Warning
 
 from .audit_log import (  # noqa
     BaseLogEntry,
@@ -233,6 +229,11 @@ class RevisionMixin(models.Model):
         blank=True,
         editable=False,
     )
+
+    # An array of additional field names that will not be included when the object is copied.
+    default_exclude_fields_in_copy = [
+        "latest_revision",
+    ]
 
     @property
     def revisions(self):
@@ -1412,7 +1413,7 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
         # Note: New translations of existing site roots are considered site roots as well, so we must
         # always check if this page is a site root, even if it's new.
         if self.is_site_root():
-            cache.delete("wagtail_site_root_paths")
+            Site.clear_site_root_paths_cache()
 
         # Log
         if is_new:
@@ -1787,16 +1788,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
         return revision
 
-    def get_latest_revision_as_page(self):
-        warnings.warn(
-            "Pages should use .get_latest_revision_as_object() instead of "
-            ".get_latest_revision_as_page() to retrieve the latest revision as a "
-            "Page instance.",
-            category=RemovedInWagtail50Warning,
-            stacklevel=2,
-        )
-        return self.get_latest_revision_as_object()
-
     def get_latest_revision_as_object(self):
         if not self.has_unpublished_changes:
             # Use the live database copy in preference to the revision record, as:
@@ -2030,8 +2021,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
     def _get_relevant_site_root_paths(self, cache_object=None):
         """
-        .. versionadded::2.16
-
         Returns a tuple of root paths for all sites this page belongs to.
         """
         return tuple(
@@ -2487,8 +2476,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
 
     def get_route_paths(self):
         """
-        .. versionadded:: 2.16
-
         Returns a list of paths that this page can be viewed at.
 
         These values are combined with the dynamic portion of the page URL to
@@ -2522,19 +2509,6 @@ class Page(AbstractPage, index.Indexed, ClusterableModel, metaclass=PageBase):
                 "lastmod": (self.last_published_at or self.latest_revision_created_at),
             }
         ]
-
-    def get_static_site_paths(self):
-        """
-        This is a generator of URL paths to feed into a static site generator
-        Override this if you would like to create static versions of subpages
-        """
-        # Yield path for this page
-        yield "/"
-
-        # Yield paths for child pages
-        for child in self.get_children().live():
-            for path in child.specific.get_static_site_paths():
-                yield "/" + child.slug + path
 
     def get_ancestors(self, inclusive=False):
         """
@@ -2827,27 +2801,6 @@ class Revision(models.Model):
     def base_content_object(self):
         return self.base_content_type.get_object_for_this_type(pk=self.object_id)
 
-    @property
-    def page(self):
-        warnings.warn(
-            "Revisions should access .content_object instead of .page "
-            "to retrieve the object.",
-            category=RemovedInWagtail50Warning,
-            stacklevel=2,
-        )
-        return self.content_object
-
-    @property
-    def page_id(self):
-        warnings.warn(
-            "Revisions should access .object_id instead of .page_id "
-            "to retrieve the object's primary key. For page revisions, "
-            "you may need to cast the object_id to integer first.",
-            category=RemovedInWagtail50Warning,
-            stacklevel=2,
-        )
-        return int(self.object_id)
-
     def save(self, user=None, *args, **kwargs):
         # Set default value for created_at to now
         # We cannot use auto_now_add as that will override
@@ -2895,15 +2848,6 @@ class Revision(models.Model):
 
     def as_object(self):
         return self.content_object.with_content_json(self.content)
-
-    def as_page_object(self):
-        warnings.warn(
-            "Revisions should use .as_object() instead of .as_page_object() "
-            "to create the object.",
-            category=RemovedInWagtail50Warning,
-            stacklevel=2,
-        )
-        return self.as_object()
 
     def approve_moderation(self, user=None):
         if self.submitted_for_moderation:
@@ -4904,6 +4848,8 @@ class PageSubscription(models.Model):
     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="subscribers")
 
     comment_notifications = models.BooleanField()
+
+    wagtail_reference_index_ignore = True
 
     class Meta:
         unique_together = [

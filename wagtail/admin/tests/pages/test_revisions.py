@@ -17,7 +17,7 @@ from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.timestamps import local_datetime
 
 
-class TestRevisions(TestCase, WagtailTestUtils):
+class TestRevisions(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -67,6 +67,14 @@ class TestRevisions(TestCase, WagtailTestUtils):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Last Christmas I gave you my heart")
+
+        # Should show edit link in the userbar
+        # https://github.com/wagtail/wagtail/issues/10002
+        self.assertContains(response, "Edit this page")
+        self.assertContains(
+            response,
+            reverse("wagtailadmin_pages:edit", args=(self.christmas_event.id,)),
+        )
 
     def test_preview_revision_with_no_page_permissions_redirects_to_admin(self):
         admin_only_user = self.create_user(
@@ -144,7 +152,7 @@ class TestRevisions(TestCase, WagtailTestUtils):
         self.assertContains(response, this_christmas_unschedule_url)
 
 
-class TestStreamRevisions(TestCase, WagtailTestUtils):
+class TestStreamRevisions(WagtailTestUtils, TestCase):
     def setUp(self):
         self.root_page = Page.objects.get(id=2)
 
@@ -182,7 +190,7 @@ class TestStreamRevisions(TestCase, WagtailTestUtils):
         )
 
 
-class TestCompareRevisions(TestCase, WagtailTestUtils):
+class TestCompareRevisions(WagtailTestUtils, TestCase):
     # Actual tests for the comparison classes can be found in test_compare.py
 
     fixtures = ["test.json"]
@@ -278,7 +286,7 @@ class TestCompareRevisions(TestCase, WagtailTestUtils):
         )
 
 
-class TestCompareRevisionsWithPerUserEditHandlers(TestCase, WagtailTestUtils):
+class TestCompareRevisionsWithPerUserEditHandlers(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -335,7 +343,7 @@ class TestCompareRevisionsWithPerUserEditHandlers(TestCase, WagtailTestUtils):
         )
 
 
-class TestCompareRevisionsWithNonModelField(TestCase, WagtailTestUtils):
+class TestCompareRevisionsWithNonModelField(WagtailTestUtils, TestCase):
     """
     Tests if form fields defined in the base_form_class will not be included.
     in revisions view as they are not actually on the model.
@@ -410,7 +418,7 @@ class TestCompareRevisionsWithNonModelField(TestCase, WagtailTestUtils):
         self.assertNotContains(response, "<h2>Code:</h2>")
 
 
-class TestRevisionsUnschedule(TestCase, WagtailTestUtils):
+class TestRevisionsUnschedule(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -568,7 +576,7 @@ class TestRevisionsUnschedule(TestCase, WagtailTestUtils):
         )
 
 
-class TestRevisionsUnscheduleForUnpublishedPages(TestCase, WagtailTestUtils):
+class TestRevisionsUnscheduleForUnpublishedPages(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):

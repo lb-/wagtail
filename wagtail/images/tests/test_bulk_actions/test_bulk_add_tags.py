@@ -14,7 +14,7 @@ def get_tag_list(image):
     return [tag.name for tag in image.tags.all()]
 
 
-class TestBulkAddTags(TestCase, WagtailTestUtils):
+class TestBulkAddTags(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.login()
         self.new_tags = ["first", "second"]
@@ -59,7 +59,7 @@ class TestBulkAddTags(TestCase, WagtailTestUtils):
                 "<li>{image_title}</li>".format(image_title=image.title), html
             )
 
-        response = self.client.post(self.url, self.post_data)
+        self.client.post(self.url, self.post_data)
 
         # New tags should not be added to the images
         for image in self.images:

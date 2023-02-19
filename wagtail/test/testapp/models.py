@@ -517,18 +517,6 @@ class EventIndex(Page):
 
         return super().route(request, path_components)
 
-    def get_static_site_paths(self):
-        # Get page count
-        page_count = self.get_paginator().num_pages
-
-        # Yield a path for each page
-        for page in range(page_count):
-            yield "/%d/" % (page + 1)
-
-        # Yield from superclass
-        for path in super().get_static_site_paths():
-            yield path
-
     def get_sitemap_urls(self, request=None):
         # Add past events url to sitemap
         return super().get_sitemap_urls(request=request) + [
@@ -1129,6 +1117,7 @@ class FullFeaturedSnippet(
     DraftStateMixin,
     LockableMixin,
     RevisionMixin,
+    TranslatableMixin,
     models.Model,
 ):
     text = models.TextField()
@@ -1139,7 +1128,7 @@ class FullFeaturedSnippet(
     def get_preview_template(self, request, mode_name):
         return "tests/previewable_model.html"
 
-    class Meta:
+    class Meta(TranslatableMixin.Meta):
         verbose_name = "full-featured snippet"
         verbose_name_plural = "full-featured snippets"
 
@@ -1338,17 +1327,6 @@ class CustomDocumentWithAuthor(AbstractDocument):
     admin_form_fields = Document.admin_form_fields + ("author",)
 
 
-class StreamModel(models.Model):
-    body = StreamField(
-        [
-            ("text", CharBlock()),
-            ("rich_text", RichTextBlock()),
-            ("image", ImageChooserBlock()),
-        ],
-        use_json_field=False,
-    )
-
-
 class JSONStreamModel(models.Model):
     body = StreamField(
         [
@@ -1357,19 +1335,6 @@ class JSONStreamModel(models.Model):
             ("image", ImageChooserBlock()),
         ],
         use_json_field=True,
-    )
-
-
-class MinMaxCountStreamModel(models.Model):
-    body = StreamField(
-        [
-            ("text", CharBlock()),
-            ("rich_text", RichTextBlock()),
-            ("image", ImageChooserBlock()),
-        ],
-        min_num=2,
-        max_num=5,
-        use_json_field=False,
     )
 
 
@@ -1383,22 +1348,6 @@ class JSONMinMaxCountStreamModel(models.Model):
         min_num=2,
         max_num=5,
         use_json_field=True,
-    )
-
-
-class BlockCountsStreamModel(models.Model):
-    body = StreamField(
-        [
-            ("text", CharBlock()),
-            ("rich_text", RichTextBlock()),
-            ("image", ImageChooserBlock()),
-        ],
-        block_counts={
-            "text": {"min_num": 1},
-            "rich_text": {"max_num": 1},
-            "image": {"min_num": 1, "max_num": 1},
-        },
-        use_json_field=False,
     )
 
 
@@ -1464,7 +1413,7 @@ class StreamPage(Page):
                 ListBlock(CharBlock()),
             ),
         ],
-        use_json_field=False,
+        use_json_field=True,
     )
 
     api_fields = ("body",)
@@ -1485,7 +1434,7 @@ class DefaultStreamPage(Page):
             ("image", ImageChooserBlock()),
         ],
         default="",
-        use_json_field=False,
+        use_json_field=True,
     )
 
     content_panels = [
@@ -1719,7 +1668,7 @@ class DefaultRichBlockFieldPage(Page):
         [
             ("rich_text", RichTextBlock()),
         ],
-        use_json_field=False,
+        use_json_field=True,
     )
 
     content_panels = Page.content_panels + [FieldPanel("body")]
@@ -1739,7 +1688,7 @@ class CustomRichBlockFieldPage(Page):
         [
             ("rich_text", RichTextBlock(editor="custom")),
         ],
-        use_json_field=False,
+        use_json_field=True,
     )
 
     content_panels = [
@@ -1785,7 +1734,7 @@ class InlineStreamPageSection(Orderable):
             ("rich_text", RichTextBlock()),
             ("image", ImageChooserBlock()),
         ],
-        use_json_field=False,
+        use_json_field=True,
     )
     panels = [FieldPanel("body")]
 
@@ -1798,7 +1747,7 @@ class InlineStreamPage(Page):
 
 
 class TableBlockStreamPage(Page):
-    table = StreamField([("table", TableBlock())], use_json_field=False)
+    table = StreamField([("table", TableBlock())], use_json_field=True)
 
     content_panels = [FieldPanel("table")]
 
@@ -1841,15 +1790,15 @@ class AlwaysShowInMenusPage(Page):
 
 # test for AddField migrations on StreamFields using various default values
 class AddedStreamFieldWithoutDefaultPage(Page):
-    body = StreamField([("title", CharBlock())], use_json_field=False)
+    body = StreamField([("title", CharBlock())], use_json_field=True)
 
 
 class AddedStreamFieldWithEmptyStringDefaultPage(Page):
-    body = StreamField([("title", CharBlock())], default="", use_json_field=False)
+    body = StreamField([("title", CharBlock())], default="", use_json_field=True)
 
 
 class AddedStreamFieldWithEmptyListDefaultPage(Page):
-    body = StreamField([("title", CharBlock())], default=[], use_json_field=False)
+    body = StreamField([("title", CharBlock())], default=[], use_json_field=True)
 
 
 class SecretPage(Page):
@@ -1977,7 +1926,7 @@ class DeadlyStreamPage(Page):
         [
             ("title", DeadlyCharBlock()),
         ],
-        use_json_field=False,
+        use_json_field=True,
     )
     content_panels = Page.content_panels + [
         FieldPanel("body"),
@@ -2066,3 +2015,14 @@ class GalleryPageImage(Orderable):
         on_delete=models.CASCADE,
         related_name="+",
     )
+
+
+class GenericSnippetNoIndexPage(GenericSnippetPage):
+    wagtail_reference_index_ignore = True
+
+
+class GenericSnippetNoFieldIndexPage(GenericSnippetPage):
+    snippet_content_type_nonindexed = models.ForeignKey(
+        ContentType, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    snippet_content_type_nonindexed.wagtail_reference_index_ignore = True

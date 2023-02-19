@@ -28,7 +28,7 @@ def get_total_page_count():
     )
 
 
-class TestPageListing(TestCase, WagtailTestUtils):
+class TestPageListing(WagtailTestUtils, TestCase):
     fixtures = ["demosite.json"]
 
     def get_response(self, **params):
@@ -187,8 +187,8 @@ class TestPageListing(TestCase, WagtailTestUtils):
             # Only generic fields available
             self.assertEqual(set(page.keys()), {"id", "meta", "title"})
 
-        self.assertTrue(blog_page_seen, "No blog pages were found in the items")
-        self.assertTrue(event_page_seen, "No event pages were found in the items")
+        self.assertTrue(blog_page_seen, msg="No blog pages were found in the items")
+        self.assertTrue(event_page_seen, msg="No event pages were found in the items")
 
     def test_non_existant_type_gives_error(self):
         response = self.get_response(type="demosite.IDontExist")

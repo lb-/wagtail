@@ -1,7 +1,7 @@
 import io
 import json
 import logging
-from unittest import mock
+from unittest import expectedFailure, mock
 
 from django.conf import settings
 from django.contrib.admin.utils import quote
@@ -45,7 +45,7 @@ def delete_existing_workflows():
     WorkflowTask.objects.all().delete()
 
 
-class TestWorkflowMenus(TestCase, WagtailTestUtils):
+class TestWorkflowMenus(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -81,7 +81,7 @@ class TestWorkflowMenus(TestCase, WagtailTestUtils):
         self.assertNotContains(response, '"url": "/admin/reports/workflow_tasks/"')
 
 
-class TestWorkflowsIndexView(TestCase, WagtailTestUtils):
+class TestWorkflowsIndexView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -157,7 +157,7 @@ class TestWorkflowsIndexView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
 
 
-class TestWorkflowsCreateView(TestCase, WagtailTestUtils):
+class TestWorkflowsCreateView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -367,7 +367,7 @@ class TestWorkflowsCreateView(TestCase, WagtailTestUtils):
         self.assertEqual(link.workflow, workflow)
 
 
-class TestWorkflowsEditView(TestCase, WagtailTestUtils):
+class TestWorkflowsEditView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -644,7 +644,7 @@ class TestWorkflowsEditView(TestCase, WagtailTestUtils):
         self.assertFalse(self.workflow.workflow_content_types.exists())
 
 
-class TestRemoveWorkflow(TestCase, WagtailTestUtils):
+class TestRemoveWorkflow(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -703,7 +703,7 @@ class TestRemoveWorkflow(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 302)
 
 
-class TestTaskIndexView(TestCase, WagtailTestUtils):
+class TestTaskIndexView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -780,7 +780,7 @@ class TestTaskIndexView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
 
 
-class TestCreateTaskView(TestCase, WagtailTestUtils):
+class TestCreateTaskView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -866,7 +866,7 @@ class TestCreateTaskView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
 
 
-class TestSelectTaskTypeView(TestCase, WagtailTestUtils):
+class TestSelectTaskTypeView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -906,7 +906,7 @@ class TestSelectTaskTypeView(TestCase, WagtailTestUtils):
         )
 
 
-class TestEditTaskView(TestCase, WagtailTestUtils):
+class TestEditTaskView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -989,7 +989,7 @@ class TestEditTaskView(TestCase, WagtailTestUtils):
         self.assertEqual(moderator_url_finder.get_edit_url(self.task), expected_url)
 
 
-class BasePageWorkflowTests(TestCase, WagtailTestUtils):
+class BasePageWorkflowTests(WagtailTestUtils, TestCase):
     model_name = "page"
 
     def setUp(self):
@@ -1055,7 +1055,7 @@ class BasePageWorkflowTests(TestCase, WagtailTestUtils):
             args=(self.object.id,) if args is None else args,
         )
 
-    def post(self, action, data=None):
+    def post(self, action, data=None, **kwargs):
         post_data = {
             "title": str(self.object.title),
             "slug": str(self.object.slug),
@@ -1064,7 +1064,7 @@ class BasePageWorkflowTests(TestCase, WagtailTestUtils):
         }
         if data:
             post_data.update(data)
-        return self.client.post(self.get_url("edit"), post_data)
+        return self.client.post(self.get_url("edit"), post_data, **kwargs)
 
     def workflow_action(self, action, data=None, **kwargs):
         return self.client.post(
@@ -1130,14 +1130,14 @@ class BaseSnippetWorkflowTests(BasePageWorkflowTests):
             args=(quote(self.object.pk),) if args is None else args,
         )
 
-    def post(self, action, data=None):
+    def post(self, action, data=None, **kwargs):
         post_data = {
             "text": self.object.text,
             f"action-{action}": "True",
         }
         if data:
             post_data.update(data)
-        return self.client.post(self.get_url("edit"), post_data)
+        return self.client.post(self.get_url("edit"), post_data, **kwargs)
 
 
 class TestSubmitPageToWorkflow(BasePageWorkflowTests):
@@ -1191,11 +1191,15 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
 
         # submit for approval
         self.post("submit")
 
-        # After submit, as a submitter, should only see cancel button
+        # After submit, as a submitter, should only see cancel and locked buttons
         response = self.client.get(edit_url)
         self.assertNotContains(response, "Save draft")
         self.assertNotContains(response, "Submit to test_workflow")
@@ -1203,6 +1207,10 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
 
         # After submit, as a moderator, should only see save, approve, and reject buttons
         self.login(self.moderator)
@@ -1213,6 +1221,10 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertContains(response, "Approve")
         self.assertContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
 
         self.reject()
 
@@ -1225,6 +1237,23 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
+
+        # After cancel, as a submitter, should only see save and submit buttons
+        response = self.post("cancel-workflow", follow=True)
+        self.assertContains(response, "Save draft")
+        self.assertContains(response, "Submit to test_workflow")
+        self.assertNotContains(response, "Cancel workflow")
+        self.assertNotContains(response, "Restart workflow")
+        self.assertNotContains(response, "Approve")
+        self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
 
     def test_workflow_action_menu_items_when_reverting(self):
         old_revision = self.object.latest_revision
@@ -1241,11 +1270,15 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # submit for approval
         self.post("submit")
 
-        # After submit, as a submitter, should not see any buttons
+        # After submit, as a submitter, should only see locked button
         response = self.client.get(revert_url)
         self.assertNotContains(response, "Replace current draft")
         self.assertNotContains(response, "Submit to test_workflow")
@@ -1253,6 +1286,10 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # After submit, as a moderator, should only see save button
         self.login(self.moderator)
@@ -1263,6 +1300,10 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         self.reject()
 
@@ -1275,6 +1316,24 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
+
+        # After cancel, as a submitter, should only see save button
+        self.post("cancel-workflow")
+        response = self.client.get(revert_url)
+        self.assertContains(response, "Replace current draft")
+        self.assertNotContains(response, "Submit to test_workflow")
+        self.assertNotContains(response, "Cancel workflow")
+        self.assertNotContains(response, "Restart workflow")
+        self.assertNotContains(response, "Approve")
+        self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
     @override_settings(WAGTAILADMIN_BASE_URL="http://admin.example.com")
     def test_submit_sends_mail(self):
@@ -1357,7 +1416,7 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
 
         # An email that fails to send should return a message rather than crash the page
         self.assertEqual(response.status_code, 302)
-        response = self.client.get(reverse("wagtailadmin_home"))
+        self.client.get(reverse("wagtailadmin_home"))
 
     def test_resume_rejected_workflow(self):
         # test that an existing workflow can be resumed by submitting when rejected
@@ -1409,13 +1468,31 @@ class TestSubmitPageToWorkflow(BasePageWorkflowTests):
         workflow_state = self.object.current_workflow_state
         self.assertEqual(workflow_state.current_task_state.task.specific, self.task_1)
         self.assertEqual(workflow_state.status, WorkflowState.STATUS_IN_PROGRESS)
-        self.post("cancel-workflow")
+        response = self.post("cancel-workflow", follow=True)
         workflow_state.refresh_from_db()
 
         # check that the workflow state's status is now cancelled
         self.assertEqual(workflow_state.status, WorkflowState.STATUS_CANCELLED)
         self.assertEqual(
             workflow_state.current_task_state.status, TaskState.STATUS_CANCELLED
+        )
+
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save " disabled>',
+        )
+        self.assertNotContains(
+            response,
+            f"The {self.model_name} could not be saved as it is locked",
+        )
+        self.assertNotContains(
+            response,
+            f"The {self.model_name} could not be saved due to validation errors",
+        )
+        # Snippets have a custom error message that's not made generic yet
+        self.assertNotContains(
+            response,
+            "The snippet could not be saved due to errors",
         )
 
     def test_email_headers(self):
@@ -1466,6 +1543,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # submit for approval
         self.post("submit")
@@ -1479,6 +1560,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # After submit, as a moderator, should only see save, approve, and reject buttons
         self.login(self.moderator)
@@ -1489,6 +1574,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertContains(response, "Approve")
         self.assertContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         self.reject()
 
@@ -1501,6 +1590,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
     def test_workflow_action_menu_items_when_reverting(self):
         old_revision = self.object.latest_revision
@@ -1517,6 +1610,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # submit for approval
         self.post("submit")
@@ -1530,6 +1627,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         # After submit, as a moderator, should only see save button
         self.login(self.moderator)
@@ -1540,6 +1641,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
         self.reject()
 
@@ -1552,6 +1657,10 @@ class TestSubmitSnippetToWorkflowNotLockable(TestSubmitSnippetToWorkflow):
         self.assertNotContains(response, "Restart workflow")
         self.assertNotContains(response, "Approve")
         self.assertNotContains(response, "Request changes")
+        self.assertNotContains(
+            response,
+            '<button type="submit" class="button action-save warning" disabled>',
+        )
 
 
 @freeze_time("2020-03-31 12:00:00")
@@ -2654,6 +2763,20 @@ class TestPageWorkflowPreview(BasePageWorkflowTests):
         self.assertTemplateUsed(response, self.preview_template)
         self.assertContains(response, self.preview_content)
 
+    def test_preview_workflow_show_edit_link_in_userbar(self):
+        preview_url = self.get_url(
+            "workflow_preview",
+            args=(quote(self.object.pk), self.object.current_workflow_task.id),
+        )
+        response = self.client.get(preview_url)
+
+        # Should show edit link in the userbar
+        # https://github.com/wagtail/wagtail/issues/10002
+        self.assertContains(response, "Edit this page")
+        self.assertContains(
+            response, reverse("wagtailadmin_pages:edit", args=(quote(self.object.pk),))
+        )
+
     def test_preview_workflow_by_submitter(self):
         self.login(self.submitter)
         preview_url = self.get_url(
@@ -2702,8 +2825,13 @@ class TestSnippetWorkflowPreview(TestPageWorkflowPreview, BaseSnippetWorkflowTes
         self.object.text = self.new_content
         self.object.save_revision()
 
+    @expectedFailure
+    def test_preview_workflow_show_edit_link_in_userbar(self):
+        # TODO: Add edit link to userbar on snippet previews
+        super().test_preview_workflow_show_edit_link_in_userbar()
 
-class TestTaskChooserView(TestCase, WagtailTestUtils):
+
+class TestTaskChooserView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 
@@ -2938,7 +3066,7 @@ class TestTaskChooserView(TestCase, WagtailTestUtils):
         )
 
 
-class TestTaskChooserChosenView(TestCase, WagtailTestUtils):
+class TestTaskChooserChosenView(WagtailTestUtils, TestCase):
     def setUp(self):
         delete_existing_workflows()
         self.login()
@@ -2966,7 +3094,7 @@ class TestTaskChooserChosenView(TestCase, WagtailTestUtils):
         )
 
 
-class TestWorkflowUsageView(TestCase, WagtailTestUtils):
+class TestWorkflowUsageView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
         self.workflow = Workflow.objects.get()

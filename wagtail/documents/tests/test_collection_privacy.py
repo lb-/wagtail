@@ -13,7 +13,7 @@ except ImportError:
     from urllib import quote
 
 
-class TestCollectionPrivacyDocument(TestCase, WagtailTestUtils):
+class TestCollectionPrivacyDocument(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -91,7 +91,7 @@ class TestCollectionPrivacyDocument(TestCase, WagtailTestUtils):
         self.assertRedirects(response, doc_url)
 
         # now requests to the documents url should pass authentication
-        response = self.client.get(doc_url)
+        self.client.get(doc_url)
 
         self.client.logout()
 

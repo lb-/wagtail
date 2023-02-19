@@ -3,7 +3,7 @@ from django.forms import Media
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.text import capfirst
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy, ngettext
 
 from wagtail.admin.ui.components import Component
 from wagtail.locks import BasicLock
@@ -11,6 +11,7 @@ from wagtail.models import (
     DraftStateMixin,
     LockableMixin,
     Page,
+    ReferenceIndex,
     UserPagePermissionsProxy,
 )
 
@@ -58,10 +59,19 @@ class BaseStatusSidePanel(BaseSidePanel):
         templates = ["wagtailadmin/shared/side_panels/includes/status/workflow.html"]
 
         if context.get("locale"):
-            templates += ["wagtailadmin/shared/side_panels/includes/status/locale.html"]
+            templates.append(
+                "wagtailadmin/shared/side_panels/includes/status/locale.html"
+            )
 
-        if self.object.pk and self.locking_enabled:
-            templates += ["wagtailadmin/shared/side_panels/includes/status/locked.html"]
+        if self.object.pk:
+            if self.locking_enabled:
+                templates.append(
+                    "wagtailadmin/shared/side_panels/includes/status/locked.html"
+                )
+
+            templates.append(
+                "wagtailadmin/shared/side_panels/includes/status/usage.html"
+            )
 
         return templates
 
@@ -155,20 +165,44 @@ class BaseStatusSidePanel(BaseSidePanel):
             "locking_enabled": self.locking_enabled,
         }
 
+    def get_usage_context(self):
+        return {
+            "usage_count": ReferenceIndex.get_references_to(self.object)
+            .group_by_source_object()
+            .count(),
+            "usage_url": getattr(self.object, "usage_url", None),
+        }
+
     def get_context_data(self, parent_context):
         context = super().get_context_data(parent_context)
         context["model_name"] = capfirst(self.model._meta.verbose_name)
         context["status_templates"] = self.get_status_templates(context)
         context.update(self.get_scheduled_publishing_context())
         context.update(self.get_lock_context())
+        if self.object.pk:
+            context.update(self.get_usage_context())
         return context
 
 
 class PageStatusSidePanel(BaseStatusSidePanel):
     def get_status_templates(self, context):
         templates = super().get_status_templates(context)
-        templates += ["wagtailadmin/shared/side_panels/includes/status/privacy.html"]
+        templates.insert(
+            -1, "wagtailadmin/shared/side_panels/includes/status/privacy.html"
+        )
         return templates
+
+    def get_usage_context(self):
+        context = super().get_usage_context()
+        context["usage_url"] = reverse(
+            "wagtailadmin_pages:usage", args=(self.object.id,)
+        )
+        context["usage_url_text"] = ngettext(
+            "Referenced %(count)s time",
+            "Referenced %(count)s times",
+            context["usage_count"],
+        ) % {"count": context["usage_count"]}
+        return context
 
     def get_context_data(self, parent_context):
         context = super().get_context_data(parent_context)

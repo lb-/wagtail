@@ -16,7 +16,7 @@ from wagtail.test.utils import WagtailTestUtils
 from wagtail.users.models import UserProfile
 
 
-class TestApproveRejectModeration(TestCase, WagtailTestUtils):
+class TestApproveRejectModeration(WagtailTestUtils, TestCase):
     def setUp(self):
         self.submitter = self.create_superuser(
             username="submitter",
@@ -58,11 +58,11 @@ class TestApproveRejectModeration(TestCase, WagtailTestUtils):
 
         page = Page.objects.get(id=self.page.id)
         # Page must be live
-        self.assertTrue(page.live, "Approving moderation failed to set live=True")
+        self.assertTrue(page.live, msg="Approving moderation failed to set live=True")
         # Page should now have no unpublished changes
         self.assertFalse(
             page.has_unpublished_changes,
-            "Approving moderation failed to set has_unpublished_changes=False",
+            msg="Approving moderation failed to set has_unpublished_changes=False",
         )
 
         # Check that the page_published signal was fired
@@ -86,13 +86,13 @@ class TestApproveRejectModeration(TestCase, WagtailTestUtils):
 
         page = Page.objects.get(id=self.page.id)
         # Page must be live
-        self.assertTrue(page.live, "Approving moderation failed to set live=True")
+        self.assertTrue(page.live, msg="Approving moderation failed to set live=True")
         # Page content should be the submitted version, not the published one
         self.assertEqual(page.title, "Hello world!")
         # Page should still have unpublished changes
         self.assertTrue(
             page.has_unpublished_changes,
-            "has_unpublished_changes incorrectly cleared on approve_moderation when a later revision exists",
+            msg="has_unpublished_changes incorrectly cleared on approve_moderation when a later revision exists",
         )
 
     def test_approve_moderation_view_bad_revision_id(self):
@@ -194,7 +194,7 @@ class TestApproveRejectModeration(TestCase, WagtailTestUtils):
         self.assertContains(response, "Hello world!")
 
 
-class TestNotificationPreferences(TestCase, WagtailTestUtils):
+class TestNotificationPreferences(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -372,7 +372,7 @@ class TestNotificationPreferences(TestCase, WagtailTestUtils):
         )
 
 
-class TestApproveRejectModerationWithoutUser(TestCase, WagtailTestUtils):
+class TestApproveRejectModerationWithoutUser(WagtailTestUtils, TestCase):
     def setUp(self):
         self.submitter = self.create_superuser(
             username="submitter",
@@ -415,11 +415,11 @@ class TestApproveRejectModerationWithoutUser(TestCase, WagtailTestUtils):
 
         page = Page.objects.get(id=self.page.id)
         # Page must be live
-        self.assertTrue(page.live, "Approving moderation failed to set live=True")
+        self.assertTrue(page.live, msg="Approving moderation failed to set live=True")
         # Page should now have no unpublished changes
         self.assertFalse(
             page.has_unpublished_changes,
-            "Approving moderation failed to set has_unpublished_changes=False",
+            msg="Approving moderation failed to set has_unpublished_changes=False",
         )
 
         # Check that the page_published signal was fired

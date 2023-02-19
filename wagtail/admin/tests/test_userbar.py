@@ -9,7 +9,7 @@ from wagtail.test.testapp.models import BusinessChild, BusinessIndex
 from wagtail.test.utils import WagtailTestUtils
 
 
-class TestUserbarTag(TestCase, WagtailTestUtils):
+class TestUserbarTag(WagtailTestUtils, TestCase):
     def setUp(self):
         self.user = self.create_superuser(
             username="test", email="test@email.com", password="password"
@@ -17,11 +17,18 @@ class TestUserbarTag(TestCase, WagtailTestUtils):
         self.homepage = Page.objects.get(id=2)
 
     def dummy_request(
-        self, user=None, *, is_preview=False, in_preview_panel=False, revision_id=None
+        self,
+        user=None,
+        *,
+        is_preview=False,
+        in_preview_panel=False,
+        revision_id=None,
+        is_editing=False,
     ):
         request = RequestFactory().get("/")
         request.user = user or AnonymousUser()
         request.is_preview = is_preview
+        request.is_editing = is_editing
         request.in_preview_panel = in_preview_panel
         if revision_id:
             request.revision_id = revision_id
@@ -117,7 +124,9 @@ class TestUserbarTag(TestCase, WagtailTestUtils):
         self.assertIn("<!-- Wagtail user bar embed code -->", content)
         self.assertIn("Edit this page", content)
 
-    def test_userbar_edit_menu_not_in_preview(self):
+    def test_userbar_edit_menu_in_previews(self):
+        # The edit link should be visible on draft, revision, and workflow previews.
+        # https://github.com/wagtail/wagtail/issues/10002
         template = Template("{% load wagtailuserbar %}{% wagtailuserbar %}")
         content = template.render(
             Context(
@@ -128,7 +137,30 @@ class TestUserbarTag(TestCase, WagtailTestUtils):
             )
         )
         self.assertIn("<!-- Wagtail user bar embed code -->", content)
+        self.assertIn("Edit this page", content)
+        self.assertIn(
+            reverse("wagtailadmin_pages:edit", args=(self.homepage.id,)), content
+        )
+
+    def test_userbar_edit_menu_not_in_preview(self):
+        # The edit link should not be visible on PreviewOnEdit/Create views.
+        # https://github.com/wagtail/wagtail/issues/8765
+        template = Template("{% load wagtailuserbar %}{% wagtailuserbar %}")
+        content = template.render(
+            Context(
+                {
+                    PAGE_TEMPLATE_VAR: self.homepage,
+                    "request": self.dummy_request(
+                        self.user, is_preview=True, is_editing=True
+                    ),
+                }
+            )
+        )
+        self.assertIn("<!-- Wagtail user bar embed code -->", content)
         self.assertNotIn("Edit this page", content)
+        self.assertNotIn(
+            reverse("wagtailadmin_pages:edit", args=(self.homepage.id,)), content
+        )
 
     def test_userbar_not_in_preview_panel(self):
         template = Template("{% load wagtailuserbar %}{% wagtailuserbar %}")
@@ -166,7 +198,7 @@ class TestUserbarTag(TestCase, WagtailTestUtils):
         self.assertIn("Empty heading found", content)
 
 
-class TestUserbarFrontend(TestCase, WagtailTestUtils):
+class TestUserbarFrontend(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
         self.homepage = Page.objects.get(id=2)
@@ -191,7 +223,7 @@ class TestUserbarFrontend(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 403)
 
 
-class TestUserbarAddLink(TestCase, WagtailTestUtils):
+class TestUserbarAddLink(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -239,7 +271,7 @@ class TestUserbarAddLink(TestCase, WagtailTestUtils):
         self.assertNotContains(response, expected_link)
 
 
-class TestUserbarModeration(TestCase, WagtailTestUtils):
+class TestUserbarModeration(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
         self.homepage = Page.objects.get(id=2)

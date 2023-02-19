@@ -30,7 +30,7 @@ from wagtail.test.utils import WagtailTestUtils
 from wagtail.test.utils.timestamps import submittable_timestamp
 
 
-class TestPageCreation(TestCase, WagtailTestUtils):
+class TestPageCreation(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -449,7 +449,7 @@ class TestPageCreation(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
     def test_create_simplepage_scheduled(self):
@@ -480,7 +480,7 @@ class TestPageCreation(TestCase, WagtailTestUtils):
         self.assertEqual(page.go_live_at.date(), go_live_at.date())
         self.assertEqual(page.expire_at.date(), expire_at.date())
         self.assertIs(page.expired, False)
-        self.assertTrue(page.status_string, "draft")
+        self.assertEqual(page.status_string, "draft")
 
         # No revisions with approved_go_live_at
         self.assertFalse(
@@ -601,7 +601,7 @@ class TestPageCreation(TestCase, WagtailTestUtils):
 
         # treebeard should report no consistency problems with the tree
         self.assertFalse(
-            any(Page.find_problems()), "treebeard found consistency problems"
+            any(Page.find_problems()), msg="treebeard found consistency problems"
         )
 
     def test_create_simplepage_post_publish_scheduled(self):
@@ -643,7 +643,7 @@ class TestPageCreation(TestCase, WagtailTestUtils):
         # But Page won't be live
         self.assertFalse(page.live)
         self.assertFalse(page.first_published_at)
-        self.assertTrue(page.status_string, "scheduled")
+        self.assertEqual(page.status_string, "scheduled")
 
     def test_create_simplepage_post_submit(self):
         # Create a moderator user for testing email
@@ -810,6 +810,9 @@ class TestPageCreation(TestCase, WagtailTestUtils):
         self.assertEqual(response.context["self"].depth, self.root_page.depth + 1)
         self.assertTrue(response.context["self"].path.startswith(self.root_page.path))
         self.assertEqual(response.context["self"].get_parent(), self.root_page)
+
+        # Should not show edit link in the userbar
+        self.assertNotContains(response, "Edit this page")
 
     def test_preview_with_custom_validation(self):
         post_data = {
@@ -1193,7 +1196,7 @@ class TestPageCreation(TestCase, WagtailTestUtils):
         self.assertEqual(response.context["page"].locale, fr_locale)
 
 
-class TestPermissionedFieldPanels(TestCase, WagtailTestUtils):
+class TestPermissionedFieldPanels(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1234,7 +1237,7 @@ class TestPermissionedFieldPanels(TestCase, WagtailTestUtils):
         self.assertContains(response, '"secret_data"')
 
 
-class TestSubpageBusinessRules(TestCase, WagtailTestUtils):
+class TestSubpageBusinessRules(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
@@ -1376,7 +1379,7 @@ class TestSubpageBusinessRules(TestCase, WagtailTestUtils):
         )
 
 
-class TestInlinePanelMedia(TestCase, WagtailTestUtils):
+class TestInlinePanelMedia(WagtailTestUtils, TestCase):
     """
     Test that form media required by InlinePanels is correctly pulled in to the edit page
     """
@@ -1403,7 +1406,7 @@ class TestInlinePanelMedia(TestCase, WagtailTestUtils):
         self.assertContains(response, "wagtailadmin/js/draftail.js")
 
 
-class TestInlineStreamField(TestCase, WagtailTestUtils):
+class TestInlineStreamField(WagtailTestUtils, TestCase):
     """
     Test that streamfields inside an inline child work
     """
@@ -1424,7 +1427,7 @@ class TestInlineStreamField(TestCase, WagtailTestUtils):
         self.assertContains(response, '<div id="sections-__prefix__-body" data-block="')
 
 
-class TestIssue2994(TestCase, WagtailTestUtils):
+class TestIssue2994(WagtailTestUtils, TestCase):
     """
     In contrast to most "standard" form fields, StreamField form widgets generally won't
     provide a postdata field with a name exactly matching the field name. To prevent Django
@@ -1460,7 +1463,7 @@ class TestIssue2994(TestCase, WagtailTestUtils):
         self.assertEqual("hello world", new_page.body[0].value)
 
 
-class TestInlinePanelWithTags(TestCase, WagtailTestUtils):
+class TestInlinePanelWithTags(WagtailTestUtils, TestCase):
     # https://github.com/wagtail/wagtail/issues/5414#issuecomment-567080707
 
     def setUp(self):
@@ -1499,7 +1502,7 @@ class TestInlinePanelWithTags(TestCase, WagtailTestUtils):
         self.assertEqual(new_page.addresses.first().tags.count(), 2)
 
 
-class TestInlinePanelNonFieldErrors(TestCase, WagtailTestUtils):
+class TestInlinePanelNonFieldErrors(WagtailTestUtils, TestCase):
     """
     Test that non field errors will render for InlinePanels
     https://github.com/wagtail/wagtail/issues/3890
@@ -1553,7 +1556,7 @@ class TestInlinePanelNonFieldErrors(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
-class TestLocaleSelector(TestCase, WagtailTestUtils):
+class TestLocaleSelector(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1633,7 +1636,7 @@ class TestLocaleSelector(TestCase, WagtailTestUtils):
 
 
 @override_settings(WAGTAIL_I18N_ENABLED=True)
-class TestLocaleSelectorOnRootPage(TestCase, WagtailTestUtils):
+class TestLocaleSelectorOnRootPage(WagtailTestUtils, TestCase):
     fixtures = ["test.json"]
 
     def setUp(self):
@@ -1682,7 +1685,7 @@ class TestLocaleSelectorOnRootPage(TestCase, WagtailTestUtils):
         self.assertNotContains(response, f'href="{add_translation_url}"')
 
 
-class TestPageSubscriptionSettings(TestCase, WagtailTestUtils):
+class TestPageSubscriptionSettings(WagtailTestUtils, TestCase):
     def setUp(self):
         # Find root page
         self.root_page = Page.objects.get(id=2)
