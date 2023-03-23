@@ -5,6 +5,7 @@ import { ActionController } from './ActionController';
 import { AutosizeController } from './AutosizeController';
 import { BulkController } from './BulkController';
 import { CountController } from './CountController';
+import { DateController } from './DateController';
 import { DismissibleController } from './DismissibleController';
 import { MessagesController } from './MessagesController';
 import { ProgressController } from './ProgressController';
@@ -23,6 +24,7 @@ export const coreControllerDefinitions: Definition[] = [
   { controllerConstructor: AutosizeController, identifier: 'w-autosize' },
   { controllerConstructor: BulkController, identifier: 'w-bulk' },
   { controllerConstructor: CountController, identifier: 'w-count' },
+  { controllerConstructor: DateController, identifier: 'w-date' },
   { controllerConstructor: DismissibleController, identifier: 'w-dismissible' },
   { controllerConstructor: MessagesController, identifier: 'w-messages' },
   { controllerConstructor: ProgressController, identifier: 'w-progress' },

@@ -246,13 +246,11 @@ export class BaseSequenceChild extends EventEmitter {
       setTimeout(() => {
         dom.slideDown();
         if (focus) {
-          // focus this field if we can do so without obtrusive UI behaviour
-          this.block.focus({ soft: true });
+          this.block.focus();
         }
       }, 10);
     } else if (focus) {
-      // focus this field if we can do so without obtrusive UI behaviour
-      this.block.focus({ soft: true });
+      this.block.focus();
     }
   }
 
