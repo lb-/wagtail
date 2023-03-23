@@ -143,7 +143,7 @@ export class BaseSequenceChild extends EventEmitter {
           ? `data-contentpath="${h(this.id)}"`
           : 'data-contentpath-disabled'
       }>
-        <input type="hidden"  name="${this.prefix}-deleted" value="">
+        <input type="hidden" name="${this.prefix}-deleted" value="">
         <input type="hidden" name="${this.prefix}-order" value="${index}">
         <input type="hidden" name="${this.prefix}-type" value="${h(
       this.type || '',
@@ -252,13 +252,11 @@ export class BaseSequenceChild extends EventEmitter {
       setTimeout(() => {
         dom.slideDown();
         if (focus) {
-          // focus this field if we can do so without obtrusive UI behaviour
-          this.block.focus({ soft: true });
+          this.block.focus();
         }
       }, 10);
     } else if (focus) {
-      // focus this field if we can do so without obtrusive UI behaviour
-      this.block.focus({ soft: true });
+      this.block.focus();
     }
   }
 

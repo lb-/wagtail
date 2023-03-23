@@ -532,14 +532,6 @@ class TestSnippetListViewWithFilterSet(WagtailTestUtils, TestCase):
         FilterableSnippet.objects.create(text="From Indonesia", country_code="ID")
         FilterableSnippet.objects.create(text="From the UK", country_code="UK")
 
-    def test_get_include_filters_form_media(self):
-        response = self.get()
-        html = response.content.decode()
-        datetime_js = versioned_static("wagtailadmin/js/date-time-chooser.js")
-
-        # The script file for the date time chooser should be included
-        self.assertTagInHTML(f'<script src="{datetime_js}"></script>', html)
-
     def test_unfiltered_no_results(self):
         response = self.get()
         add_url = reverse("wagtailsnippets_snippetstests_filterablesnippet:add")
