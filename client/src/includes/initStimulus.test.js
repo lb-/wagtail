@@ -123,7 +123,7 @@ describe('initStimulus', () => {
     // create a controller and register it
     application.register(
       'example-a',
-      application.constructor.createController(wordCountController),
+      application.use.createController(wordCountController),
     );
 
     // before controller element added - should not include an `output` element
@@ -205,12 +205,12 @@ describe('initStimulus', () => {
   });
 
   it('should provide access to a base Controller class on the returned application instance', () => {
-    expect(application.constructor.Controller).toEqual(Controller);
+    expect(application.use.Controller).toEqual(Controller);
   });
 });
 
 describe('createController', () => {
-  const createController = initStimulus().constructor.createController;
+  const createController = initStimulus().use.createController;
 
   it('should safely create a Stimulus Controller class if no args provided', () => {
     const CustomController = createController();
@@ -228,5 +228,6 @@ describe('createController', () => {
     expect(CustomController.targets).toEqual(['source']);
     expect(CustomController.someMethod).toBeUndefined();
     expect(CustomController.prototype.someMethod).toEqual(someMethod);
+    expect(CustomController.prototype instanceof Controller).toBeTruthy();
   });
 });
