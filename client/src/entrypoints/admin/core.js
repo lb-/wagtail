@@ -1,11 +1,13 @@
 import $ from 'jquery';
+import * as Stimulus from '@hotwired/stimulus';
 
 import { coreControllerDefinitions } from '../../controllers';
 import { escapeHtml } from '../../utils/text';
 import { initStimulus } from '../../includes/initStimulus';
 
 /** initialise Wagtail Stimulus application with core controller definitions */
-window.Stimulus = initStimulus({ definitions: coreControllerDefinitions });
+window.stimulusApp = initStimulus({ definitions: coreControllerDefinitions });
+window.Stimulus = Stimulus;
 
 window.escapeHtml = escapeHtml;
 
