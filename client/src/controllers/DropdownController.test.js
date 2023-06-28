@@ -19,6 +19,27 @@ describe('DropdownController', () => {
     application.register('w-dropdown', DropdownController);
   });
 
+  beforeEach(() => {
+    // JSdom does not yet dispatch transitoinend events, so we mock it here.
+    // https://github.com/jsdom/jsdom/issues/1781
+
+    const addEventListenerOriginal =
+      window.HTMLDivElement.prototype.addEventListener;
+
+    jest
+      .spyOn(window.HTMLDivElement.prototype, 'addEventListener')
+      .mockImplementation(function addEventListener(..._) {
+        const [eventName, callback] = _;
+        // mock an instant transition
+        if (eventName === 'transitionend') callback({ target: this });
+        return addEventListenerOriginal(..._);
+      });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('initialises Tippy.js on connect', () => {
     const toggle = document.querySelector('[data-w-dropdown-target="toggle"]');
     const content = document.querySelector(
@@ -28,14 +49,21 @@ describe('DropdownController', () => {
     expect(content).toBe(null);
   });
 
-  it('triggers custom event on activation', () => {
+  it('triggers custom event on activation', async () => {
     const toggle = document.querySelector('[data-w-dropdown-target="toggle"]');
-    const mock = jest.fn();
-    document.addEventListener('w-dropdown:shown', mock);
+
+    const mock = new Promise((resolve) => {
+      document.addEventListener('w-dropdown:shown', (event) => {
+        resolve(event);
+      });
+    });
+
     toggle.dispatchEvent(new Event('click'));
-    // Leave time for animation to complete.
-    setTimeout(() => {
-      expect(mock).toHaveBeenCalled();
-    }, 500);
+
+    const event = await mock;
+
+    expect(event).toEqual(
+      expect.objectContaining({ type: 'w-dropdown:shown', target: document }),
+    );
   });
 });

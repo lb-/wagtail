@@ -51,6 +51,13 @@ export class DropdownController extends Controller<HTMLElement> {
       plugins.push(hideTooltipOnClickInside);
     }
 
+    const onShown = () => {
+      this.dispatch('shown', {
+        // work around for target type bug https://github.com/hotwired/stimulus/issues/642
+        target: ((key = 'document') => window[key])(),
+      });
+    };
+
     /**
      * Default Tippy Options
      */
@@ -67,7 +74,7 @@ export class DropdownController extends Controller<HTMLElement> {
         }
       },
       onShown() {
-        document.dispatchEvent(new CustomEvent('w-dropdown:shown'));
+        onShown();
       },
       onHide() {
         if (hoverTooltipInstance) {
