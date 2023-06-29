@@ -8,7 +8,7 @@ jest.useFakeTimers();
 describe('SyncController', () => {
   let application;
 
-  describe('basic sync between two fields', () => {
+  describe('basic sync to a target field', () => {
     beforeEach(() => {
       application?.stop();
 
@@ -29,7 +29,7 @@ describe('SyncController', () => {
       application = Application.start();
     });
 
-    afterAll(() => {
+    afterEach(() => {
       document.body.innerHTML = '';
       jest.clearAllMocks();
       jest.clearAllTimers();
@@ -53,7 +53,7 @@ describe('SyncController', () => {
       });
     });
 
-    it('should allow the sync field to apply its value to the target element', () => {
+    it('should allow the sync field to apply its value to the target element', async () => {
       const changeListener = jest.fn();
       document
         .getElementById('title')
@@ -69,13 +69,13 @@ describe('SyncController', () => {
       dateInput.value = '2025-05-05';
       dateInput.dispatchEvent(new Event('change'));
 
-      jest.runAllTimers();
+      await Promise.resolve(jest.runAllTimers());
 
       expect(document.getElementById('title').value).toEqual('2025-05-05');
       expect(changeListener).toHaveBeenCalledTimes(1);
     });
 
-    it('should allow for a simple ping against the target field that bubbles', () => {
+    it('should allow for a simple ping against the target field that bubbles', async () => {
       const pingListener = jest.fn();
       document.addEventListener('w-sync:ping', pingListener);
 
@@ -138,7 +138,7 @@ describe('SyncController', () => {
       expect(document.getElementById('title').value).toEqual('');
     });
 
-    it('should debounce multiple consecutive calls to apply by default', () => {
+    it('should debounce multiple consecutive calls to apply by default', async () => {
       const titleInput = document.getElementById('title');
       const dateInput = document.getElementById('event-date');
 
@@ -163,7 +163,7 @@ describe('SyncController', () => {
       expect(changeListener).not.toHaveBeenCalled();
       expect(titleInput.value).toEqual('');
 
-      jest.advanceTimersByTime(50); // pass the 100ms debounce value
+      await Promise.resolve(jest.advanceTimersByTime(50)); // pass the 100ms debounce value
 
       // keyup run multiple times, only one change event should occur
       expect(titleInput.value).toEqual('2027-10-14');
@@ -177,16 +177,16 @@ describe('SyncController', () => {
         jest.advanceTimersByTime(5);
       });
 
-      jest.advanceTimersByTime(300); // not yet reaching the custom debounce value
+      await await Promise.resolve(jest.advanceTimersByTime(300)); // not yet reaching the custom debounce value
       expect(changeListener).toHaveBeenCalledTimes(1);
 
-      jest.advanceTimersByTime(295); // passing the custom debounce value
+      await await Promise.resolve(jest.advanceTimersByTime(295)); // passing the custom debounce value
       expect(changeListener).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe('delayed sync between two fields', () => {
-    beforeAll(() => {
+  describe('delayed sync to a target field', () => {
+    beforeEach(() => {
       application?.stop();
 
       document.body.innerHTML = `
@@ -207,7 +207,7 @@ describe('SyncController', () => {
       application = Application.start();
     });
 
-    it('should delay the update on change based on the set value', () => {
+    it('should delay the update on change based on the set value', async () => {
       application.register('w-sync', SyncController);
 
       const dateInput = document.getElementById('event-date');
@@ -215,16 +215,16 @@ describe('SyncController', () => {
 
       dateInput.dispatchEvent(new Event('cut'));
 
-      jest.advanceTimersByTime(500);
+      await Promise.resolve(jest.advanceTimersByTime(500));
 
       expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 500);
 
-      jest.runAllTimers();
+      await Promise.resolve(jest.runAllTimers());
 
       expect(document.getElementById('title').value).toEqual('');
     });
 
-    it('should delay the update on apply based on the set value', () => {
+    it('should delay the update on apply based on the set value', async () => {
       const changeListener = jest.fn();
       document
         .getElementById('title')
@@ -240,19 +240,19 @@ describe('SyncController', () => {
       dateInput.value = '2025-05-05';
       dateInput.dispatchEvent(new Event('change'));
 
-      jest.advanceTimersByTime(500);
+      await Promise.resolve(jest.advanceTimersByTime(500));
 
       expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 500);
 
-      jest.runAllTimers();
+      await Promise.resolve(jest.runAllTimers());
 
       expect(document.getElementById('title').value).toEqual('2025-05-05');
       expect(changeListener).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('ability for the sync to be disabled between two fields', () => {
-    beforeAll(() => {
+  describe('ability for the sync to be disabled between a target field', () => {
+    beforeEach(() => {
       application?.stop();
 
       document.body.innerHTML = `
@@ -291,7 +291,9 @@ describe('SyncController', () => {
       jest.runAllTimers();
 
       expect(titleElement.value).toEqual('keep me');
-      expect(dateInput.getAttribute('data-w-sync-disabled-value')).toBeTruthy();
+      expect(
+        dateInput.getAttribute('data-w-sync-block-target-value'),
+      ).toBeTruthy();
     });
 
     it('should allow for the target element to block syncing with the check approach', () => {
@@ -306,7 +308,7 @@ describe('SyncController', () => {
       application.register('w-sync', SyncController);
 
       const dateInput = document.getElementById('event-date');
-      dateInput.setAttribute('data-w-sync-disabled-value', '');
+      dateInput.setAttribute('data-w-sync-block-target-value', '');
 
       dateInput.value = '2025-05-05';
 
@@ -316,12 +318,14 @@ describe('SyncController', () => {
       jest.runAllTimers();
 
       expect(titleElement.value).toEqual('keep me');
-      expect(dateInput.getAttribute('data-w-sync-disabled-value')).toBeTruthy();
+      expect(
+        dateInput.getAttribute('data-w-sync-block-target-value'),
+      ).toBeTruthy();
     });
   });
 
-  describe('ability to use sync for other field behaviour', () => {
-    beforeAll(() => {
+  describe('ability to use sync for non-text target fields', () => {
+    beforeEach(() => {
       application?.stop();
     });
 
@@ -380,9 +384,116 @@ describe('SyncController', () => {
 
       document.getElementById('choose').dispatchEvent(new Event('click'));
 
-      jest.runAllTimers();
+      await Promise.resolve(jest.runAllTimers());
 
       expect(document.getElementById('pet-select').value).toEqual('pikachu');
+    });
+  });
+
+  describe('basic sync from a source field', () => {
+    beforeEach(() => {
+      application?.stop();
+
+      document.body.innerHTML = `
+      <section>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          data-controller="w-sync"
+          data-action="w-sync:connected->w-sync#adopt change@document->w-sync#adopt"
+          data-w-sync-join-param=", "
+          data-w-sync-source-value="#last-name, #first-name"
+        />
+        <input type="number" name="number" id="number" value="3" />
+        <input type="text" name="first-name" id="first-name" value="Jack" />
+        <input type="text" name="last-name" id="last-name" value="Ryan" />
+      </section>`;
+
+      application = new Application();
+      application.register('w-sync', SyncController);
+    });
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+      jest.clearAllTimers();
+      jest.clearAllMocks();
+    });
+
+    it('should sync with source fields once the controller connects via the connected event', async () => {
+      const titleElement = document.getElementById('title');
+      expect(titleElement.value).toEqual('');
+
+      const changeListener = jest.fn();
+      document.addEventListener('change', changeListener);
+
+      await application.start().then(jest.runAllTimers);
+
+      expect(titleElement.value).toEqual('Ryan, Jack');
+
+      // should dispatch a change event, by default, on the controlled field
+      expect(changeListener).toHaveBeenCalledTimes(1);
+      expect(changeListener).toHaveBeenLastCalledWith(
+        expect.objectContaining({ target: titleElement }),
+      );
+    });
+
+    it('should allow for a delay value to sync with a delay', async () => {
+      expect(document.getElementById('title').value).toEqual('');
+      document
+        .getElementById('title')
+        .setAttribute('data-w-sync-delay-value', '100');
+
+      await application.start().then(jest.advanceTimersByTime(101)); // debounce value
+
+      expect(document.getElementById('title').value).not.toEqual('Ryan, Jack');
+
+      await Promise.resolve(jest.advanceTimersByTime(201)); // wait for additional delay
+
+      expect(document.getElementById('title').value).toEqual('Ryan, Jack');
+    });
+
+    it('should sync with the source fields whenever they change, but not when other fields change', async () => {
+      const titleElement = document.getElementById('title');
+      const firstNameElement = document.getElementById('first-name');
+
+      // start the application & confirm initial sync has worked
+      await application.start().then(jest.runAllTimers);
+      expect(titleElement.value).toEqual('Ryan, Jack');
+
+      // change one of the source fields but trigger an event on a different field
+      firstNameElement.value = 'John';
+      document
+        .getElementById('number')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+
+      jest.runAllTimers();
+      await Promise.resolve(jest.runAllTimers());
+
+      // confirm that the controlled field has not changed as the event was not on the tracked source fields
+      expect(firstNameElement.value).toEqual('John');
+      expect(titleElement.value).toEqual('Ryan, Jack');
+
+      // trigger on a source field and confirm that the sync has now happened
+      firstNameElement.dispatchEvent(new Event('change', { bubbles: true }));
+      await Promise.resolve(jest.runAllTimers());
+
+      expect(firstNameElement.value).toEqual('John');
+      expect(titleElement.value).toEqual('Ryan, John');
+    });
+
+    it('should allow a quiet mode which will not trigger change events on the controlled field', async () => {
+      const titleElement = document.getElementById('title');
+      titleElement.setAttribute('data-w-sync-quiet-value', 'true');
+      expect(titleElement.value).toEqual('');
+
+      const changeListener = jest.fn();
+      document.addEventListener('change', changeListener);
+
+      await application.start().then(jest.runAllTimers);
+
+      expect(titleElement.value).toEqual('Ryan, Jack');
+      expect(changeListener).not.toHaveBeenCalled();
     });
   });
 });

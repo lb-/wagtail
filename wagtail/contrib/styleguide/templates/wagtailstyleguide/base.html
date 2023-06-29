@@ -19,6 +19,21 @@
     {% include "wagtailadmin/shared/header.html" with title=title_trans icon='image' %}
 
     <div class="nice-padding">
+        {% panel id="sync-fields" heading="Typography" %}
+            <h3>Sync fields</h3>
+
+            <input type="text" name="title" id="title" />
+            <input
+                type="date"
+                id="event-date"
+                name="event-date"
+                value="2025-07-22"
+                data-controller="w-sync"
+                data-action="change->w-sync#apply cut->w-sync#clear focus->w-sync#check"
+                data-w-sync-target-value="#title"
+            />
+        {% endpanel %}
+
         {% panel id="typography" heading="Typography" %}
             <h1>This is an h1</h1>
             <h2>This is an h2</h2>
