@@ -495,5 +495,19 @@ describe('SyncController', () => {
       expect(titleElement.value).toEqual('Ryan, Jack');
       expect(changeListener).not.toHaveBeenCalled();
     });
+
+    /**
+     * Some additional tests to consider
+     * - two way sync with source & target
+     * - try to improve the perf of the non-quiet (double change trigger)
+     * - text field with checkbox as a source
+     * - checkbox field with a text field as a source
+     * - similar for radios
+     * - similar for select
+     * - controlled (ref?) fields?
+     * - ping
+     * - blocking with the event prevent default approach
+     * - pull out maybeDelay to a util in the file (does not need to be a class method)
+     */
   });
 });
