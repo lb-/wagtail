@@ -23,6 +23,8 @@ const getGlobalHeaderSearchOptions = (): {
  * Allow for an element to trigger an async query that will
  * patch the results into a results DOM container. The query
  * input can be the controlled element or the containing form.
+ * It supports tha ability to update the URL with the query
+ * when processed.
  *
  * @example
  *  <div id="results"></div>
@@ -31,7 +33,7 @@ const getGlobalHeaderSearchOptions = (): {
  *    type="text"
  *    name="q"
  *    data-controller="w-swap"
- *    data-action="input->w-swap#updateLocation"
+ *    data-action="input->w-swap#searchLazy"
  *    data-w-swap-src-value="path/to/search"
  *    data-w-swap-target-value="#results"
  *  />
@@ -66,22 +68,22 @@ export class SwapController extends Controller<
   abortController?: AbortController;
   /** The related icon element to attach the spinner to */
   iconElement?: SVGUseElement | null;
+  /** Debounced function to search results and then replace the DOM */
+  searchLazy?: { (...args: any[]): void; cancel(): void };
   /** Element that receives the fetch result HTML output */
   targetElement?: HTMLElement;
-  /** Debounced function to fetch results, patch into the DOM & update the location */
-  updateLocation?: { (...args: any[]): void; cancel(): void };
 
   /**
    * Ensure we have backwards compatibility with setting window.headerSearch
    * and allowing for elements without a controller attached to be set up.
    *
    * Will be removed in a future release.
-   *
-   * @deprecated RemovedInWagtail60
    */
   static afterLoad(identifier: string) {
     domReady().then(() => {
-      const { termInput } = getGlobalHeaderSearchOptions();
+      const { termInput, targetOutput, url } = getGlobalHeaderSearchOptions();
+
+      console.log('dom ready');
 
       const input = termInput
         ? (document.querySelector(termInput) as HTMLInputElement)
@@ -91,32 +93,32 @@ export class SwapController extends Controller<
 
       if (!form) return;
 
-      // no need to connect to the controller as it's using the new approach
-      if (form.hasAttribute('data-controller')) return;
+      if (!input.hasAttribute(`data-${identifier}-target`)) {
+        input.setAttribute(`data-${identifier}-target`, 'input');
+      }
 
-      // set up the controller on the form and the action on the inputs
-
-      form.setAttribute('data-controller', identifier);
-      form.setAttribute(
-        'data-action',
-        [
-          `change->${identifier}#updateLocation`,
-          `input->${identifier}#updateLocation`,
+      Object.entries({
+        'data-controller': identifier,
+        'data-action': [
+          `change->${identifier}#searchLazy`,
+          `input->${identifier}#searchLazy`,
         ].join(' '),
-      );
-      input.setAttribute(`data-${identifier}-target`, 'input');
+        [`data-${identifier}-src-value`]: url,
+        [`data-${identifier}-target-value`]: targetOutput,
+      }).forEach(([key, value]) => {
+        if (!form.hasAttribute(key)) {
+          form.setAttribute(key, value as string);
+        }
+      });
     });
   }
 
   connect() {
-    // set up values that may be set with the global header approach
     const formContainer = this.hasInputTarget
       ? this.inputTarget.form
       : this.element;
-    const { targetOutput, url: src } = getGlobalHeaderSearchOptions();
     this.srcValue =
-      src || this.srcValue || formContainer?.getAttribute('action') || '';
-    this.targetValue = targetOutput || this.targetValue;
+      this.srcValue || formContainer?.getAttribute('action') || '';
     this.targetElement = this.getTarget(this.targetValue);
 
     // set up icons
@@ -131,11 +133,8 @@ export class SwapController extends Controller<
     // set up initial loading state (if set originally in the HTML)
     this.loadingValue = false;
 
-    // set up debounced update method
-    this.updateLocation = debounce(
-      this.swapLocation.bind(this),
-      this.waitValue,
-    );
+    // set up debounced method
+    this.searchLazy = debounce(this.search.bind(this), this.waitValue);
   }
 
   getTarget(targetValue = this.targetValue) {
@@ -176,19 +175,76 @@ export class SwapController extends Controller<
   }
 
   /**
-   * Abort any existing requests & set up new abort controller, then fetch and patch
-   * in the HTML results, dispatching an event and handling any clean up.
+   * Perform a search based on a single input query, and only if that query's value
+   * differs from the current matching URL param. Once complete, update the URL param.
+   * Additionally, clear the `'p'` pagination param in the URL if present, can be overridden
+   * via action params if needed.
+   */
+  search(
+    data?:
+      | string
+      | (CustomEvent<{ clear: string }> & {
+          params?: { clear?: string };
+        }),
+  ) {
+    const { defaultClearParam } = this.constructor as typeof SwapController;
+    /** Parse a clear param (e.g. 'p' for page), can be space separated */
+    const clearParams = (
+      typeof data === 'string'
+        ? data
+        : data?.detail?.clear || data?.params?.clear || defaultClearParam
+    ).split(' ');
+
+    const searchInput = this.hasInputTarget ? this.inputTarget : this.element;
+    const queryParam = searchInput.name;
+    const searchParams = new URLSearchParams(window.location.search);
+    const currentQuery = searchParams.get(queryParam) || '';
+    const newQuery = searchInput.value || '';
+
+    // only do the query if it has changed for trimmed queries
+    // for example - " " === "" and "first word " ==== "first word"
+    if (currentQuery.trim() === newQuery.trim()) return;
+
+    // Update search query param ('q') to the new value or remove if empty
+    if (newQuery) {
+      searchParams.set(queryParam, newQuery);
+    } else {
+      searchParams.delete(queryParam);
+    }
+
+    // clear any params (e.g. page/p) if needed
+    clearParams.forEach((param) => {
+      searchParams.delete(param);
+    });
+
+    const queryString = '?' + searchParams.toString();
+    const url = this.srcValue;
+
+    this.replace(url + queryString).then(() => {
+      window.history.replaceState(null, '', queryString);
+    });
+  }
+
+  /**
+   * Abort any existing requests & set up new abort controller, then fetch and replace
+   * the HTML target with the new results.
    * Cancel any in progress results request using the AbortController so that
    * a faster response does not replace an in flight request.
    */
-  async request(param: string | CustomEvent<{ url: string }>) {
+  async replace(
+    data:
+      | string
+      | (CustomEvent<{ url: string }> & { params?: { url?: string } }),
+  ) {
+    /** Parse a request URL from the supplied param, as a string or inside a custom event */
+    const requestUrl =
+      typeof data === 'string'
+        ? data
+        : data.detail.url || data.params?.url || '';
+
     if (this.abortController) this.abortController.abort();
     this.abortController = new AbortController();
     const { signal } = this.abortController;
-
-    /** Parse a request URL from the supplied param, as a string or inside a custom event */
-    const requestUrl =
-      typeof param === 'string' ? param : param.detail.url || '';
 
     this.loadingValue = true;
 
@@ -234,47 +290,10 @@ export class SwapController extends Controller<
         console.error(`Error fetching ${requestUrl}`, error);
       })
       .finally(() => {
-        this.loadingValue = false;
+        if (signal === this.abortController?.signal) {
+          this.loadingValue = false;
+        }
       });
-  }
-
-  /**
-   * Perform a search based on a single input query, and only if that query's value
-   * differs from the current matching URL param. Once complete, update the URL param.
-   * Additionally, clear the `'p'` pagination param in the URL if present, can be overridden
-   * via action params if needed.
-   */
-  swapLocation({ params = {} }: { params?: { clear?: string } }) {
-    const { defaultClearParam } = this.constructor as typeof SwapController;
-    const clearParams = (params?.clear || defaultClearParam).split(' ');
-    const searchInput = this.hasInputTarget ? this.inputTarget : this.element;
-    const queryParam = searchInput.name;
-    const searchParams = new URLSearchParams(window.location.search);
-    const currentQuery = searchParams.get(queryParam) || '';
-    const newQuery = searchInput.value || '';
-
-    // only do the query if it has changed for trimmed queries
-    // for example - " " === "" and "first word " ==== "first word"
-    if (currentQuery.trim() === newQuery.trim()) return;
-
-    // Update search query param ('q') to the new value or remove if empty
-    if (newQuery) {
-      searchParams.set(queryParam, newQuery);
-    } else {
-      searchParams.delete(queryParam);
-    }
-
-    // clear any params (e.g. page/p) if needed
-    clearParams.forEach((param) => {
-      searchParams.delete(param);
-    });
-
-    const queryString = '?' + searchParams.toString();
-    const url = this.srcValue;
-
-    this.request(url + queryString).then(() => {
-      window.history.replaceState(null, '', queryString);
-    });
   }
 
   /**
@@ -283,6 +302,6 @@ export class SwapController extends Controller<
    */
   disconnect() {
     this.loadingValue = false;
-    this.updateLocation?.cancel();
+    this.searchLazy?.cancel();
   }
 }

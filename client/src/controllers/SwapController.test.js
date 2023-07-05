@@ -114,18 +114,17 @@ describe('SwapController', () => {
   describe('fallback on window.headerSearch values if not in HTML', () => {
     it('should set the src & target value from the window.headerSearch if not present', async () => {
       window.headerSearch = {
+        termInput: '#search',
         url: 'path/to/page/search',
         targetOutput: '#page-results',
       };
 
       document.body.innerHTML = `
+      <form id="form"><input id="search" type="text" name="q" /></form>
       <div id="page-results"></div>
-      <input
-        id="search"
-        type="text"
-        name="q"
-        data-controller="w-swap"
-      />`;
+      `;
+
+      SwapController.afterLoad('w-swap');
 
       // trigger next browser render cycle
       await Promise.resolve();
@@ -133,12 +132,15 @@ describe('SwapController', () => {
       // should not error
       expect(handleError).not.toHaveBeenCalled();
 
-      expect({ ...document.getElementById('search').dataset }).toEqual({
+      expect({ ...document.getElementById('form').dataset }).toEqual({
+        action: 'change->w-swap#searchLazy input->w-swap#searchLazy',
         controller: 'w-swap',
-        wSwapIconValue: '',
-        wSwapLoadingValue: 'false', // set on connect
         wSwapSrcValue: 'path/to/page/search', // set from window.headerSearch
         wSwapTargetValue: '#page-results', // set from window.headerSearch
+      });
+
+      expect({ ...document.getElementById('search').dataset }).toEqual({
+        wSwapTarget: 'input',
       });
     });
   });
@@ -154,7 +156,7 @@ describe('SwapController', () => {
             type="text"
             name="q"
             data-controller="w-swap"
-            data-action="keyup->w-swap#updateLocation"
+            data-action="keyup->w-swap#searchLazy"
             data-w-swap-src-value="/admin/images/results/"
             data-w-swap-target-value="#results"
           />
@@ -486,7 +488,7 @@ describe('SwapController', () => {
         method="get"
         role="search"
         data-controller="w-swap"
-        data-action="input->w-swap#updateLocation"
+        data-action="input->w-swap#searchLazy"
         data-w-swap-target-value="#other-results"
       >
         <div class="w-field__input">
