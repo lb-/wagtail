@@ -88,3 +88,6 @@ class Panel:
 | `class_names` | ❌ Avoid for new code.                                                                                              |
 | `className`   | ❌ Avoid for new code.                                                                                              |
 | `classNames`  | ❌ Avoid for new code.                                                                                              |
+
+| `classes`     | ❌ Avoid for new code.                                                                                              |
+
