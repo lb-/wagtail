@@ -8,7 +8,6 @@ import React, {
 
 import { debounce } from '../../utils/debounce';
 import { gettext } from '../../utils/gettext';
-import { toggleCollapsiblePanel } from '../../includes/panels';
 import Icon from '../Icon/Icon';
 
 import CollapseAll from './CollapseAll';
@@ -134,7 +133,9 @@ const Minimap: React.FunctionComponent<MinimapProps> = ({
       e.preventDefault();
     }
 
-    toggleCollapsiblePanel(link.toggle, true);
+    link.toggle.dispatchEvent(
+      new CustomEvent('w-panel:open', { cancelable: false, bubbles: false }),
+    );
     toggleMinimap(true);
   };
 

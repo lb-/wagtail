@@ -5,10 +5,6 @@
 import EventEmitter from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import { escapeHtml as h } from '../../../utils/text';
-import {
-  initCollapsiblePanel,
-  toggleCollapsiblePanel,
-} from '../../../includes/panels';
 import { range } from '../../../utils/range';
 
 class ActionButton {
@@ -226,8 +222,6 @@ export class BaseSequenceChild extends EventEmitter {
       capabilities,
     );
 
-    initCollapsiblePanel(this.element.querySelector('[data-panel-toggle]'));
-
     if (collapsed) {
       this.collapse();
     }
@@ -352,7 +346,9 @@ export class BaseSequenceChild extends EventEmitter {
 
     // If there is an error, the panel should be expanded always so the error is not obscured
     if (error) {
-      toggleCollapsiblePanel(this.toggleElement, true);
+      this.toggleElement.dispatchEvent(
+        new CustomEvent('w-panel:open', { cancelable: false, bubbles: false }),
+      );
     }
   }
 
@@ -368,7 +364,9 @@ export class BaseSequenceChild extends EventEmitter {
   }
 
   collapse() {
-    toggleCollapsiblePanel(this.toggleElement, false);
+    this.toggleElement.dispatchEvent(
+      new CustomEvent('w-panel:close', { cancelable: false, bubbles: false }),
+    );
   }
 
   getDuplicatedState() {

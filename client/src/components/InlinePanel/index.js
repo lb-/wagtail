@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import { initCollapsiblePanels } from '../../includes/panels';
 import { ExpandingFormset } from '../ExpandingFormset';
 
 /**
@@ -233,11 +232,6 @@ export class InlinePanel extends ExpandingFormset {
     }
 
     this.updateControlStates();
-    initCollapsiblePanels(
-      document.querySelectorAll(
-        `#inline_child_${newChildPrefix} [data-panel-toggle]`,
-      ),
-    );
 
     if (!('runCallbacks' in opts) || opts.runCallbacks) {
       if (this.opts.onAdd) this.opts.onAdd(formIndex);

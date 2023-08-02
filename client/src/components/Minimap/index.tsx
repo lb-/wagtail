@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { MinimapMenuItem } from './MinimapItem';
 
-import { toggleCollapsiblePanel } from '../../includes/panels';
 import { debounce } from '../../utils/debounce';
 
 import Minimap from './Minimap';
@@ -83,7 +82,12 @@ const renderMinimap = (container: HTMLElement) => {
       // Avoid collapsing the title field, where the collapse toggle is hidden.
       const isTitle = i === 0 && link.href.includes('title');
       if (!isTitle) {
-        toggleCollapsiblePanel(link.toggle, expanded);
+        link.toggle.dispatchEvent(
+          new CustomEvent(expanded ? 'w-panel:open' : 'w-panel:close', {
+            cancelable: false,
+            bubbles: false,
+          }),
+        );
       }
     });
   };
