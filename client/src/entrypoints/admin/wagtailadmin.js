@@ -3,10 +3,6 @@ import { initTooltips } from '../../includes/initTooltips';
 import { initTabs } from '../../includes/tabs';
 import initCollapsibleBreadcrumbs from '../../includes/breadcrumbs';
 import initSidePanel from '../../includes/sidePanel';
-import {
-  initAnchoredPanels,
-  initCollapsiblePanels,
-} from '../../includes/panels';
 import { initMinimap } from '../../components/Minimap';
 
 // Expose components as globals for third-party reuse.
@@ -23,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initCollapsibleBreadcrumbs();
   initSidePanel();
-  initCollapsiblePanels();
 });
 
 /**
@@ -31,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
  * window `load` only fires once the page’s resources are loaded.
  */
 window.addEventListener('load', () => {
-  initAnchoredPanels();
   initMinimap();
 });
 

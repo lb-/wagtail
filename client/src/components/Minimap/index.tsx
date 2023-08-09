@@ -1,11 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import type { Application } from '@hotwired/stimulus';
+import type { PanelController } from '../../controllers/PanelController';
 import { MinimapMenuItem } from './MinimapItem';
 
-import { toggleCollapsiblePanel } from '../../includes/panels';
 import { debounce } from '../../utils/debounce';
 
 import Minimap from './Minimap';
+
+declare global {
+  interface Window {
+    Stimulus: Application;
+  }
+}
 
 /**
  * Generate a minimap link’s data, based on the panel’s elements.
@@ -13,32 +20,34 @@ import Minimap from './Minimap';
 const createMinimapLink = (
   anchor: HTMLAnchorElement,
 ): MinimapMenuItem | null => {
-  const panel = anchor.closest<HTMLElement>('[data-panel]');
-  const headingId = panel?.getAttribute('aria-labelledby');
-  const heading = panel?.querySelector<HTMLHeadingElement>(`#${headingId}`);
-  const toggle = panel?.querySelector<HTMLButtonElement>('[data-panel-toggle]');
+  const panelSelector = `[data-controller~="w-panel"]`;
+  const panel = anchor.closest<HTMLElement>(panelSelector);
+
   // Special case for InlinePanel, where deleted items are kept until the form is saved.
   const inlinePanelDeleted = anchor.closest(
     '[data-inline-panel-child].deleted',
   );
-  if (!panel || !heading || !toggle || inlinePanelDeleted) {
-    return null;
-  }
 
-  const headingText = heading.querySelector('[data-panel-heading-text]');
-  // If the heading’s most correct text content is unavailable (StreamField block collapsed when empty),
-  // fall back to the full heading text.
-  const label =
-    headingText?.textContent ||
-    heading.textContent?.replace(/\s+\*\s+$/g, '').trim();
-  const required = panel.querySelector('[data-panel-required]') !== null;
-  const useElt = toggle.querySelector<SVGUseElement>('use');
-  const icon = useElt?.getAttribute('href')?.replace('#icon-', '') || '';
-  const ariaLevel = heading.getAttribute('aria-level');
-  const headingLevel = `h${ariaLevel || heading.tagName[1] || 2}`;
+  if (!panel || inlinePanelDeleted) return null;
+
+  const panelController = window.Stimulus.getControllerForElementAndIdentifier(
+    panel,
+    'w-panel',
+  ) as PanelController;
+
+  if (!panelController) return null;
+
+  const heading = panelController.headingTarget;
+  const toggle = panelController.toggleTarget;
+
+  if (!toggle || !heading) return null;
+
+  const { icon, label, level, requiredValue: required } = panelController;
+  const headingLevel = `h${level}`;
+
   const errorCount = [].slice
     .call(panel.querySelectorAll('.error-message'))
-    .filter((err) => err.closest('[data-panel]') === panel).length;
+    .filter((err) => err.closest(panelSelector) === panel).length;
 
   return {
     anchor,
@@ -71,7 +80,7 @@ const renderMinimap = (container: HTMLElement) => {
   }
 
   const anchors = anchorsContainer.querySelectorAll<HTMLAnchorElement>(
-    '[data-panel-anchor]',
+    '[data-w-panel-target~="anchor"]',
   );
   const links: MinimapMenuItem[] = [].slice
     .call(anchors)
@@ -83,7 +92,12 @@ const renderMinimap = (container: HTMLElement) => {
       // Avoid collapsing the title field, where the collapse toggle is hidden.
       const isTitle = i === 0 && link.href.includes('title');
       if (!isTitle) {
-        toggleCollapsiblePanel(link.toggle, expanded);
+        link.panel.dispatchEvent(
+          new CustomEvent(expanded ? 'w-panel:open' : 'w-panel:close', {
+            cancelable: false,
+            bubbles: false,
+          }),
+        );
       }
     });
   };
@@ -114,7 +128,7 @@ export const initMinimap = (
   const updateMinimap = debounce(renderMinimap.bind(null, container), 100);
 
   document.addEventListener('wagtail:tab-changed', updateMinimap);
-  document.addEventListener('wagtail:panel-init', updateMinimap);
+  document.addEventListener('w-panel:ready', updateMinimap);
 
   // Make sure the positioning of the minimap is always correct.
   const setOffsetTop = () =>

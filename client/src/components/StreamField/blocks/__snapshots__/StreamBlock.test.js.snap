@@ -16,22 +16,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         <input type="hidden" name="the-prefix-0-order" value="0">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -39,7 +39,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -57,7 +57,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -80,22 +80,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         <input type="hidden" name="the-prefix-1-order" value="1">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -103,7 +103,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -121,7 +121,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -144,22 +144,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         <input type="hidden" name="the-prefix-2-order" value="2">
         <input type="hidden" name="the-prefix-2-type" value="test_block_b">
         <input type="hidden" name="the-prefix-2-id" value="fake-uuid-v4-value">
-        <section class="w-panel w-panel--nested" id="block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-fake-uuid-v4-value-heading" data-panel-toggle="" aria-controls="block-fake-uuid-v4-value-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-fake-uuid-v4-value-heading" aria-controls="block-fake-uuid-v4-value-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-fake-uuid-v4-value-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-fake-uuid-v4-value-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -167,7 +167,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -185,7 +185,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be duplicated 1`] = `
         </svg>
       </button></div>
           </div>
-          <div id="block-fake-uuid-v4-value-content" class="w-panel__content">
+          <div id="block-fake-uuid-v4-value-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-2-value-errors" data-field-errors="">
@@ -223,22 +223,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
         <input type="hidden" name="the-prefix-1-order" value="0">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -246,7 +246,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -264,7 +264,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -287,22 +287,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
         <input type="hidden" name="the-prefix-0-order" value="1">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -310,7 +310,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -328,7 +328,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered downward 1
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -366,22 +366,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
         <input type="hidden" name="the-prefix-1-order" value="0">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -389,7 +389,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -407,7 +407,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -430,22 +430,22 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
         <input type="hidden" name="the-prefix-0-order" value="1">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -453,7 +453,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -471,7 +471,7 @@ exports[`telepath: wagtail.blocks.StreamBlock blocks can be reordered upward 1`]
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -509,22 +509,22 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
         <input type="hidden" name="the-prefix-0-order" value="0">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -532,7 +532,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -550,7 +550,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -573,22 +573,22 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
         <input type="hidden" name="the-prefix-1-order" value="1">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -596,7 +596,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -614,7 +614,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders correctly 1`] = `
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -652,22 +652,22 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
         <input type="hidden" name="the-prefix-0-order" value="0">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -675,7 +675,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -693,7 +693,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -716,22 +716,22 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
         <input type="hidden" name="the-prefix-1-order" value="1">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -739,7 +739,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -757,7 +757,7 @@ exports[`telepath: wagtail.blocks.StreamBlock it renders menus on opening 1`] = 
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -795,22 +795,22 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
         <input type="hidden" name="the-prefix-0-order" value="0">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="1">
-        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-1-section" aria-labelledby="block-1-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-1-section" aria-labelledby="block-1-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" data-panel-toggle="" aria-controls="block-1-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-1-heading" aria-controls="block-1-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-1-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-1-section" aria-labelledby="block-1-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -818,7 +818,7 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -836,7 +836,7 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
         </svg>
       </button></div>
           </div>
-          <div id="block-1-content" class="w-panel__content">
+          <div id="block-1-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">
@@ -859,22 +859,22 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
         <input type="hidden" name="the-prefix-1-order" value="1">
         <input type="hidden" name="the-prefix-1-type" value="test_block_b">
         <input type="hidden" name="the-prefix-1-id" value="2">
-        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-2-section" aria-labelledby="block-2-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-2-section" aria-labelledby="block-2-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" data-panel-toggle="" aria-controls="block-2-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-2-heading" aria-controls="block-2-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-pilcrow w-panel__icon" aria-hidden="true">
                 <use href="#icon-pilcrow"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-2-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block B</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-2-section" aria-labelledby="block-2-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -882,7 +882,7 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -900,7 +900,7 @@ exports[`telepath: wagtail.blocks.StreamBlock setError renders error messages 1`
         </svg>
       </button></div>
           </div>
-          <div id="block-2-content" class="w-panel__content">
+          <div id="block-2-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--admin_auto_height_text_input w-field--error" data-field="">
           <div class="w-field__errors" id="the-prefix-1-value-errors" data-field-errors="">
@@ -940,22 +940,22 @@ exports[`telepath: wagtail.blocks.StreamBlock with unique block type it can add 
         <input type="hidden" name="the-prefix-0-order" value="0">
         <input type="hidden" name="the-prefix-0-type" value="test_block_a">
         <input type="hidden" name="the-prefix-0-id" value="fake-uuid-v4-value">
-        <section class="w-panel w-panel--nested" id="block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel="">
+        <section class="w-panel w-panel--nested" id="block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel="" data-controller="w-count w-panel" data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close" data-w-count-find="[aria-invalid='true'], .error, .w-field--error" data-w-count-container-value="" data-w-panel-closed-class="collapsed" data-w-panel-required-value="true" data-w-panel-use-hidden-value="true">
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-panel-anchor="">
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-fake-uuid-v4-value-heading" data-panel-toggle="" aria-controls="block-fake-uuid-v4-value-content" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="Toggle section" aria-describedby="block-fake-uuid-v4-value-heading" aria-controls="block-fake-uuid-v4-value-content" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-placeholder w-panel__icon" aria-hidden="true">
                 <use href="#icon-placeholder"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-fake-uuid-v4-value-heading" data-panel-heading="">
-              <span data-panel-heading-text="" class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="block-fake-uuid-v4-value-heading" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">Test Block A</span>
-              <span class="w-required-mark" data-panel-required="">*</span>
+              <span class="w-required-mark">*</span>
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#block-fake-uuid-v4-value-section" aria-labelledby="block-fake-uuid-v4-value-heading">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -963,7 +963,7 @@ exports[`telepath: wagtail.blocks.StreamBlock with unique block type it can add 
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls=""><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
+            <div class="w-panel__controls" data-w-panel-target="controls"><button type="button" class="button button--icon text-replace white" title="Move up" disabled="disabled">
         <svg class="icon icon-arrow-up" aria-hidden="true">
           <use href="#icon-arrow-up"></use>
         </svg>
@@ -981,7 +981,7 @@ exports[`telepath: wagtail.blocks.StreamBlock with unique block type it can add 
         </svg>
       </button></div>
           </div>
-          <div id="block-fake-uuid-v4-value-content" class="w-panel__content">
+          <div id="block-fake-uuid-v4-value-content" class="w-panel__content" data-w-panel-target="content">
             <div class="w-field__wrapper" data-field-wrapper="">
         <div class="w-field w-field--char_field w-field--text_input" data-field="">
           <div class="w-field__errors" id="the-prefix-0-value-errors" data-field-errors="">

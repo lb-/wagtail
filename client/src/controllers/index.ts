@@ -9,6 +9,7 @@ import { DialogController } from './DialogController';
 import { DismissibleController } from './DismissibleController';
 import { DropdownController } from './DropdownController';
 import { MessagesController } from './MessagesController';
+import { PanelController } from './PanelController';
 import { ProgressController } from './ProgressController';
 import { SkipLinkController } from './SkipLinkController';
 import { SlugController } from './SlugController';
@@ -33,6 +34,7 @@ export const coreControllerDefinitions: Definition[] = [
   { controllerConstructor: DismissibleController, identifier: 'w-dismissible' },
   { controllerConstructor: DropdownController, identifier: 'w-dropdown' },
   { controllerConstructor: MessagesController, identifier: 'w-messages' },
+  { controllerConstructor: PanelController, identifier: 'w-panel' },
   { controllerConstructor: ProgressController, identifier: 'w-progress' },
   { controllerConstructor: SkipLinkController, identifier: 'w-skip-link' },
   { controllerConstructor: SlugController, identifier: 'w-slug' },

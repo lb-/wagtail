@@ -404,8 +404,8 @@ export class CommentApp {
       }
     });
 
-    document.body.addEventListener('commentAnchorVisibilityChange', () => {
-      // If any streamfield blocks or panels have collapsed or expanded
+    document.body.addEventListener('w-panel:changed', () => {
+      // If any StreamField blocks or panels have collapsed or expanded
       // check if we need to rerender
       this.layout.refreshDesiredPositions(
         this.store.getState().settings.currentTab,

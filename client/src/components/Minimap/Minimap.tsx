@@ -8,7 +8,6 @@ import React, {
 
 import { debounce } from '../../utils/debounce';
 import { gettext } from '../../utils/gettext';
-import { toggleCollapsiblePanel } from '../../includes/panels';
 import Icon from '../Icon/Icon';
 
 import CollapseAll from './CollapseAll';
@@ -38,7 +37,7 @@ const mapIntersections = (
   acc: LinkIntersections,
   { target, isIntersecting }: IntersectionObserverEntry,
 ) => {
-  const href = `#${target.closest('[data-panel]')?.id}` || '';
+  const href = `#${target.closest('[data-controller~="w-panel"]')?.id}` || '';
   acc[href] = isIntersecting;
   return acc;
 };
@@ -134,7 +133,10 @@ const Minimap: React.FunctionComponent<MinimapProps> = ({
       e.preventDefault();
     }
 
-    toggleCollapsiblePanel(link.toggle, true);
+    link.toggle.dispatchEvent(
+      new CustomEvent('w-panel:open', { cancelable: false, bubbles: false }),
+    );
+
     toggleMinimap(true);
   };
 

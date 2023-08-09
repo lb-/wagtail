@@ -5,10 +5,6 @@
 import EventEmitter from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import { escapeHtml as h } from '../../../utils/text';
-import {
-  initCollapsiblePanel,
-  toggleCollapsiblePanel,
-} from '../../../includes/panels';
 import { range } from '../../../utils/range';
 
 class ActionButton {
@@ -136,6 +132,7 @@ export class BaseSequenceChild extends EventEmitter {
     const contentId = `block-${id}-content`;
     const blockTypeIcon = h(this.blockDef.meta.icon);
     const blockTypeLabel = h(this.blockDef.meta.label);
+    const isRequired = !!blockDef.meta.required;
 
     const dom = $(`
       <div ${
@@ -151,26 +148,31 @@ export class BaseSequenceChild extends EventEmitter {
         <input type="hidden" name="${this.prefix}-id" value="${h(
           this.id || '',
         )}">
-        <section class="w-panel w-panel--nested" id="${panelId}" aria-labelledby="${headingId}" data-panel>
+        <section class="w-panel w-panel--nested" id="${panelId}" aria-labelledby="${headingId}" ${[
+          'data-panel', // RemovedInWagtail60 - Keeping for any backwards compatible package/customisation JS usage, remove in a future version.
+          'data-controller="w-count w-panel"',
+          'data-action="readystatechange@document->w-panel#scroll:once:target w-count:above->w-panel#open:self:once w-panel:open->w-panel#open w-panel:close->w-panel#close"',
+          `data-w-count-find="[aria-invalid='true'], .error, .w-field--error"`,
+          'data-w-count-container-value=""',
+          'data-w-panel-closed-class="collapsed"',
+          `data-w-panel-required-value="${isRequired}"`,
+          'data-w-panel-use-hidden-value="true"',
+        ].join(' ')}>
           <div class="w-panel__header">
-            <a class="w-panel__anchor w-panel__anchor--prefix" href="#${panelId}" aria-labelledby="${headingId}" data-panel-anchor>
+            <a class="w-panel__anchor w-panel__anchor--prefix" href="#${panelId}" aria-labelledby="${headingId}" data-w-panel-target="anchor">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
                 <use href="#icon-link"></use>
               </svg>
             </a>
-            <button class="w-panel__toggle" type="button" aria-label="${'Toggle section'}" aria-describedby="${headingId}" data-panel-toggle aria-controls="${contentId}" aria-expanded="true">
+            <button class="w-panel__toggle" type="button" aria-label="${'Toggle section'}" aria-describedby="${headingId}" aria-controls="${contentId}" aria-expanded="true" data-w-panel-target="toggle" data-action="w-panel#toggle">
               <svg class="icon icon-${blockTypeIcon} w-panel__icon" aria-hidden="true">
                 <use href="#icon-${blockTypeIcon}"></use>
               </svg>
             </button>
-            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="${headingId}" data-panel-heading>
-              <span data-panel-heading-text class="c-sf-block__title"></span>
+            <h2 class="w-panel__heading w-panel__heading--label" aria-level="3" id="${headingId}" data-w-panel-target="heading">
+              <span data-w-panel-target="label" class="c-sf-block__title"></span>
               <span class="c-sf-block__type">${blockTypeLabel}</span>
-              ${
-                blockDef.meta.required
-                  ? '<span class="w-required-mark" data-panel-required>*</span>'
-                  : ''
-              }
+              ${isRequired ? '<span class="w-required-mark">*</span>' : ''}
             </h2>
             <a class="w-panel__anchor w-panel__anchor--suffix" href="#${panelId}" aria-labelledby="${headingId}">
               <svg class="icon icon-link w-panel__icon" aria-hidden="true">
@@ -178,9 +180,9 @@ export class BaseSequenceChild extends EventEmitter {
               </svg>
             </a>
             <div class="w-panel__divider"></div>
-            <div class="w-panel__controls" data-panel-controls></div>
+            <div class="w-panel__controls" data-w-panel-target="controls"></div>
           </div>
-          <div id="${contentId}" class="w-panel__content">
+          <div id="${contentId}" class="w-panel__content" data-w-panel-target="content">
             <div data-streamfield-block></div>
           </div>
         </section>
@@ -190,9 +192,14 @@ export class BaseSequenceChild extends EventEmitter {
     $(placeholder).replaceWith(dom);
     this.element = dom.get(0);
     const blockElement = dom.find('[data-streamfield-block]').get(0);
-    this.actionsContainerElement = dom.find('[data-panel-controls]').get(0);
-    this.titleElement = dom.find('[data-panel-heading-text]');
-    this.toggleElement = this.element.querySelector('[data-panel-toggle]');
+    this.panel = dom.find('[data-controller~="w-panel"]').get(0);
+    this.actionsContainerElement = dom
+      .find('[data-w-panel-target="controls"]')
+      .get(0);
+    this.titleElement = dom.find('[data-w-panel-target="label"]');
+    this.toggleElement = this.element.querySelector(
+      '[data-w-panel-target="toggle"]',
+    );
     this.deletedInput = dom.find(`input[name="${this.prefix}-deleted"]`);
     this.indexInput = dom.find(`input[name="${this.prefix}-order"]`);
 
@@ -226,13 +233,11 @@ export class BaseSequenceChild extends EventEmitter {
       capabilities,
     );
 
-    initCollapsiblePanel(this.element.querySelector('[data-panel-toggle]'));
-
     if (collapsed) {
       this.collapse();
     }
 
-    this.toggleElement.addEventListener('wagtail:panel-toggle', () => {
+    this.toggleElement.addEventListener('w-panel:changed', () => {
       const label = this.getTextLabel({ maxLength: 50 });
       this.titleElement.text(label || '');
     });
@@ -352,7 +357,9 @@ export class BaseSequenceChild extends EventEmitter {
 
     // If there is an error, the panel should be expanded always so the error is not obscured
     if (error) {
-      toggleCollapsiblePanel(this.toggleElement, true);
+      this.panel.dispatchEvent(
+        new CustomEvent('w-panel:open', { cancelable: false, bubbles: false }),
+      );
     }
   }
 
@@ -368,7 +375,9 @@ export class BaseSequenceChild extends EventEmitter {
   }
 
   collapse() {
-    toggleCollapsiblePanel(this.toggleElement, false);
+    this.panel.dispatchEvent(
+      new CustomEvent('w-panel:close', { cancelable: false, bubbles: false }),
+    );
   }
 
   getDuplicatedState() {
