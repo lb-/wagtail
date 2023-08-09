@@ -75,6 +75,26 @@ export const initStimulus = ({
   const application = WagtailApplication.start(root);
 
   application.debug = debug;
+
+  /**
+   * Register a custom action option that will only run the action if the
+   * event's target is an element with an id that aligns with the current
+   * URL fragment hash.
+   *
+   * @see https://stimulus.hotwired.dev/reference/actions#options
+   * @see https://developer.mozilla.org/en-US/docs/Web/CSS/:target
+   *
+   * @example
+   * // URL: https://example.com/#primary
+   * // Will click this button on page load when ID is in the url
+   * <button id="primary" data-controller="w-action" data-action="readystatechange@document->w-action#click:target">Primary</button>
+   */
+  application.registerActionOption(
+    'target',
+    ({ element, value }) =>
+      (document.querySelector('*:target') === element) === value,
+  );
+
   application.load(definitions);
 
   return application;

@@ -207,6 +207,48 @@ describe('initStimulus', () => {
   it('should provide access to a base Controller class on the returned application instance', () => {
     expect(application.constructor.Controller).toEqual(Controller);
   });
+
+  it('should register `target` as an action option to filter events if the URL target is the element', async () => {
+    const ping = jest.fn();
+    const pong = jest.fn();
+
+    class PingController extends Controller {
+      ping() {
+        ping();
+      }
+
+      pong() {
+        pong();
+      }
+    }
+
+    application.register('ping', PingController);
+
+    document.body.innerHTML = `
+    <main>
+      <button id="button" data-controller="ping" data-action="ping#ping:target ping#pong:!target">Ping</button>
+    </main>
+    `;
+
+    await Promise.resolve();
+
+    const button = document.getElementById('button');
+
+    button.click();
+
+    expect(pong).toHaveBeenCalled();
+    expect(ping).not.toHaveBeenCalled();
+
+    // now set the URL target to the button & click again
+    jest.clearAllMocks();
+
+    window.location.hash = '#button';
+
+    button.click();
+
+    expect(pong).not.toHaveBeenCalled();
+    expect(ping).toHaveBeenCalled();
+  });
 });
 
 describe('createController', () => {
