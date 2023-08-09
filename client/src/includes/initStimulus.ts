@@ -66,13 +66,13 @@ class WagtailApplication extends Application {
 export const initStimulus = ({
   debug = process.env.NODE_ENV === 'development',
   definitions = [],
-  element = document.documentElement,
+  root = document.documentElement,
 }: {
   debug?: boolean;
   definitions?: Definition[];
-  element?: HTMLElement;
+  root?: HTMLElement;
 } = {}): Application => {
-  const application = WagtailApplication.start(element);
+  const application = WagtailApplication.start(root);
 
   application.debug = debug;
   application.load(definitions);
