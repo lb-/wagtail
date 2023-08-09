@@ -14,7 +14,7 @@ const DEFAULT_ERROR_SELECTOR = '.error-message,.help-critical';
  *  <span class="error-message">An error</span>
  * </div>
  */
-export class CountController extends Controller<HTMLFormElement> {
+export class CountController extends Controller<HTMLElement> {
   static classes = ['active'];
   static targets = ['label', 'total'];
   static values = {
@@ -25,7 +25,7 @@ export class CountController extends Controller<HTMLFormElement> {
     total: { default: 0, type: Number },
   };
 
-  /** selector string, used to determine the container/s to search through */
+  /** selector string, used to determine the container/s to search through, if empty, the controller element will be used. */
   declare containerValue: string;
   /** selector string, used to find the elements to count within the container */
   declare findValue: string;
@@ -48,9 +48,13 @@ export class CountController extends Controller<HTMLFormElement> {
   }
 
   count() {
-    this.totalValue = [
-      ...document.querySelectorAll(this.containerValue || 'body'),
-    ]
+    const container = this.containerValue;
+
+    const elementsToSearch = container
+      ? [...document.querySelectorAll(container)]
+      : [this.element];
+
+    this.totalValue = elementsToSearch
       .map((element) => element.querySelectorAll(this.findValue).length)
       .reduce((total, subTotal) => total + subTotal, 0);
 
@@ -73,16 +77,24 @@ export class CountController extends Controller<HTMLFormElement> {
     this.totalValueChanged(this.count());
   }
 
-  totalValueChanged(total: number) {
+  totalValueChanged(total: number, previousTotal?: number | undefined) {
     const min = this.minValue;
+    const isAboveMinimum = total > min;
+
     if (this.hasActiveClass) {
-      this.element.classList.toggle(this.activeClass, total > min);
+      this.element.classList.toggle(this.activeClass, isAboveMinimum);
     }
     if (this.hasLabelTarget) {
-      this.labelTarget.textContent = total > min ? this.getLabel(total) : '';
+      this.labelTarget.textContent = isAboveMinimum ? this.getLabel(total) : '';
     }
     if (this.hasTotalTarget) {
-      this.totalTarget.textContent = total > min ? `${total}` : '';
+      this.totalTarget.textContent = isAboveMinimum ? `${total}` : '';
+    }
+
+    if (isAboveMinimum && previousTotal !== undefined) {
+      this.dispatch('above', { cancelable: false, detail: { min, total } });
+    } else {
+      this.dispatch('below', { cancelable: false, detail: { min, total } });
     }
   }
 }

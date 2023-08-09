@@ -4,8 +4,16 @@ import { CountController } from './CountController';
 describe('CountController', () => {
   let application;
 
+  const handleAboveEvent = jest.fn();
+  const handleBelowEvent = jest.fn();
+
+  document.addEventListener('w-count:above', handleAboveEvent);
+  document.addEventListener('w-count:below', handleBelowEvent);
+
   describe('basic behaviour', () => {
     beforeAll(() => {
+      jest.clearAllMocks();
+
       application?.stop();
 
       document.body.innerHTML = `
@@ -21,10 +29,12 @@ describe('CountController', () => {
       application.register('w-count', CountController);
     });
 
-    it('should run the count on connect', () => {
+    it('should run the count on connect & dispatch an event', () => {
       expect(
         document.getElementById('element').dataset.wCountTotalValue,
       ).toEqual('0');
+
+      expect(handleAboveEvent).toHaveBeenCalledTimes(0);
     });
 
     it('should count the items if present', async () => {
@@ -41,6 +51,11 @@ describe('CountController', () => {
       ).toEqual('3');
       expect(document.getElementById('total').innerHTML).toEqual('3');
       expect(document.getElementById('label').innerHTML).toEqual('3 errors');
+
+      expect(handleAboveEvent).toHaveBeenCalledTimes(1);
+      expect(handleAboveEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ detail: { min: 0, total: 3 } }),
+      );
     });
 
     it('should update the targets based on the min value set', async () => {
@@ -50,6 +65,10 @@ describe('CountController', () => {
 
       expect(document.getElementById('total').innerHTML).toEqual('');
       expect(document.getElementById('label').innerHTML).toEqual('');
+
+      expect(handleBelowEvent).toHaveBeenLastCalledWith(
+        expect.objectContaining({ detail: { min: 3, total: 3 } }),
+      );
     });
 
     it('should support a custom find value for different elements', async () => {
@@ -160,6 +179,56 @@ describe('CountController', () => {
       expect(
         document.querySelector('.w-tabs__errors').classList.contains('!w-flex'),
       ).toBe(true);
+    });
+  });
+
+  describe('when the container value supplied is empty', () => {
+    beforeAll(() => {
+      jest.clearAllMocks();
+      application?.stop();
+
+      document.body.innerHTML = `
+    <section id="section-1" data-controller="w-count" data-w-count-container-value="" data-w-count-find-value=".gold-star">
+      <i class="gold-star"></i>
+      <i class="gold-star"></i>
+      <i class="no-star"></i>
+    </section>
+    <section id="section-2" data-controller="w-count" data-w-count-container-value="" data-w-count-find-value=".gold-star">
+      <i class="gold-star"></i>
+      <i class="gold-star"></i>
+      <i class="gold-star"></i>
+      <i class="silver-star"></i>
+    </section>
+    <section id="section-3" data-controller="w-count" data-w-count-container-value="" data-w-count-find-value=".gold-star">
+      <i class="gold-star"></i>
+      <i class="silver-star"></i>
+    </section>
+  `;
+
+      application = Application.start();
+      application.register('w-count', CountController);
+    });
+
+    it("should count the found items in the controller's container", () => {
+      expect(
+        document.getElementById('section-1').dataset.wCountTotalValue,
+      ).toEqual('2');
+
+      expect(
+        document.getElementById('section-2').dataset.wCountTotalValue,
+      ).toEqual('3');
+
+      expect(
+        document.getElementById('section-3').dataset.wCountTotalValue,
+      ).toEqual('1');
+
+      expect(handleAboveEvent.mock.calls.map(([{ detail }]) => detail)).toEqual(
+        [
+          { min: 0, total: 2 },
+          { min: 0, total: 3 },
+          { min: 0, total: 1 },
+        ],
+      );
     });
   });
 });
