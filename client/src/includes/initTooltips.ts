@@ -57,21 +57,21 @@ export const hideTooltipOnBreadcrumbExpandAndCollapse = {
     return {
       onShow() {
         document.addEventListener(
-          'wagtail:breadcrumbs-expand',
+          'w-breadcrumb:opened',
           onBreadcrumbExpandAndCollapse,
         );
         document.addEventListener(
-          'wagtail:breadcrumbs-collapse',
+          'w-breadcrumb:closed',
           onBreadcrumbExpandAndCollapse,
         );
       },
       onHide() {
         document.removeEventListener(
-          'wagtail:breadcrumbs-collapse',
+          'w-breadcrumb:closed',
           onBreadcrumbExpandAndCollapse,
         );
         document.removeEventListener(
-          'wagtail:breadcrumbs-expand',
+          'w-breadcrumb:opened',
           onBreadcrumbExpandAndCollapse,
         );
       },
