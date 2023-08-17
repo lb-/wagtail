@@ -1,5 +1,15 @@
 import { Controller } from '@hotwired/stimulus';
 
+const maybeDelay = (callback: () => void, delay = 0) => {
+  if (delay) {
+    setTimeout(() => {
+      callback();
+    }, delay);
+  } else {
+    callback();
+  }
+};
+
 /**
  * Adds the ability to make the controlled element be used as an
  * opening/closing (aka collapsing) element.
@@ -27,8 +37,10 @@ export class RevealController extends Controller<HTMLElement> {
 
   static values = {
     closed: { default: false, type: Boolean },
+    hideDelay: { default: 0, type: Number },
     peeking: { default: false, type: Boolean },
     peekTarget: { default: '', type: String },
+    storage: { default: '', type: String },
   };
 
   declare closedValue: boolean;
@@ -44,11 +56,13 @@ export class RevealController extends Controller<HTMLElement> {
   declare readonly hasContentTarget: boolean;
   declare readonly hasOpenIconClass: string;
   declare readonly hasToggleTarget: boolean;
+  declare readonly hideDelayValue: number;
   declare readonly initialClasses: string[];
   declare readonly openedClasses: string[];
   declare readonly openedContentClasses: string[];
   declare readonly openIconClass: string;
   declare readonly peekTargetValue: string;
+  declare readonly storageValue: string;
   declare readonly toggleTarget: HTMLButtonElement;
   declare readonly toggleTargets: HTMLButtonElement[];
 
@@ -174,6 +188,7 @@ export class RevealController extends Controller<HTMLElement> {
     const closedClasses = this.closedClasses;
     const openedClasses = this.openedClasses;
     const contentTargets = this.contentTargets;
+    const hideDelay = this.hideDelayValue;
     const isInitial = previouslyClosed === undefined;
     const isPeeking = this.peekingValue;
     const openedContentClasses = this.openedContentClasses;
@@ -189,16 +204,18 @@ export class RevealController extends Controller<HTMLElement> {
       });
       contentTargets.forEach((content) => {
         content.classList.remove(...openedContentClasses);
-        /**
-         * Use experimental `until-found` value, so users can search inside the content.
-         * Browsers without support for `until-found` will not have this value set
-         */
-        if ('onbeforematch' in document.body) {
-          content.setAttribute('hidden', 'until-found');
-        } else {
-          // eslint-disable-next-line no-param-reassign
-          content.hidden = true;
-        }
+        maybeDelay(() => {
+          /**
+           * Use experimental `until-found` value, so users can search inside the content.
+           * Browsers without support for `until-found` will not have this value set
+           */
+          if ('onbeforematch' in document.body) {
+            content.setAttribute('hidden', 'until-found');
+          } else {
+            // eslint-disable-next-line no-param-reassign
+            content.hidden = true;
+          }
+        }, hideDelay);
       });
       this.element.classList.add(...closedClasses);
       this.element.classList.remove(...openedClasses);
@@ -211,10 +228,13 @@ export class RevealController extends Controller<HTMLElement> {
       });
       contentTargets.forEach((content) => {
         content.classList.add(...openedContentClasses);
-        content.hidden = false; // eslint-disable-line no-param-reassign
+        maybeDelay(() => {
+          content.hidden = false; // eslint-disable-line no-param-reassign
+        }, hideDelay);
       });
       this.element.classList.remove(...closedClasses);
       this.element.classList.add(...openedClasses);
+      this.stored = true;
       this.dispatch('opened', { cancelable: false });
     }
 
@@ -305,7 +325,46 @@ export class RevealController extends Controller<HTMLElement> {
       });
   }
 
+  get stored() {
+    const storageValue = this.storageValue;
+    const key = `${this.identifier}:opened`;
+    if (storageValue) {
+      try {
+        const storedValue = localStorage.getItem(key);
+        if (storedValue === storageValue) {
+          return true;
+        }
+      } catch (error) {
+        // Ignore if localStorage is not available
+      }
+    }
+    return false;
+  }
+
+  set stored(isOpened) {
+    const storageValue = this.storageValue;
+    const key = `${this.identifier}:opened`;
+    setTimeout(() => {
+      try {
+        if (isOpened) {
+          localStorage.setItem(key, storageValue);
+        } else {
+          localStorage.removeItem(key);
+        }
+      } catch (error) {
+        // Ignore if localStorage is not available
+      }
+    });
+  }
+
   disconnect() {
     this.cleanUpPeekListener?.call(this);
+  }
+
+  afterLoad() {
+    // add reading of local storage and updating
+    // from: wagtail:side-panel-open
+    // to: `${this.identifier}:opened`
+    // delete wagtail:side-panel-open entries
   }
 }

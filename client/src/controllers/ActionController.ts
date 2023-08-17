@@ -91,4 +91,25 @@ export class ActionController extends Controller<
     if (!url) return;
     window.location.assign(url);
   }
+
+  /**
+   * Trigger the dispatching of an event, either to another element via a target
+   * selector or dispatches to the controlled element. A custom name can also
+   * be provided for this event.
+   */
+  send(
+    event: CustomEvent<{ name?: string; target?: string }> & {
+      params: { name?: string; target?: string };
+    },
+  ) {
+    const name = event.detail.name || event.params.name;
+    const targetSelector = event.detail.target || event.params.target;
+    const target = targetSelector && document.querySelector(targetSelector);
+    this.dispatch(name || 'send', {
+      bubbles: true,
+      cancelable: false,
+      ...(target instanceof HTMLElement && { target }),
+      ...(name && { prefix: '' }),
+    });
+  }
 }

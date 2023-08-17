@@ -2,12 +2,16 @@
 
 <button type="button"
     class="{{ nav_icon_button_classes }}"
+    aria-controls="{{ panel.name }}-side-panel"
+    aria-expanded="false"
     aria-label="{{ toggle.aria_label }}"
     data-tippy-content="{{ panel.title }}"
     data-tippy-offset="[0,0]"
     data-tippy-placement="bottom"
-    data-side-panel-toggle="{{ panel.name }}"
-    aria-expanded="false"
+    data-controller="w-action"
+    data-action="w-action#send"
+    data-w-action-name-param="w-side-panel:toggle"
+    data-w-action-target-param="#{{ panel.name }}-side-panel"
 >
     {% icon name=toggle.icon_name classname=nav_icon_classes %}
     {% if toggle.has_counter %}

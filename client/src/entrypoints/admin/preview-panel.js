@@ -258,6 +258,7 @@ function initPreview() {
       debouncedSetPreviewData();
     };
 
+    // need to change this??!?
     previewSidePanel.addEventListener('show', () => {
       // Immediately update the preview when the panel is opened
       checkAndUpdatePreview();
@@ -271,6 +272,7 @@ function initPreview() {
       );
     });
 
+    // need to change this!??!?!
     previewSidePanel.addEventListener('hide', () => {
       clearInterval(updateInterval);
     });
