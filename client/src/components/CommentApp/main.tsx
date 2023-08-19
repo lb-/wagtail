@@ -109,15 +109,15 @@ function CommentListing({
   React.useEffect(() => {
     const root = document.querySelector('#main');
     const commentSidePanel = document.querySelector(
-      '[data-side-panel="comments"]',
+      '[data-controller~="w-reveal"]#comments-side-panel',
     );
 
     root?.addEventListener('scroll', updateScroll);
-    commentSidePanel?.addEventListener('show', updateScroll);
+    commentSidePanel?.addEventListener('w-reveal:opened', updateScroll);
 
     return () => {
       root?.removeEventListener('scroll', updateScroll);
-      commentSidePanel?.removeEventListener('show', updateScroll);
+      commentSidePanel?.removeEventListener('w-reveal:opened', updateScroll);
     };
   }, []);
 

@@ -4,7 +4,7 @@ import { gettext } from '../../utils/gettext';
 
 function initPreview() {
   const previewSidePanel = document.querySelector(
-    '[data-side-panel="preview"]',
+    '[data-controller~="w-reveal"]#preview-side-panel',
   );
 
   // Preview side panel is not shown if the object does not have any preview modes

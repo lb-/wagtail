@@ -1,14 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-
-const maybeDelay = (callback: () => void, delay = 0) => {
-  if (delay) {
-    setTimeout(() => {
-      callback();
-    }, delay);
-  } else {
-    callback();
-  }
-};
+import { delay } from '../utils/delay';
 
 /**
  * Adds the ability to make the controlled element be used as an
@@ -188,7 +179,7 @@ export class RevealController extends Controller<HTMLElement> {
     const closedClasses = this.closedClasses;
     const openedClasses = this.openedClasses;
     const contentTargets = this.contentTargets;
-    const hideDelay = this.hideDelayValue;
+    const hideDelay = this.hideDelayValue || null; // If zero, no delay will be used
     const isInitial = previouslyClosed === undefined;
     const isPeeking = this.peekingValue;
     const openedContentClasses = this.openedContentClasses;
@@ -204,7 +195,7 @@ export class RevealController extends Controller<HTMLElement> {
       });
       contentTargets.forEach((content) => {
         content.classList.remove(...openedContentClasses);
-        maybeDelay(() => {
+        delay(() => {
           /**
            * Use experimental `until-found` value, so users can search inside the content.
            * Browsers without support for `until-found` will not have this value set
@@ -228,7 +219,7 @@ export class RevealController extends Controller<HTMLElement> {
       });
       contentTargets.forEach((content) => {
         content.classList.add(...openedContentClasses);
-        maybeDelay(() => {
+        delay(() => {
           content.hidden = false; // eslint-disable-line no-param-reassign
         }, hideDelay);
       });

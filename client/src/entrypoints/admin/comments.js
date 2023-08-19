@@ -305,16 +305,18 @@ window.comments = (() => {
 
     // Open the comments panel whenever the comment app is activated by a user clicking on an "Add comment" widget on the form.
     const commentSidePanel = document.querySelector(
-      '[data-side-panel="comments"]',
+      '[data-controller~="w-reveal"]#comments-side-panel',
     );
     commentApp.onActivate(() => {
-      commentSidePanel.dispatchEvent(new Event('open'));
+      commentSidePanel.dispatchEvent(new CustomEvent('w-reveal:open'));
     });
 
     // Keep number of comments up to date with comment app
     const commentCounter = document.querySelector(
-      '[data-side-panel-toggle="comments"] [data-side-panel-toggle-counter]',
+      '[data-controller~="w-action"][aria-controls^="comments"] [data-side-panel-toggle-counter]',
     );
+
+    console.log('commentCounter', { commentCounter, commentSidePanel });
 
     const updateCommentCount = () => {
       const commentCount = commentApp.selectors.selectCommentCount(

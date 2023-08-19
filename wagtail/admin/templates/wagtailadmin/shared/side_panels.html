@@ -7,9 +7,10 @@
 {% for panel in side_panels %}
 {% comment %} opening one needs to close the others!>!?!? {% endcomment %}
 <aside class="form-side form-side--initial"
+    id="{{ panel.name }}-side-panel"
     aria-label="{% trans 'Side panels' %}"
     data-controller="w-reveal w-resize"
-    data-action="w-side-panel:toggle->w-reveal#toggle w-side-panel:open->w-reveal#open w-side-panel:close->w-reveal#close"
+    data-action="w-side-panel:toggle->w-reveal#toggle w-side-panel:open->w-reveal#open w-side-panel:close->w-reveal#close w-reveal:open@document->w-reveal#open:!self w-side-panel:close->w-reveal#close"
     data-w-resize-active-body-class="side-panel-resizing"
     data-w-reveal-closed-value="true"
     data-w-reveal-ignore-find-value="true"
@@ -21,9 +22,9 @@
         class="form-side__close-button"
         type="button"
         aria-label="{% trans 'Toggle side panel' %}"
-        aria-controls="{{ panel.name }}-side-panel"
+        aria-controls="{{ panel.name }}-side-panel-content"
         aria-expanded="false"
-        data-action="w-reveal#toggle"
+        data-action="w-reveal#close"
         data-w-reveal-target="toggle"
     >
         {% icon name="expand-right" %}
@@ -46,7 +47,7 @@
         </label>
     </div>
 
-    <div class="form-side__panel" id="{{ panel.name }}-side-panel" data-w-reveal-target="content" hidden>
+    <div class="form-side__panel" id="{{ panel.name }}-side-panel-content" data-w-reveal-target="content" hidden>
         <h2 id="side-panel-{{ panel.name }}-title" class="w-sr-only" data-w-reveal-target="heading">{{ panel.title }}</h2>
         {% component panel %}
     </div>
