@@ -279,19 +279,19 @@ class TestFormat(WagtailTestUtils, TestCase):
         self.assertTagInHTML(expected_html, result, allow_extra_attrs=True)
 
     def test_image_to_html_no_classnames(self):
-        self.format.classnames = None
+        self.format.classname = None
         result = self.format.image_to_html(self.image, "test alt text")
         self.assertTagInHTML(
             '<img width="640" height="480" alt="test alt text">',
             result,
             allow_extra_attrs=True,
         )
-        self.format.classnames = "test classnames"
+        self.format.classname = "test is-primary"
 
     def test_image_to_html_with_quoting(self):
         result = self.format.image_to_html(self.image, 'Arthur "two sheds" Jackson')
         self.assertTagInHTML(
-            '<img class="test classnames" width="640" height="480" '
+            '<img class="test is-primary" width="640" height="480" '
             'alt="Arthur &quot;two sheds&quot; Jackson">',
             result,
             allow_extra_attrs=True,

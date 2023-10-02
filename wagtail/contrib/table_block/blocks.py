@@ -163,11 +163,11 @@ class TableBlock(FieldBlock):
             )
 
             if value.get("cell"):
-                new_context["classnames"] = {}
+                new_context["classname"] = {}
                 new_context["hidden"] = {}
                 for meta in value["cell"]:
                     if "className" in meta:
-                        new_context["classnames"][(meta["row"], meta["col"])] = meta[
+                        new_context["classname"][(meta["row"], meta["col"])] = meta[
                             "className"
                         ]
                     if "hidden" in meta:

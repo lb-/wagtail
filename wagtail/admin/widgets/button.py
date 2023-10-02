@@ -54,7 +54,7 @@ class Button(Component):
     def base_attrs_string(self):
         # The set of attributes to be included on all renderings of
         # the button, as a string. Does not include the href or class
-        # attributes (since the classnames intended for the button styling
+        # attributes (since the classes intended for the button styling
         # should not be applied to dropdown items)
         return flatatt(self.attrs)
 

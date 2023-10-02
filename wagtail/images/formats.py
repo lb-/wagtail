@@ -7,15 +7,15 @@ from .shortcuts import get_rendition_or_not_found
 
 
 class Format:
-    def __init__(self, name, label, classnames, filter_spec):
+    def __init__(self, name, label, classname, filter_spec):
         self.name = name
         self.label = label
-        self.classnames = classnames
+        self.classname = classname
         self.filter_spec = filter_spec
 
     def __str__(self):
         return (
-            f'"{self.name}", "{self.label}", "{self.classnames}", "{self.filter_spec}"'
+            f'"{self.name}", "{self.label}", "{self.classname}", "{self.filter_spec}"'
         )
 
     def __repr__(self):
@@ -44,8 +44,8 @@ class Format:
         rendition = get_rendition_or_not_found(image, self.filter_spec)
 
         extra_attributes["alt"] = escape(alt_text)
-        if self.classnames:
-            extra_attributes["class"] = "%s" % escape(self.classnames)
+        if self.classname:
+            extra_attributes["class"] = "%s" % escape(self.classname)
 
         return rendition.img_tag(extra_attributes)
 

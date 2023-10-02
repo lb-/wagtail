@@ -182,7 +182,7 @@ class Panel:
 
     def classes(self):
         """
-        Additional CSS classnames to add to whatever kind of object this is at output.
+        Additional CSS classes to add to whatever kind of object this is at output.
         Subclasses of Panel should override this, invoking super().classes() to
         append more classes specific to the situation.
         """
