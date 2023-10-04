@@ -258,7 +258,8 @@ function initPreview() {
       debouncedSetPreviewData();
     };
 
-    previewSidePanel.addEventListener('show', () => {
+    previewSidePanel.addEventListener('w-reveal:opened', (event) => {
+      if (event.target !== previewSidePanel) return; // ignore nested reveal panels
       // Immediately update the preview when the panel is opened
       checkAndUpdatePreview();
 
@@ -271,13 +272,15 @@ function initPreview() {
       );
     });
 
-    previewSidePanel.addEventListener('hide', () => {
+    previewSidePanel.addEventListener('w-reveal:closed', (event) => {
+      if (event.target !== previewSidePanel) return; // ignore nested reveal panels
       clearInterval(updateInterval);
     });
   } else {
     // Even if the preview is not updated automatically, we still need to
     // initialise the preview data when the panel is shown
-    previewSidePanel.addEventListener('show', () => {
+    previewSidePanel.addEventListener('w-reveal:opened', (event) => {
+      if (event.target !== previewSidePanel) return; // ignore nested reveal panels
       setPreviewData();
     });
   }

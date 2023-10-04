@@ -113,11 +113,11 @@ function CommentListing({
     );
 
     root?.addEventListener('scroll', updateScroll);
-    commentSidePanel?.addEventListener('show', updateScroll);
+    commentSidePanel?.addEventListener('w-reveal:opened', updateScroll);
 
     return () => {
       root?.removeEventListener('scroll', updateScroll);
-      commentSidePanel?.removeEventListener('show', updateScroll);
+      commentSidePanel?.removeEventListener('w-reveal:opened', updateScroll);
     };
   }, []);
 

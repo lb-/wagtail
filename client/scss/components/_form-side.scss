@@ -111,4 +111,8 @@
   &__panel {
     @apply w-px-5 xl:w-px-10 w-py-4 w-w-full w-h-full w-overflow-y-auto w-scrollbar-thin;
   }
+
+  &__panels {
+    @apply w-m-0 w-p-0 w-h-full;
+  }
 }

@@ -35,6 +35,7 @@ export class RevealController extends Controller<HTMLElement> {
     },
     peeking: { default: false, type: Boolean },
     peekTarget: { default: '', type: String },
+    storage: { default: '', type: String },
   };
 
   declare closedValue: boolean;
@@ -66,6 +67,7 @@ export class RevealController extends Controller<HTMLElement> {
    */
   declare readonly outsideTargetValue: string;
   declare readonly peekTargetValue: string;
+  declare readonly storageValue: string;
   declare readonly toggleTarget: HTMLButtonElement;
   declare readonly toggleTargets: HTMLButtonElement[];
 
@@ -250,7 +252,46 @@ export class RevealController extends Controller<HTMLElement> {
       });
   }
 
+  get stored() {
+    const storageValue = this.storageValue;
+    const key = `${this.identifier}:opened`;
+    if (storageValue) {
+      try {
+        const storedValue = localStorage.getItem(key);
+        if (storedValue === storageValue) {
+          return true;
+        }
+      } catch (error) {
+        // Ignore if localStorage is not available
+      }
+    }
+    return false;
+  }
+
+  set stored(isOpened) {
+    const storageValue = this.storageValue;
+    const key = `${this.identifier}:opened`;
+    setTimeout(() => {
+      try {
+        if (isOpened) {
+          localStorage.setItem(key, storageValue);
+        } else {
+          localStorage.removeItem(key);
+        }
+      } catch (error) {
+        // Ignore if localStorage is not available
+      }
+    });
+  }
+
   disconnect() {
     this.cleanUpPeekListener?.call(this);
+  }
+
+  afterLoad() {
+    // add reading of local storage and updating
+    // from: wagtail:side-panel-open
+    // to: `${this.identifier}:opened`
+    // delete wagtail:side-panel-open entries
   }
 }

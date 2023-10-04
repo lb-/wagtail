@@ -9,7 +9,7 @@ function initKeyboardShortcuts() {
   // eslint-disable-next-line no-undef
   Mousetrap.bind(['mod+p'], () => {
     const previewToggle = document.querySelector(
-      '[data-side-panel-toggle="preview"]',
+      `[data-w-action-target-param="[data-side-panel='preview']"]`,
     );
     if (previewToggle) previewToggle.click();
     return false;

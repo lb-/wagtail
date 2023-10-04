@@ -4,11 +4,48 @@
     {# Rendering for the minimap is done with React. #}
     <aside aria-label="{% trans 'Minimap' %}" data-minimap-container></aside>
 {% endif %}
-<aside class="form-side form-side--initial" aria-label="{% trans 'Side panels' %}" data-form-side{% if in_explorer %} data-form-side-explorer{% endif %}>
-    <button type="button" class="form-side__close-button" data-form-side-close-button aria-label="{% trans 'Toggle side panel' %}">
-        {% icon name="expand-right" %}
-    </button>
-
+<aside
+    class="form-side form-side--initial"
+    aria-label="{% trans 'Side panels' %}"
+    id="form-side-container"
+    data-form-side
+    {% if in_explorer %}data-form-side-explorer{% endif %}
+    data-controller="w-count"
+    data-action="w-reveal:ready->w-count#count w-reveal:toggled->w-count#count"
+    data-w-count-active-class="form-side--open"
+    data-w-count-active-container-class="side-panel-open"
+    data-w-count-find-value="[data-form-side] [data-side-panel][data-w-reveal-closed-value='false']"
+    data-w-count-initial-class="form-side--initial"
+>
+    <ul class="form-side__panels">
+        {% for panel in side_panels %}
+            <li
+                class="form-side__panel"
+                id="side-panel-{{ panel.name }}-content"
+                hidden
+                data-controller="w-reveal"
+                data-action="w-side-panel:toggle->w-reveal#toggle w-side-panel:open->w-reveal#open w-side-panel:close->w-reveal#close w-reveal:opened@document->w-reveal#close:sibling"
+                data-side-panel="{{ panel.name }}"
+                data-w-reveal-closed-value="true"
+                data-w-reveal-hide-delay="500"{% comment %} Wait for transition to finish {% endcomment %}
+                data-w-reveal-opened-outside-class="form-side--{{ panel.name }}"
+                data-w-reveal-target="content"
+                {% if not in_explorer %}data-w-reveal-storage-value="{{ panel.name }}"{% endif %}
+            >
+                <button
+                    aria-label="{% trans 'Toggle side panel' %}"
+                    class="form-side__close-button"
+                    type="button"
+                    data-action="w-reveal#toggle"
+                    data-w-reveal-target="toggle"
+                >
+                    {% icon name="expand-right" %}
+                </button>
+                <h2 id="side-panel-{{ panel.name }}-title" class="w-sr-only">{{ panel.title }}</h2>
+                {% component panel %}
+            </li>
+        {% endfor %}
+    </ul>
     <div class="form-side__resize-grip-container">
         <label class="form-side__resize-grip" data-form-side-resize-grip>
             {% comment %}
@@ -24,11 +61,4 @@
             <div class="form-side__resize-grip-icon"></div>
         </label>
     </div>
-
-    {% for panel in side_panels %}
-        <div class="form-side__panel" data-side-panel="{{ panel.name }}" hidden>
-            <h2 id="side-panel-{{ panel.name }}-title" class="w-sr-only">{{ panel.title }}</h2>
-            {% component panel %}
-        </div>
-    {% endfor %}
 </aside>

@@ -308,12 +308,12 @@ window.comments = (() => {
       '[data-side-panel="comments"]',
     );
     commentApp.onActivate(() => {
-      commentSidePanel.dispatchEvent(new Event('open'));
+      commentSidePanel.dispatchEvent(new CustomEvent('w-side-panel:open'));
     });
 
     // Keep number of comments up to date with comment app
     const commentCounter = document.querySelector(
-      '[data-side-panel-toggle="comments"] [data-side-panel-toggle-counter]',
+      `[data-w-action-target-param="[data-side-panel='comments']"] [data-side-panel-toggle-counter]`,
     );
 
     const updateCommentCount = () => {
