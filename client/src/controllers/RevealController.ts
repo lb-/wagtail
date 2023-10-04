@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { debounce } from '../utils/debounce';
 
 /**
  * Adds the ability to make the controlled element be used as an
@@ -27,6 +28,7 @@ export class RevealController extends Controller<HTMLElement> {
 
   static values = {
     closed: { default: false, type: Boolean },
+    hideDelay: { default: 0, type: Number },
     peeking: { default: false, type: Boolean },
     peekTarget: { default: '', type: String },
   };
@@ -44,6 +46,8 @@ export class RevealController extends Controller<HTMLElement> {
   declare readonly hasContentTarget: boolean;
   declare readonly hasOpenIconClass: string;
   declare readonly hasToggleTarget: boolean;
+  /** If falsey (e.g. zero), no delay will be used. */
+  declare readonly hideDelayValue: number;
   declare readonly initialClasses: string[];
   declare readonly openedClasses: string[];
   declare readonly openedContentClasses: string[];
@@ -96,6 +100,7 @@ export class RevealController extends Controller<HTMLElement> {
     const closedClasses = this.closedClasses;
     const openedClasses = this.openedClasses;
     const contentTargets = this.contentTargets;
+    const hideDelay = this.hideDelayValue || null;
     const isInitial = previouslyClosed === undefined;
     const isPeeking = this.peekingValue;
     const openedContentClasses = this.openedContentClasses;
@@ -111,8 +116,9 @@ export class RevealController extends Controller<HTMLElement> {
       });
       contentTargets.forEach((content) => {
         content.classList.remove(...openedContentClasses);
-        // eslint-disable-next-line no-param-reassign
-        content.hidden = true;
+        debounce(() => {
+          content.hidden = true; // eslint-disable-line no-param-reassign
+        }, hideDelay)();
       });
       this.element.classList.add(...closedClasses);
       this.element.classList.remove(...openedClasses);
@@ -137,9 +143,7 @@ export class RevealController extends Controller<HTMLElement> {
     toggles.forEach((target) => {
       this.dispatch('toggled', {
         cancelable: false,
-        detail: {
-          closed: shouldClose,
-        },
+        detail: { closed: shouldClose },
         target,
       });
     });

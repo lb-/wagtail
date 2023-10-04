@@ -460,4 +460,57 @@ describe('RevealController', () => {
       expect(document.querySelector('header').outerHTML).toEqual(previousHTML);
     });
   });
+
+  describe('support for the hideDelay value', () => {
+    it('should delay the hidden attribute if the value is provided above zero (0)', async () => {
+      await setup(`
+    <div id="element" data-controller="w-reveal" data-w-reveal-target="content" data-w-reveal-hide-delay-value="1500">
+      <p>Content</p>
+      <button id="toggle" type="button" data-w-reveal-target="toggle" data-action="w-reveal#toggle"></button>
+    </div>
+      `);
+
+      expect(document.getElementById('element').hidden).toBe(false);
+
+      document.getElementById('toggle').click();
+
+      await Promise.resolve();
+
+      expect(document.getElementById('element').hidden).toBe(false);
+    });
+
+    it('should not delay the hidden attribute if the value is not provided', async () => {
+      await setup(`
+    <div id="element" data-controller="w-reveal" data-w-reveal-target="content">
+      <p>Content</p>
+      <button id="toggle" type="button" data-w-reveal-target="toggle" data-action="w-reveal#toggle"></button>
+    </div>
+      `);
+
+      expect(document.getElementById('element').hidden).toBe(false);
+
+      document.getElementById('toggle').click();
+
+      await Promise.resolve();
+
+      expect(document.getElementById('element').hidden).toBe(true);
+    });
+
+    it('should not delay the hidden attribute if the value is provided as zero (0)', async () => {
+      await setup(`
+    <div id="element" data-controller="w-reveal" data-w-reveal-target="content" data-w-reveal-hide-delay-value="0">
+      <p>Content</p>
+      <button id="toggle" type="button" data-w-reveal-target="toggle" data-action="w-reveal#toggle"></button>
+    </div>
+      `);
+
+      expect(document.getElementById('element').hidden).toBe(false);
+
+      document.getElementById('toggle').click();
+
+      await Promise.resolve();
+
+      expect(document.getElementById('element').hidden).toBe(true);
+    });
+  });
 });
