@@ -77,5 +77,18 @@ export const initStimulus = ({
   application.debug = debug;
   application.load(definitions);
 
+  /**
+   * Register a custom action option to check if the event target is a sibling.
+   * If true, the event will only pass through if the target is a sibling.
+   * If false, the event will only pass through if the target is not a sibling.
+   */
+  application.registerActionOption(
+    'sibling',
+    ({ element: el, event: { target } = {} }) => {
+      if (el === target || !(target instanceof Element)) return false;
+      return el.parentElement === target.parentElement;
+    },
+  );
+
   return application;
 };

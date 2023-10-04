@@ -70,6 +70,7 @@ class WordCountController extends Controller {
 
 describe('initStimulus', () => {
   const mockControllerConnected = jest.fn();
+  const mockCall = jest.fn();
 
   class TestMockController extends Controller {
     static targets = ['item'];
@@ -79,6 +80,10 @@ describe('initStimulus', () => {
       this.itemTargets.forEach((item) => {
         item.setAttribute('hidden', '');
       });
+    }
+
+    call(event) {
+      mockCall(this.element, event);
     }
   }
 
@@ -206,6 +211,44 @@ describe('initStimulus', () => {
 
   it('should provide access to a base Controller class on the returned application instance', () => {
     expect(application.constructor.Controller).toEqual(Controller);
+  });
+
+  describe('custom action filters', () => {
+    describe('sibling', () => {
+      it('should support sibling as an action filter', async () => {
+        document.body.innerHTML = `
+      <main>
+        <div id="container" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling">
+          <section id="a" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling">
+          </section>
+          <section id="b" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling">
+          </section>
+          <section id="c" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling">
+          </section>
+          <section id="d" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling">
+          </section>
+        </div>
+        <section id="outside" data-controller="w-test-mock" data-action="some-event@document->w-test-mock#call:sibling"></section>
+      </main>`;
+
+        await Promise.resolve();
+
+        expect(mockCall).toBeCalledTimes(0);
+
+        document
+          .getElementById('c')
+          .dispatchEvent(new CustomEvent('some-event', { bubbles: true }));
+
+        expect(mockCall).toBeCalledTimes(3);
+
+        // not the source element of 'c'
+        expect(mockCall.mock.calls.map(([element]) => element.id)).toEqual([
+          'a',
+          'b',
+          'd',
+        ]);
+      });
+    });
   });
 });
 
