@@ -21,6 +21,7 @@ export class RevealController extends Controller<HTMLElement> {
     'initial',
     'opened',
     'openedContent',
+    'openedOutside',
     'openIcon',
   ];
 
@@ -29,6 +30,10 @@ export class RevealController extends Controller<HTMLElement> {
   static values = {
     closed: { default: false, type: Boolean },
     hideDelay: { default: 0, type: Number },
+    outsideTarget: {
+      default: 'body, main, article, aside, nav, section',
+      type: String,
+    },
     peeking: { default: false, type: Boolean },
     peekTarget: { default: '', type: String },
   };
@@ -49,9 +54,19 @@ export class RevealController extends Controller<HTMLElement> {
   /** If falsey (e.g. zero), no delay will be used. */
   declare readonly hideDelayValue: number;
   declare readonly initialClasses: string[];
+  declare readonly openedBodyClasses: string[];
   declare readonly openedClasses: string[];
   declare readonly openedContentClasses: string[];
+  declare readonly openedOutsideClasses: string[];
   declare readonly openIconClass: string;
+  /**
+   * Selector string for the outside content to add/remove outside opened classes.
+   * Defaults to the section content categories and then the `main` & finally `body` element.
+   * If no closest element can be found it will search through the whole document.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories#sectioning_content
+   */
+  declare readonly outsideTargetValue: string;
   declare readonly peekTargetValue: string;
   declare readonly toggleTarget: HTMLButtonElement;
   declare readonly toggleTargets: HTMLButtonElement[];
@@ -104,7 +119,9 @@ export class RevealController extends Controller<HTMLElement> {
     const isInitial = previouslyClosed === undefined;
     const isPeeking = this.peekingValue;
     const openedContentClasses = this.openedContentClasses;
+    const openedOutsideClasses = this.openedOutsideClasses;
     const toggles = this.toggles;
+    const outside = openedOutsideClasses.length ? this.outside : null;
 
     if (!isPeeking) this.updateToggleIcon(shouldClose);
 
@@ -120,6 +137,7 @@ export class RevealController extends Controller<HTMLElement> {
           content.hidden = true; // eslint-disable-line no-param-reassign
         }, hideDelay)();
       });
+      outside?.classList.remove(...openedOutsideClasses);
       this.element.classList.add(...closedClasses);
       this.element.classList.remove(...openedClasses);
       this.dispatch('closed', { cancelable: false });
@@ -135,6 +153,8 @@ export class RevealController extends Controller<HTMLElement> {
       });
       this.element.classList.remove(...closedClasses);
       this.element.classList.add(...openedClasses);
+      outside?.classList.add(...openedOutsideClasses);
+      this.stored = true;
       this.dispatch('opened', { cancelable: false });
     }
 
@@ -173,6 +193,20 @@ export class RevealController extends Controller<HTMLElement> {
       return;
     }
     this.closedValue = !this.closedValue;
+  }
+
+  /** Attempt to find the 'outside' targeted element.
+   * First search for the closest element (parent) of the controlled element.
+   * After that, try to find the element anywhere in the document.
+   */
+  get outside() {
+    const outsideSelector = this.outsideTargetValue;
+    if (!outsideSelector) return null;
+    return (
+      this.element.closest(outsideSelector) ||
+      document.querySelector(outsideSelector) ||
+      null
+    );
   }
 
   /**

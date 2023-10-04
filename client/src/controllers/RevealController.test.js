@@ -513,4 +513,63 @@ describe('RevealController', () => {
       expect(document.getElementById('element').hidden).toBe(true);
     });
   });
+
+  describe('support for outside container & outside classes changes when opened', () => {
+    it('should allow a default outside container of sectional content and support updating classes on it when opened', async () => {
+      await setup(`
+    <main>
+      <article>
+        <section class="section-original">
+          <div data-controller="w-reveal" data-w-reveal-opened-outside-class="section-expanded" data-w-reveal-closed-value="true">
+            <button id="toggle" type="button" data-w-reveal-target="toggle" data-action="w-reveal#toggle">Toggle</button>
+            <div id="content" data-w-reveal-target="content"></div>
+          </div>
+        </section>
+      </article>
+    </main>
+      `);
+
+      expect(document.querySelector('section').className).toEqual(
+        'section-original',
+      );
+
+      await Promise.resolve(document.getElementById('toggle').click());
+
+      expect(document.querySelector('section').className).toEqual(
+        'section-original section-expanded',
+      );
+
+      await Promise.resolve(document.getElementById('toggle').click());
+
+      expect(document.querySelector('section').className).toEqual(
+        'section-original',
+      );
+    });
+
+    it('should allow a custom outside container based on a selector and support updating classes on it when opened', async () => {
+      await setup(`
+      <div data-controller="w-reveal" data-w-reveal-opened-outside-class="status-update--show !visible" data-w-reveal-outside-target-value="[data-status]">
+        <button id="toggle" type="button" data-w-reveal-target="toggle" data-action="w-reveal#toggle">Toggle</button>
+        <div id="content" data-w-reveal-target="content"></div>
+      </div>
+      <div id="status" class="status-update" data-status>SHOW WHEN EXPANDED</div>
+      `);
+
+      expect(document.getElementById('status').className).toEqual(
+        'status-update status-update--show !visible',
+      );
+
+      await Promise.resolve(document.getElementById('toggle').click());
+
+      expect(document.getElementById('status').className).toEqual(
+        'status-update',
+      );
+
+      await Promise.resolve(document.getElementById('toggle').click());
+
+      expect(document.getElementById('status').className).toEqual(
+        'status-update status-update--show !visible',
+      );
+    });
+  });
 });
