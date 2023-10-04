@@ -143,13 +143,12 @@ describe('RevealController', () => {
     it('should update classes when opened/closed', async () => {
       await setup(`
       <section
-        class="container remove-me-when-connected"
+        class="container"
         id="section"
         data-controller="w-reveal"
         data-w-reveal-close-icon-class="icon-collapse"
         data-w-reveal-closed-class="collapsed"
         data-w-reveal-closed-value="true"
-        data-w-reveal-initial-class="remove-me-when-connected"
         data-w-reveal-open-icon-class="icon-expand"
         data-w-reveal-opened-class="open--container"
         data-w-reveal-opened-content-class="show-max-width"
@@ -172,7 +171,7 @@ describe('RevealController', () => {
 
       // initially closed
       expect(document.getElementById('section').className).toEqual(
-        'container collapsed', // should not have 'remove-me-when-connected'
+        'container collapsed',
       );
       expect(
         [...document.querySelectorAll('li')].every(

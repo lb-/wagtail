@@ -18,7 +18,6 @@ export class RevealController extends Controller<HTMLElement> {
   static classes = [
     'closed',
     'closeIcon',
-    'initial',
     'opened',
     'openedContent',
     'openedOutside',
@@ -53,7 +52,6 @@ export class RevealController extends Controller<HTMLElement> {
   declare readonly hasToggleTarget: boolean;
   /** If falsey (e.g. zero), no delay will be used. */
   declare readonly hideDelayValue: number;
-  declare readonly initialClasses: string[];
   declare readonly openedBodyClasses: string[];
   declare readonly openedClasses: string[];
   declare readonly openedContentClasses: string[];
@@ -91,22 +89,17 @@ export class RevealController extends Controller<HTMLElement> {
       };
     }
 
-    // Dispatch initial event & class removal after timeout (allowing other JS content to load)
-
+    // Dispatch a ready event after timeout (allowing other JS content to load)
     new Promise((resolve) => {
       setTimeout(resolve);
-    })
-      .then(() => {
-        this.element.classList.remove(...this.initialClasses);
-      })
-      .then(() => {
-        this.dispatch('ready', {
-          cancelable: false,
-          detail: {
-            closed: this.closedValue,
-          },
-        });
+    }).then(() => {
+      this.dispatch('ready', {
+        cancelable: false,
+        detail: {
+          closed: this.closedValue,
+        },
       });
+    });
   }
 
   closedValueChanged(shouldClose: boolean, previouslyClosed?: boolean) {
