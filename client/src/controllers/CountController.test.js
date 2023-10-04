@@ -162,4 +162,118 @@ describe('CountController', () => {
       ).toBe(true);
     });
   });
+
+  describe('when using classes', () => {
+    beforeAll(() => {
+      application?.stop();
+
+      document.body.innerHTML = `
+  <main id="main">
+    <div
+      class="form-side form-side--initial"
+      id="element"
+      data-controller="w-count"
+      data-action="run:count@document->w-count#count"
+      data-w-count-active-class="form-side--open"
+      data-w-count-active-container-class="side-panel-open"
+      data-w-count-find-value="#element [data-item-no-find]"
+      data-w-count-container-value="#main"
+      data-w-count-initial-class="form-side--initial"
+      >
+      <ul>
+        <li data-item>1</li>
+        <li data-item>2</li>
+        <li data-item>3</li>
+        <li data-item>4</li>
+        <li data-item>5</li>
+      </ul>
+    </div>
+  </main>`;
+
+      application = new Application();
+      application.register('w-count', CountController);
+    });
+
+    it('should remove the initial class once first count has been done', async () => {
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--initial'),
+      ).toBeTruthy();
+
+      application.start();
+
+      await Promise.resolve();
+
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--initial'),
+      ).toBeFalsy();
+    });
+
+    it('should update the container & element class only when the count is above the threshold (aka active)', async () => {
+      expect(
+        document.getElementById('main').classList.contains('side-panel-open'),
+      ).toBeFalsy();
+
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--open'),
+      ).toBeFalsy();
+
+      application.start();
+
+      await Promise.resolve();
+
+      expect(
+        document.getElementById('main').classList.contains('side-panel-open'),
+      ).toBeFalsy();
+
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--open'),
+      ).toBeFalsy();
+
+      // now update what's counted and count again
+
+      document
+        .getElementById('element')
+        .setAttribute('data-w-count-find-value', '#element [data-item]');
+
+      await Promise.resolve(
+        document.dispatchEvent(new CustomEvent('run:count', { bubbles: true })),
+      );
+
+      expect(
+        document.getElementById('main').classList.contains('side-panel-open'),
+      ).toBeTruthy();
+
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--open'),
+      ).toBeTruthy();
+
+      // should remove again when count content changes & counted again
+
+      document.querySelector('ul').remove();
+
+      await Promise.resolve(
+        document.dispatchEvent(new CustomEvent('run:count', { bubbles: true })),
+      );
+
+      expect(
+        document.getElementById('main').classList.contains('side-panel-open'),
+      ).toBeFalsy();
+
+      expect(
+        document
+          .getElementById('element')
+          .classList.contains('form-side--open'),
+      ).toBeFalsy();
+    });
+  });
 });
