@@ -1,11 +1,9 @@
+import { InlinePanel } from '.';
+
 describe('InlinePanel', () => {
-  let InlinePanel;
-
   beforeAll(() => {
-    InlinePanel = require('./index').InlinePanel;
-
     document.body.innerHTML = `
-<form>
+  <form>
     <input name="person_cafe_relationship-TOTAL_FORMS" value="0" id="id_person_cafe_relationship-TOTAL_FORMS" type="hidden" />
     <input name="person_cafe_relationship-INITIAL_FORMS" value="0" id="id_person_cafe_relationship-INITIAL_FORMS" type="hidden" />
     <input name="person_cafe_relationship-MIN_NUM_FORMS" value="1" id="id_person_cafe_relationship-MIN_NUM_FORMS" type="hidden" />
@@ -15,7 +13,7 @@ describe('InlinePanel', () => {
         <p id="person_cafe_relationship-__prefix__">form for inline child</p>
     </template>
     <button type="button" id="id_person_cafe_relationship-ADD">Add item</button>
-</form>`;
+  </form>`;
   });
 
   const onAdd = jest.fn();
@@ -30,10 +28,24 @@ describe('InlinePanel', () => {
     new InlinePanel(options);
 
     expect(onAdd).not.toHaveBeenCalled();
+    expect(
+      document.getElementById('id_person_cafe_relationship-FORMS').children,
+    ).toHaveLength(0);
 
     // click the 'add' button
     document.getElementById('id_person_cafe_relationship-ADD').click();
+    expect(
+      document.getElementById('id_person_cafe_relationship-FORMS').children,
+    ).toHaveLength(1);
     expect(onAdd).toHaveBeenCalled();
+
+    // click again
+    document.getElementById('id_person_cafe_relationship-ADD').click();
+    expect(
+      document.getElementById('id_person_cafe_relationship-FORMS').children,
+    ).toHaveLength(2);
+    expect(onAdd).toHaveBeenCalled();
+
     expect(document.body.innerHTML).toMatchSnapshot();
   });
 });
