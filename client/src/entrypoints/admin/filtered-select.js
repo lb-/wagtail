@@ -25,6 +25,8 @@
   </div>
 */
 
+// 1. PREPARE AN ISSUE FOR THIS - sync controller!
+
 import $ from 'jquery';
 
 $(() => {

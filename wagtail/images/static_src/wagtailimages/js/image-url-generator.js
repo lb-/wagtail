@@ -1,3 +1,5 @@
+// 3. ?? should we do this in Stimulus (lazy load) / async
+
 $(function () {
   $('.image-url-generator').each(function () {
     var $this = $(this);

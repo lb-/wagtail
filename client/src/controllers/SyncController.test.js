@@ -390,4 +390,82 @@ describe('SyncController', () => {
       expect(document.getElementById('pet-select').value).toEqual('pikachu');
     });
   });
+
+  describe('ability to use to filter options available in a select field??', () => {
+    const setup = async (
+      html = `
+  <form>
+    <fieldset>
+      <div>
+        <label for="continent-field">Continent</label>
+        <select
+          id="continent-field"
+          data-controller="w-sync"
+          data-action="w-sync#filter"
+          data-w-sync-target-value="#country-field"
+        >
+          <option value="">--------</option>
+          <option value="1" data-w-sync-filter-param="[3,4,6,8]">Europe</option>
+          <option value="2" data-w-sync-filter-param="[2,7]">Africa</option>
+          <option value="3" data-w-sync-filter-param="[1,5]">Asia</option>
+        </select>
+      </div>
+      <div>
+        <label for="country-field">Country</label>
+        <select id="country-field">
+          <option value="">--------</option>
+          <option value="1" data-filter-ignore="3">China</option>
+          <option value="2" data-filter-ignore="2">Egypt</option>
+          <option value="3" data-filter-ignore="1">France</option>
+          <option value="4" data-filter-ignore="1">Germany</option>
+          <option value="5" data-filter-ignore="3">Japan</option>
+          <option value="6" data-filter-ignore="1,3">Russia</option>
+          <option value="7" data-filter-ignore="2">South Africa</option>
+          <option value="8" data-filter-ignore="1,3">Turkey</option>
+        </select>
+      </div>
+    </fieldset>
+  </form>
+    `,
+    ) => {
+      document.body.innerHTML = `<main>${html}</main>`;
+
+      application = Application.start();
+
+      application.register('w-sync', SyncController);
+
+      await Promise.resolve();
+    };
+
+    afterEach(() => {
+      document.body.innerHTML = '';
+      application?.stop();
+    });
+
+    it('should work', async () => {
+      await setup();
+
+      const getVisibleOptions = () =>
+        [...document.getElementById('country-field').options]
+          .filter((option) => !option.hidden)
+          .map((option) => option.value);
+
+      const input = document.getElementById('continent-field');
+      const allValues = ['', '1', '2', '3', '4', '5', '6', '7', '8'];
+
+      expect(getVisibleOptions()).toEqual(allValues);
+
+      input.value = '1'; // Europe
+
+      await Promise.resolve(input.dispatchEvent(new Event('change')));
+
+      expect(getVisibleOptions()).toEqual(['', '3', '4', '6', '8']);
+
+      input.value = ''; // Reset to blank
+
+      await Promise.resolve(input.dispatchEvent(new Event('change')));
+
+      expect(getVisibleOptions()).toEqual(allValues);
+    });
+  });
 });

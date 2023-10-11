@@ -9,6 +9,8 @@ window.Stimulus = initStimulus({ definitions: coreControllerDefinitions });
 
 window.escapeHtml = escapeHtml;
 
+// 2. create issue for this enableDirtyFormCheck
+
 /**
  * Enables a "dirty form check", prompting the user if they are navigating away
  * from a page with unsaved changes, as well as optionally controlling other

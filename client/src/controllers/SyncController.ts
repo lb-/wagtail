@@ -20,7 +20,9 @@ import { debounce } from '../utils/debounce';
  *   />
  * </section>
  */
-export class SyncController extends Controller<HTMLInputElement> {
+export class SyncController extends Controller<
+  HTMLInputElement | HTMLSelectElement
+> {
   static values = {
     debounce: { default: 100, type: Number },
     delay: { default: 0, type: Number },
@@ -33,7 +35,8 @@ export class SyncController extends Controller<HTMLInputElement> {
   declare delayValue: number;
   declare disabledValue: boolean;
   declare quietValue: boolean;
-  declare readonly targetValue: string;
+  /** Selector string for the element to be targeted by this sync behaviour. */
+  declare targetValue: string;
 
   /**
    * Dispatches an event to all target elements so that they can be notified
@@ -106,6 +109,55 @@ export class SyncController extends Controller<HTMLInputElement> {
   }
 
   /**
+   * Applies a filtering to the targeted elements based on the value/option
+   * selected in the controlled element.
+   */
+  filter(event) {
+    const values = Array.from(
+      (this.element as HTMLSelectElement).selectedOptions,
+    )
+      .flatMap((option) => {
+        let value = [];
+        try {
+          value = Array.from(
+            JSON.parse(
+              option.getAttribute(`data-${this.identifier}-filter-param`) ||
+                `[${option.value}]`,
+            ),
+          );
+        } catch (error) {
+          // ignore error
+        }
+        return value;
+      })
+      .map((value) => `${value}`)
+      .filter(Boolean);
+
+    console.log('FILTER', {
+      event,
+      values,
+      value: (this.element as HTMLSelectElement).selectedOptions,
+    });
+
+    this.processTargetElements('filter').forEach((target) => {
+      if (target instanceof HTMLSelectElement) {
+        Array.from(target.options).forEach((option) => {
+          if (!option.value) return;
+          if (values.includes(option.value) || values.length === 0) {
+            option.removeAttribute('hidden');
+          } else {
+            if (option.selected) {
+              // eslint-disable-next-line no-param-reassign
+              target.value = '';
+            }
+            option.setAttribute('hidden', '');
+          }
+        });
+      }
+    });
+  }
+
+  /**
    * Simple method to dispatch a ping event to the targeted elements.
    */
   ping() {
@@ -122,12 +174,13 @@ export class SyncController extends Controller<HTMLInputElement> {
     resetDisabledValue = false,
     options = {},
   ) {
-    if (!resetDisabledValue && this.disabledValue) {
+    const targetValue = this.targetValue;
+    if ((!resetDisabledValue && this.disabledValue) || !targetValue) {
       return [];
     }
 
     const targetElements = [
-      ...document.querySelectorAll<HTMLElement>(this.targetValue),
+      ...document.querySelectorAll<HTMLElement>(targetValue),
     ];
 
     const elements = targetElements.filter((target) => {
