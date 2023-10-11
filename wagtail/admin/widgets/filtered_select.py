@@ -24,8 +24,11 @@ class FilteredSelect(forms.Select):
 
     def build_attrs(self, base_attrs, extra_attrs=None):
         my_attrs = {
-            "data-widget": "filtered-select",
-            "data-filter-field": self.filter_field,
+            "data-widget": "filtered-select",  # would not be needed
+            "data-filter-field": self.filter_field,  # would not be needed
+            #
+            "data-controller": "w-clean",
+            "data-action": "w-sync:ping->w-clean#filter",
         }
         if extra_attrs:
             my_attrs.update(extra_attrs)
@@ -110,6 +113,10 @@ class FilteredSelect(forms.Select):
             option["attrs"]["data-filter-value"] = ",".join(
                 [str(val) for val in filter_value]
             )
+
+            option["attrs"]["data-w-clean-filter-param"] = [
+                str(val) for val in filter_value
+            ]
 
         return option
 

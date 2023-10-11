@@ -9,7 +9,9 @@ type SlugMethods = 'slugify' | 'urlify';
  * @example
  * <input type="text" name="slug" data-controller="w-slug" data-action="blur->w-slug#slugify" />
  */
-export class SlugController extends Controller<HTMLInputElement> {
+export class SlugController extends Controller<
+  HTMLInputElement | HTMLSelectElement
+> {
   static values = {
     allowUnicode: { default: false, type: Boolean },
   };
@@ -50,6 +52,19 @@ export class SlugController extends Controller<HTMLInputElement> {
     }
 
     return valuesAreSame;
+  }
+
+  /**
+   * Adjusts the available options on a select field based on the value provided.
+   */
+  filter(event) {
+    if (!(this.element instanceof HTMLSelectElement)) return;
+
+    const { value } = event?.detail || {};
+    // here we would have to go through each option, parse the value and the data attribute
+    // compare to the provided value and hide/disable accordingly
+    // this is maybe not the most performant approach
+    // we could cache the option resolved values? (store on the option element?)
   }
 
   /**

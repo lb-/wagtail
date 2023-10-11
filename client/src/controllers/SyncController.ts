@@ -28,6 +28,7 @@ export class SyncController extends Controller<
     delay: { default: 0, type: Number },
     disabled: { default: false, type: Boolean },
     quiet: { default: false, type: Boolean },
+    source: String,
     target: String,
   };
 
@@ -35,6 +36,8 @@ export class SyncController extends Controller<
   declare delayValue: number;
   declare disabledValue: boolean;
   declare quietValue: boolean;
+  /** Selector string for the elements to be used as a source for this sync behaviour. */
+  declare sourceValue: string;
   /** Selector string for the element to be targeted by this sync behaviour. */
   declare targetValue: string;
 
@@ -162,6 +165,16 @@ export class SyncController extends Controller<
    */
   ping() {
     this.processTargetElements('ping', false, { bubbles: true });
+  }
+
+  /**
+   * ???
+   */
+  processSourceElements() {
+    const sourceValue = this.sourceValue;
+    return sourceValue
+      ? [...document.querySelectorAll<HTMLElement>(sourceValue)]
+      : [];
   }
 
   /**

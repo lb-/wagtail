@@ -94,6 +94,13 @@ class WorkflowTasksReportFilterSet(WagtailFilterSet):
         field_name="workflow_state__workflow",
         queryset=Workflow.objects.all(),
         label=_("Workflow"),
+        widget=django_filters.ModelChoiceFilter.field_class.widget(
+            attrs={
+                "data-controller": "w-clean",
+                "data-action": "w-sync->w-sync#ping",
+                "data-w-sync-target-value": "#id_task",
+            },
+        ),
     )
 
     # HERE

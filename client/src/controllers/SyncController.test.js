@@ -401,27 +401,31 @@ describe('SyncController', () => {
         <select
           id="continent-field"
           data-controller="w-sync"
-          data-action="w-sync#filter"
+          data-action="w-sync->w-sync#ping"
           data-w-sync-target-value="#country-field"
         >
           <option value="">--------</option>
-          <option value="1" data-w-sync-filter-param="[3,4,6,8]">Europe</option>
-          <option value="2" data-w-sync-filter-param="[2,7]">Africa</option>
-          <option value="3" data-w-sync-filter-param="[1,5]">Asia</option>
+          <option value="1">Europe</option>
+          <option value="2">Africa</option>
+          <option value="3">Asia</option>
         </select>
       </div>
       <div>
         <label for="country-field">Country</label>
-        <select id="country-field">
+        <select
+          id="country-field"
+          data-controller="w-clean"
+          data-action="w-sync:ping->w-clean#filter"
+        >
           <option value="">--------</option>
-          <option value="1" data-filter-ignore="3">China</option>
-          <option value="2" data-filter-ignore="2">Egypt</option>
-          <option value="3" data-filter-ignore="1">France</option>
-          <option value="4" data-filter-ignore="1">Germany</option>
-          <option value="5" data-filter-ignore="3">Japan</option>
-          <option value="6" data-filter-ignore="1,3">Russia</option>
-          <option value="7" data-filter-ignore="2">South Africa</option>
-          <option value="8" data-filter-ignore="1,3">Turkey</option>
+          <option value="1" data-w-sync-filter-param="[3]">China</option>
+          <option value="2" data-w-sync-filter-param="[2]">Egypt</option>
+          <option value="3" data-w-sync-filter-param="[1]">France</option>
+          <option value="4" data-w-sync-filter-param="[1]">Germany</option>
+          <option value="5" data-w-sync-filter-param="[3]">Japan</option>
+          <option value="6" data-w-sync-filter-param="[1,3]">Russia</option>
+          <option value="7" data-w-sync-filter-param="[2]">South Africa</option>
+          <option value="8" data-w-sync-filter-param="[1,3]">Turkey</option>
         </select>
       </div>
     </fieldset>
