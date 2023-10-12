@@ -398,11 +398,7 @@ describe('SyncController', () => {
     <fieldset>
       <div>
         <label for="continent-field">Continent</label>
-        <select
-          id="continent-field"
-          data-controller="w-sync"
-          data-action="w-sync->w-sync#ping"
-          data-w-sync-target-value="#country-field"
+        <select id="continent-field"
         >
           <option value="">--------</option>
           <option value="1">Europe</option>
@@ -414,8 +410,9 @@ describe('SyncController', () => {
         <label for="country-field">Country</label>
         <select
           id="country-field"
-          data-controller="w-clean"
-          data-action="w-sync:ping->w-clean#filter"
+          data-controller="w-sync"
+          data-action="change@document->w-sync#filter"
+          data-w-sync-source-value="continent-field"
         >
           <option value="">--------</option>
           <option value="1" data-w-sync-filter-param="[3]">China</option>

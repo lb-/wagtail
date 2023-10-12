@@ -47,7 +47,7 @@ export class SyncController extends Controller<
    * default.
    */
   connect() {
-    this.processTargetElements('start', true);
+    this.processElements('start', true);
     this.apply = debounce(this.apply.bind(this), this.debounceValue);
   }
 
@@ -56,7 +56,7 @@ export class SyncController extends Controller<
    * whether this sync controller should be disabled.
    */
   check() {
-    this.processTargetElements('check', true);
+    this.processElements('check', true);
   }
 
   /**
@@ -83,7 +83,7 @@ export class SyncController extends Controller<
       });
     };
 
-    this.processTargetElements('apply').forEach((target) => {
+    this.processElements('apply').forEach((target) => {
       if (this.delayValue) {
         setTimeout(() => {
           applyValue(target);
@@ -98,7 +98,7 @@ export class SyncController extends Controller<
    * Clears the value of the targeted elements.
    */
   clear() {
-    this.processTargetElements('clear').forEach((target) => {
+    this.processElements('clear').forEach((target) => {
       setTimeout(() => {
         target.setAttribute('value', '');
         if (this.quietValue) return;
@@ -115,7 +115,7 @@ export class SyncController extends Controller<
    * Applies a filtering to the targeted elements based on the value/option
    * selected in the controlled element.
    */
-  filter(event) {
+  filterOld(event) {
     const values = Array.from(
       (this.element as HTMLSelectElement).selectedOptions,
     )
@@ -142,7 +142,7 @@ export class SyncController extends Controller<
       value: (this.element as HTMLSelectElement).selectedOptions,
     });
 
-    this.processTargetElements('filter').forEach((target) => {
+    this.processElements('filter').forEach((target) => {
       if (target instanceof HTMLSelectElement) {
         Array.from(target.options).forEach((option) => {
           if (!option.value) return;
@@ -160,43 +160,64 @@ export class SyncController extends Controller<
     });
   }
 
+  filter(event) {
+    const elements = this.processElements('filter');
+    if (this.sourceValue && !elements.includes(this.element)) {
+      return;
+    }
+    console.log('event', event);
+    // the event will be triggered globally, so we need to ensure that it is the event
+    // we care about (on the source elements only)
+    // in which case, this works in reverse of all the others
+
+    const element = this.element;
+    if (!(element instanceof HTMLSelectElement)) return;
+    const values = Array.from(element.options)
+      .flatMap((option) => {
+        // the option we care about is the one from the event.target!
+        // again we will need to parse the values every single time. for every single option.
+        let value = [];
+        try {
+          value = Array.from(
+            JSON.parse(
+              option.getAttribute(`data-${this.identifier}-filter-param`) ||
+                `[${option.value}]`,
+            ),
+          );
+        } catch (error) {
+          // ignore error
+        }
+        return value;
+      })
+      .map((value) => `${value}`)
+      .filter(Boolean);
+
+    // values e.g. ['1', '2', '3']
+  }
+
   /**
    * Simple method to dispatch a ping event to the targeted elements.
    */
   ping() {
-    this.processTargetElements('ping', false, { bubbles: true });
+    this.processElements('ping', false, { bubbles: true });
   }
 
   /**
-   * ???
+   * Returns the non-default prevented elements that are targets or the source
+   * of this sync controller. Additionally allows this processing to enable
+   * or disable this controller instance's sync behaviour.
    */
-  processSourceElements() {
-    const sourceValue = this.sourceValue;
-    return sourceValue
-      ? [...document.querySelectorAll<HTMLElement>(sourceValue)]
-      : [];
-  }
-
-  /**
-   * Returns the non-default prevented elements that are targets of this sync
-   * controller. Additionally allows this processing to enable or disable
-   * this controller instance's sync behaviour.
-   */
-  processTargetElements(
-    eventName: string,
-    resetDisabledValue = false,
-    options = {},
-  ) {
-    const targetValue = this.targetValue;
-    if ((!resetDisabledValue && this.disabledValue) || !targetValue) {
+  processElements(eventName: string, resetDisabledValue = false, options = {}) {
+    const selector = this.targetValue || this.sourceValue;
+    if ((!resetDisabledValue && this.disabledValue) || !selector) {
       return [];
     }
 
-    const targetElements = [
-      ...document.querySelectorAll<HTMLElement>(targetValue),
-    ];
+    const selectedElements = Array.from(
+      document.querySelectorAll<HTMLElement>(selector),
+    );
 
-    const elements = targetElements.filter((target) => {
+    const elements = selectedElements.filter((target) => {
       const event = this.dispatch(eventName, {
         bubbles: false,
         cancelable: true,
@@ -209,7 +230,7 @@ export class SyncController extends Controller<
     });
 
     if (resetDisabledValue) {
-      this.disabledValue = targetElements.length > elements.length;
+      this.disabledValue = selectedElements.length > elements.length;
     }
 
     return elements;
