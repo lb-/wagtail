@@ -269,6 +269,7 @@ def url_generator(request, image_id):
         request.user, "change", image
     ):
         raise PermissionDenied
+    # HERE
 
     form = URLGeneratorForm(
         initial={
