@@ -1,8 +1,16 @@
 import { Controller } from '@hotwired/stimulus';
 
-const castArray = (...args) => args.flat(1);
+import { castArray } from '../utils/castArray';
 
 /**
+ * Adds the ability for a controlled form element to conditionally
+ * show/hide or enable/disable targeted elements based on the form data.
+ *
+ * @example
+ * <form data-controller="w-cond" data-action="change->w-cond#resolve">
+ *   <input type="checkbox" name="agreement">
+ *   <button type="button" data-w-cond-target="show" data-match='{"agreement": "on"}'>Continue</button>
+ * </form>
  *
  */
 export class CondController extends Controller<HTMLFormElement> {
@@ -27,6 +35,12 @@ export class CondController extends Controller<HTMLFormElement> {
   /** If true, the controller will persist in the DOM if no targets exist on connect
    * or after all are removed. Otherwise, the controller will remove it's attributes from the DOM. */
   declare persistValue: boolean;
+
+  declare matchCache: Record<string, Record<string, string[]>>;
+
+  initialize() {
+    this.matchCache = {};
+  }
 
   connect() {
     this.checkTargets();
@@ -62,24 +76,12 @@ export class CondController extends Controller<HTMLFormElement> {
     const data = Object.fromEntries(formData.entries());
 
     this.enableTargets.forEach((target) => {
-      const matchStr = target.getAttribute('data-match');
-      let match = {};
-
-      if (matchStr) {
-        try {
-          match = JSON.parse(matchStr);
-          if (Array.isArray(match)) match = Object.fromEntries(match);
-        } catch (e) {
-          //
-        }
-      }
+      const match = this.getMatchData(target);
 
       if (
         match &&
         Object.entries(match).every(([key, value]) =>
-          castArray(value)
-            .map(String)
-            .includes(String(data[key] || '')),
+          value.includes(String(data[key] || '')),
         )
       ) {
         target.removeAttribute('disabled');
@@ -105,24 +107,12 @@ export class CondController extends Controller<HTMLFormElement> {
     });
 
     this.disableTargets.forEach((target) => {
-      const matchStr = target.getAttribute('data-match');
-      let match = {};
-
-      if (matchStr) {
-        try {
-          match = JSON.parse(matchStr);
-          if (Array.isArray(match)) match = Object.fromEntries(match);
-        } catch (e) {
-          //
-        }
-      }
+      const match = this.getMatchData(target);
 
       if (
         match &&
         Object.entries(match).every(([key, value]) =>
-          castArray(value)
-            .map(String)
-            .includes(String(data[key] || '')),
+          value.includes(String(data[key] || '')),
         )
       ) {
         target.setAttribute('disabled', 'disabled');
@@ -148,24 +138,12 @@ export class CondController extends Controller<HTMLFormElement> {
     });
 
     this.hideTargets.forEach((target) => {
-      const matchStr = target.getAttribute('data-match');
-      let match = {};
-
-      if (matchStr) {
-        try {
-          match = JSON.parse(matchStr);
-          if (Array.isArray(match)) match = Object.fromEntries(match);
-        } catch (e) {
-          //
-        }
-      }
+      const match = this.getMatchData(target);
 
       if (
         match &&
         Object.entries(match).every(([key, value]) =>
-          castArray(value)
-            .map(String)
-            .includes(String(data[key] || '')),
+          value.includes(String(data[key] || '')),
         )
       ) {
         // eslint-disable-next-line no-param-reassign
@@ -188,24 +166,12 @@ export class CondController extends Controller<HTMLFormElement> {
     });
 
     this.showTargets.forEach((target) => {
-      const matchStr = target.getAttribute('data-match');
-      let match = {};
-
-      if (matchStr) {
-        try {
-          match = JSON.parse(matchStr);
-          if (Array.isArray(match)) match = Object.fromEntries(match);
-        } catch (e) {
-          //
-        }
-      }
+      const match = this.getMatchData(target);
 
       if (
         match &&
         Object.entries(match).every(([key, value]) =>
-          castArray(value)
-            .map(String)
-            .includes(String(data[key] || '')),
+          value.includes(String(data[key] || '')),
         )
       ) {
         // eslint-disable-next-line no-param-reassign
@@ -233,6 +199,41 @@ export class CondController extends Controller<HTMLFormElement> {
     });
 
     this.dispatch('resolved', { bubbles: true, cancelable: false });
+  }
+
+  getMatchData(target: Element): Record<string, string[]> {
+    if (!target) return {};
+    const matchStr = target.getAttribute('data-match');
+    if (!matchStr) return {};
+
+    // check cache
+    const cachedMatch = this.matchCache[matchStr];
+    if (cachedMatch) return cachedMatch;
+
+    // prepare match data
+    let match = {};
+
+    if (matchStr) {
+      try {
+        match = JSON.parse(matchStr);
+        if (Array.isArray(match)) match = Object.fromEntries(match);
+      } catch (e) {
+        // Safely ignore JSON parsing errors
+      }
+    }
+
+    // Map through values and convert to array of strings
+    const matchData = Object.fromEntries(
+      Object.entries(match).map(([key, value]) => [
+        key,
+        castArray(value).map(String),
+      ]),
+    );
+
+    // eslint-disable-next-line no-param-reassign
+    this.matchCache[matchStr] = matchData;
+
+    return matchData;
   }
 
   enableTargetDisconnected() {
