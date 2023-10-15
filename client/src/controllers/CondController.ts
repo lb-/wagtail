@@ -6,10 +6,22 @@ import { castArray } from '../utils/castArray';
  * Adds the ability for a controlled form element to conditionally
  * show/hide or enable/disable targeted elements based on the form data.
  *
- * @example
+ * @example - Show an additional checkbox if a value is not chosen
  * <form data-controller="w-cond" data-action="change->w-cond#resolve">
- *   <input type="checkbox" name="agreement">
- *   <button type="button" data-w-cond-target="show" data-match='{"agreement": "on"}'>Continue</button>
+ *   <input type="radio" name="drink" value="coffee" />
+ *   <input type="radio" name="drink" value="tea" />
+ *   <input type="radio" name="drink" value="milo" />
+ *   <input type="checkbox" id="confirm" name="confirm" data-w-cond-target="hide" data-match='{"drink": "coffee"}' />
+ * </form>
+ *
+ * @example - Show an additional checkbox if a value is chosen
+ * <form data-controller="w-cond" data-action="change->w-cond#resolve">
+ *   <select name="fav-drink" required>
+ *     <option value="">Select a drink</option>
+ *     <option value="coffee">Coffee</option>
+ *     <option value="other">Other</option>
+ *   </select>
+ *   <input type="text" name="other-drink" data-w-cond-target="show" data-match='{"fav-drink": ["other"]}'>
  * </form>
  *
  */
