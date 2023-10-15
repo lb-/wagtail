@@ -10,6 +10,7 @@ export class CondController extends Controller<HTMLFormElement> {
 
   static value = {
     active: { default: false, type: Boolean },
+    persist: { default: false, type: Boolean },
   };
 
   /** Targets will be disabled if the `data-match` matches the scoped form data, otherwise will be enabled. */
@@ -23,9 +24,17 @@ export class CondController extends Controller<HTMLFormElement> {
 
   /** Allows the behavior to be stopped/started to avoid unnecessary checks. */
   declare activeValue: boolean;
+  /** If true, the controller will persist in the DOM if no targets exist on connect
+   * or after all are removed. Otherwise, the controller will remove it's attributes from the DOM. */
+  declare persistValue: boolean;
+
+  connect() {
+    this.checkTargets();
+  }
 
   /**
    * Checks for any targets that will mean that the controller needs to be active.
+   * Lazily checks all targets to avoid DOM thrashing.
    */
   checkTargets() {
     const anyTargetsExist = [
@@ -34,6 +43,15 @@ export class CondController extends Controller<HTMLFormElement> {
       () => this.hideTargets,
       () => this.showTargets,
     ].some((fn) => fn().length > 0);
+    if (!this.persistValue) {
+      const identifier = this.identifier;
+      const { controllerAttribute } = this.application.schema;
+      const cleanedAttribute = (
+        this.element.getAttribute(controllerAttribute) || ''
+      ).replace(identifier, '');
+      this.element.setAttribute(controllerAttribute, cleanedAttribute);
+      return;
+    }
     this.activeValue = anyTargetsExist;
   }
 
