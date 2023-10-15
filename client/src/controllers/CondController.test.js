@@ -188,18 +188,52 @@ describe('CondController', () => {
   });
 
   describe('the ability for the controller to be activated or deactivated', () => {
-    it('should not check for the form data if there are no targets', async () => {
-      const handleResolved = jest.fn();
-
-      document.addEventListener('w-cond:resolved', handleResolved);
-
+    it('should remove itself as a controlled element if it connects with no targets by default', async () => {
       await setup(`
     <form data-controller="w-cond" data-action="change->w-cond#resolve">
       <input type="checkbox" name="ignored" />
       <input type="text" id="note" name="note" />
     </form>`);
 
+      expect(
+        document.querySelector('form').getAttribute('data-controller'),
+      ).toBeFalsy();
+    });
+
+    it('should remove itself, by default, as a controlled element if the last targeted element is removed', async () => {
+      await setup(`
+    <form data-controller="w-cond" data-action="change->w-cond#resolve">
+      <input type="checkbox" name="ignored" />
+      <input type="text" id="note" name="note" data-w-cond-target="show" />
+    </form>`);
+
+      expect(
+        document.querySelector('form').getAttribute('data-controller'),
+      ).toBe('w-cond');
+
+      await Promise.resolve(document.getElementById('note').remove());
+
+      expect(
+        document.querySelector('form').getAttribute('data-controller'),
+      ).toBeFalsy();
+    });
+
+    it('should not check for the form data if there are no targets if persist is true', async () => {
+      const handleResolved = jest.fn();
+
+      document.addEventListener('w-cond:resolved', handleResolved);
+
+      await setup(`
+    <form data-controller="w-cond" data-action="change->w-cond#resolve" data-w-cond-persist-value="true">
+      <input type="checkbox" name="ignored" />
+      <input type="text" id="note" name="note" />
+    </form>`);
+
       const noteField = document.getElementById('note');
+
+      expect(
+        document.querySelector('form').getAttribute('data-controller'),
+      ).toBeTruthy();
 
       expect(handleResolved).not.toHaveBeenCalled();
 

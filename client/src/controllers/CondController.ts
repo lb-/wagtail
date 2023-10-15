@@ -8,7 +8,7 @@ const castArray = (...args) => args.flat(1);
 export class CondController extends Controller<HTMLFormElement> {
   static targets = ['disable', 'enable', 'hide', 'show'];
 
-  static value = {
+  static values = {
     active: { default: false, type: Boolean },
     persist: { default: false, type: Boolean },
   };
@@ -43,7 +43,7 @@ export class CondController extends Controller<HTMLFormElement> {
       () => this.hideTargets,
       () => this.showTargets,
     ].some((fn) => fn().length > 0);
-    if (!this.persistValue) {
+    if (!this.persistValue && !anyTargetsExist) {
       const identifier = this.identifier;
       const { controllerAttribute } = this.application.schema;
       const cleanedAttribute = (
