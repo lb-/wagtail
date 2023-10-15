@@ -1,36 +1,36 @@
 <form class="w-mb-10" data-controller="w-cond" data-action="change->w-cond#resolve">
-  <select name="filter_method" id="id_filter_method">
-    <option value="original" selected="">Original size</option>
-    <option value="width">Resize to width</option>
-    <option value="height">Resize to height</option>
-    <option value="min">Resize to min</option>
-    <option value="max">Resize to max</option>
-    <option value="fill">Resize to fill</option>
-  </select>
-  <fieldset>
-    <input
-      type="number"
-      name="width"
-      value="150"
-      id="id_width"
-      disabled
-      data-w-cond-target="disable"
-    />
-    <input
-      type="number"
-      name="height"
-      value="162"
-      id="id_height"
-      disabled
-      data-w-cond-target="disable"
-    />
-    <input
-      type="number"
-      name="closeness"
-      value="0"
-      id="id_closeness"
-      disabled
-      data-w-cond-target="disable"
-    />
-  </fieldset>
+    <select name="filter_method" id="id_filter_method">
+        <option value="original" selected="">Original size</option>
+        <option value="width">Resize to width</option>
+        <option value="height">Resize to height</option>
+        <option value="min">Resize to min</option>
+        <option value="max">Resize to max</option>
+        <option value="fill">Resize to fill</option>
+    </select>
+    <fieldset>
+        <input
+            type="number"
+            name="width"
+            value="150"
+            id="id_width"
+            disabled
+            data-w-cond-target="disable"
+        />
+        <input
+            type="number"
+            name="height"
+            value="162"
+            id="id_height"
+            disabled
+            data-w-cond-target="disable"
+        />
+        <input
+            type="number"
+            name="closeness"
+            value="0"
+            id="id_closeness"
+            disabled
+            data-w-cond-target="disable"
+        />
+    </fieldset>
 </form>
