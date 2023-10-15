@@ -187,6 +187,118 @@ describe('CondController', () => {
     });
   });
 
+  describe('the ability for the controller to be activated or deactivated', () => {
+    it('should not check for the form data if there are no targets', async () => {
+      const handleResolved = jest.fn();
+
+      document.addEventListener('w-cond:resolved', handleResolved);
+
+      await setup(`
+    <form data-controller="w-cond" data-action="change->w-cond#resolve">
+      <input type="checkbox" name="ignored" />
+      <input type="text" id="note" name="note" />
+    </form>`);
+
+      const noteField = document.getElementById('note');
+
+      expect(handleResolved).not.toHaveBeenCalled();
+
+      await Promise.resolve(
+        document
+          .querySelector('input')
+          .dispatchEvent(new Event('change', { bubbles: true })),
+      );
+
+      expect(handleResolved).not.toHaveBeenCalled();
+
+      // add a target & trigger a change event
+      await Promise.resolve(
+        noteField.setAttribute('data-w-cond-target', 'show'),
+      );
+
+      expect(handleResolved).toHaveBeenCalledTimes(1);
+
+      await Promise.resolve(
+        noteField.dispatchEvent(new Event('change', { bubbles: true })),
+      );
+
+      expect(handleResolved).toHaveBeenCalledTimes(2);
+
+      // now remove the target and check that the event no longer fires
+
+      await Promise.resolve(noteField.remove());
+
+      await Promise.resolve(
+        document
+          .querySelector('input')
+          .dispatchEvent(new Event('change', { bubbles: true })),
+      );
+
+      expect(handleResolved).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('syncing state of targets once connected', () => {
+    it('should ensure that the enabled/disabled attributes sync once connected', async () => {
+      await setup(`
+    <form id="form" data-controller="w-cond">
+      <fieldset>
+        <input type="password" name="password" />
+        <input type="email" name="email" />
+        <input type="checkbox" name="remember" />
+      </fieldset>
+      <label for="">This is my device.</label>
+      <input
+        type="checkbox"
+        id="my-device-check"
+        name="my-device"
+        data-w-cond-target="enable"
+        data-match="${_({ remember: 'on' })}"
+      />
+      <button
+        type="button"
+        id="continue-button"
+        data-w-cond-target="disable"
+        data-match="${_({ email: '', password: '' })}"
+      >
+        Continue
+      </button>
+    </form>`);
+
+      expect(document.getElementById('my-device-check').disabled).toBe(true);
+      expect(document.getElementById('continue-button').disabled).toBe(true);
+    });
+
+    it('should ensure that the hide/show attributes sync once connected', async () => {
+      await setup(`
+    <form id="form" data-controller="w-cond">
+      <fieldset>
+        <input type="password" name="password" />
+        <input type="email" name="email" />
+        <input
+          type="checkbox"
+          name="remember"
+          id="remember-me-field"
+          data-w-cond-target="hide"
+          data-match="${_({ email: '', password: '' })}"
+        />
+      </fieldset>
+      <label for="">This is my device.</label>
+      <div
+        id="alert"
+        data-w-cond-target="show"
+        data-match="${_({ remember: 'on' })}"
+      >
+        Cookies will be saved to this device.
+      </div>
+      <button type="button">Continue</button>
+    </form>`);
+
+      expect(document.getElementById('alert').hidden).toBe(true);
+      expect(document.getElementById('remember-me-field').hidden).toBe(true);
+    });
+  });
+
   describe('combining targets & elements for more complex interaction', () => {
     it('should allow show and hide targets to be used together', async () => {
       await setup(`
@@ -497,13 +609,4 @@ describe('CondController', () => {
       expect(countryField.value).toEqual('');
     });
   });
-
-  /**
-   * need to consider 'loaded' state different from the initial HTML
-   * need to consider a selected value that is made hidden, (select/options) what happens
-   * disabled/inactive value - allowing to be activated after some other action (like a blur)
-   * missing/ malformed data in data-match, array syntax support?
-   * controlled container that is not a form
-   * caching of values on the element so we do not have to JSON.parse each time
-   */
 });

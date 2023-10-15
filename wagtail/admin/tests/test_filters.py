@@ -45,7 +45,7 @@ class TestFilteredModelChoiceField(WagtailTestUtils, TestCase):
         class UserForm(forms.Form):
             users = FilteredModelChoiceField(
                 queryset=User.objects.order_by(User.USERNAME_FIELD),
-                filter_field="id_group",
+                filter_field="group",
                 filter_accessor="groups",
             )
 

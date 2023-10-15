@@ -8,16 +8,37 @@ const castArray = (...args) => args.flat(1);
 export class CondController extends Controller<HTMLFormElement> {
   static targets = ['disable', 'enable', 'hide', 'show'];
 
-  declare disableTargets: HTMLElement[];
-  declare enableTargets: HTMLElement[];
-  declare hideTargets: HTMLElement[];
-  declare showTargets: HTMLElement[];
+  static value = {
+    active: { default: false, type: Boolean },
+  };
 
-  connect() {
-    // TODO - debounce resolve
+  /** Targets will be disabled if the `data-match` matches the scoped form data, otherwise will be enabled. */
+  declare readonly disableTargets: HTMLElement[];
+  /** Targets will be enabled if the `data-match` matches the scoped form data, otherwise will be disabled. */
+  declare readonly enableTargets: HTMLElement[];
+  /** Targets will be hidden if the `data-match` matches the scoped form data, otherwise will be shown. */
+  declare readonly hideTargets: HTMLElement[];
+  /** Targets will be shown if the `data-match` matches the scoped form data, otherwise will be hidden. */
+  declare readonly showTargets: HTMLElement[];
+
+  /** Allows the behavior to be stopped/started to avoid unnecessary checks. */
+  declare activeValue: boolean;
+
+  /**
+   * Checks for any targets that will mean that the controller needs to be active.
+   */
+  checkTargets() {
+    const anyTargetsExist = [
+      () => this.disableTargets,
+      () => this.enableTargets,
+      () => this.hideTargets,
+      () => this.showTargets,
+    ].some((fn) => fn().length > 0);
+    this.activeValue = anyTargetsExist;
   }
 
   resolve() {
+    if (!this.activeValue) return;
     const form = this.element;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
@@ -49,15 +70,17 @@ export class CondController extends Controller<HTMLFormElement> {
         if (target instanceof HTMLOptionElement) {
           const selectElement = target.closest('select');
           if (selectElement && target.selected) {
-            selectElement.value =
-              Array.from(selectElement.options).find(
-                (option) => option.defaultSelected,
-              )?.value || '';
-            this.dispatch('change', {
-              target: selectElement,
-              bubbles: true,
-              cancelable: false,
-            });
+            if (selectElement && target.selected) {
+              selectElement.value =
+                Array.from(selectElement.options).find(
+                  (option) => option.defaultSelected,
+                )?.value || '';
+              // intentionally not dispatching a change event, could cause an infinite loop
+              this.dispatch('cleared', {
+                target: selectElement,
+                bubbles: true,
+              });
+            }
           }
         }
       }
@@ -88,15 +111,17 @@ export class CondController extends Controller<HTMLFormElement> {
         if (target instanceof HTMLOptionElement) {
           const selectElement = target.closest('select');
           if (selectElement && target.selected) {
-            selectElement.value =
-              Array.from(selectElement.options).find(
-                (option) => option.defaultSelected,
-              )?.value || '';
-            this.dispatch('change', {
-              target: selectElement,
-              bubbles: true,
-              cancelable: false,
-            });
+            if (selectElement && target.selected) {
+              selectElement.value =
+                Array.from(selectElement.options).find(
+                  (option) => option.defaultSelected,
+                )?.value || '';
+              // intentionally not dispatching a change event, could cause an infinite loop
+              this.dispatch('cleared', {
+                target: selectElement,
+                bubbles: true,
+              });
+            }
           }
         }
       } else {
@@ -134,11 +159,8 @@ export class CondController extends Controller<HTMLFormElement> {
               Array.from(selectElement.options).find(
                 (option) => option.defaultSelected,
               )?.value || '';
-            this.dispatch('change', {
-              target: selectElement,
-              bubbles: true,
-              cancelable: false,
-            });
+            // intentionally not dispatching a change event, could cause an infinite loop
+            this.dispatch('cleared', { target: selectElement, bubbles: true });
           }
         }
       } else {
@@ -176,34 +198,58 @@ export class CondController extends Controller<HTMLFormElement> {
         if (target instanceof HTMLOptionElement) {
           const selectElement = target.closest('select');
           if (selectElement && target.selected) {
-            selectElement.value =
-              Array.from(selectElement.options).find(
-                (option) => option.defaultSelected,
-              )?.value || '';
-            this.dispatch('change', {
-              target: selectElement,
-              bubbles: true,
-              cancelable: false,
-            });
+            if (selectElement && target.selected) {
+              selectElement.value =
+                Array.from(selectElement.options).find(
+                  (option) => option.defaultSelected,
+                )?.value || '';
+              // intentionally not dispatching a change event, could cause an infinite loop
+              this.dispatch('cleared', {
+                target: selectElement,
+                bubbles: true,
+              });
+            }
           }
         }
       }
     });
+
+    this.dispatch('resolved', { bubbles: true, cancelable: false });
+  }
+
+  enableTargetDisconnected() {
+    this.checkTargets();
   }
 
   enableTargetConnected() {
+    this.activeValue = true;
     this.resolve();
+  }
+
+  disableTargetDisconnected() {
+    this.checkTargets();
   }
 
   disableTargetConnected() {
+    this.activeValue = true;
     this.resolve();
+  }
+
+  hideTargetDisconnected() {
+    this.checkTargets();
   }
 
   hideTargetConnected() {
+    this.activeValue = true;
     this.resolve();
   }
 
+  showTargetDisconnected() {
+    this.checkTargets();
+  }
+
   showTargetConnected() {
+    this.activeValue = true;
     this.resolve();
   }
 }

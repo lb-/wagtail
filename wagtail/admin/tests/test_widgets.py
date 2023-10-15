@@ -595,7 +595,7 @@ class TestFilteredSelect(TestCase):
                 ("JP", "Japan", ["AS"]),
                 ("RU", "Russia", ["AS", "EU"]),
             ],
-            filter_field="id_continent",
+            filter_field="continent",
         )
 
         html = widget.render("country", "JP")
@@ -633,7 +633,7 @@ class TestFilteredSelect(TestCase):
                 ),
                 ("SK", "Slovakia", ["EU"]),
             ],
-            filter_field="id_continent",
+            filter_field="continent",
         )
 
         html = widget.render("country", "JP")
