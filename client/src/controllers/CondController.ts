@@ -81,136 +81,48 @@ export class CondController extends Controller<HTMLFormElement> {
     this.activeValue = anyTargetsExist;
   }
 
+  /**
+   * Resolve the conditional targets based on the form data and the targets'
+   * `data-match` attributes.
+   */
   resolve() {
     if (!this.activeValue) return;
     const form = this.element;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    const formData = Object.fromEntries(new FormData(form).entries());
 
-    this.enableTargets.forEach((target) => {
-      const match = this.getMatchData(target);
-
-      if (
-        match &&
-        Object.entries(match).every(([key, value]) =>
-          value.includes(String(data[key] || '')),
-        )
-      ) {
-        target.removeAttribute('disabled');
-      } else {
-        target.setAttribute('disabled', 'disabled');
-        if (target instanceof HTMLOptionElement) {
-          const selectElement = target.closest('select');
-          if (selectElement && target.selected) {
-            if (selectElement && target.selected) {
-              selectElement.value =
-                Array.from(selectElement.options).find(
-                  (option) => option.defaultSelected,
-                )?.value || '';
-              // intentionally not dispatching a change event, could cause an infinite loop
-              this.dispatch('cleared', {
-                target: selectElement,
-                bubbles: true,
-              });
-            }
-          }
-        }
-      }
+    [
+      ...this.enableTargets.map((target) => ({ shouldDisable: false, target })),
+      ...this.disableTargets.map((target) => ({ shouldDisable: true, target })),
+    ].forEach(({ shouldDisable, target }) => {
+      const isMatch = this.getIsMatch(formData, this.getMatchData(target));
+      this.toggleAttribute(
+        target,
+        shouldDisable ? isMatch : !isMatch,
+        'disabled',
+      );
     });
 
-    this.disableTargets.forEach((target) => {
-      const match = this.getMatchData(target);
-
-      if (
-        match &&
-        Object.entries(match).every(([key, value]) =>
-          value.includes(String(data[key] || '')),
-        )
-      ) {
-        target.setAttribute('disabled', 'disabled');
-        if (target instanceof HTMLOptionElement) {
-          const selectElement = target.closest('select');
-          if (selectElement && target.selected) {
-            if (selectElement && target.selected) {
-              selectElement.value =
-                Array.from(selectElement.options).find(
-                  (option) => option.defaultSelected,
-                )?.value || '';
-              // intentionally not dispatching a change event, could cause an infinite loop
-              this.dispatch('cleared', {
-                target: selectElement,
-                bubbles: true,
-              });
-            }
-          }
-        }
-      } else {
-        target.removeAttribute('disabled');
-      }
-    });
-
-    this.hideTargets.forEach((target) => {
-      const match = this.getMatchData(target);
-
-      if (
-        match &&
-        Object.entries(match).every(([key, value]) =>
-          value.includes(String(data[key] || '')),
-        )
-      ) {
-        // eslint-disable-next-line no-param-reassign
-        target.hidden = true;
-        if (target instanceof HTMLOptionElement) {
-          const selectElement = target.closest('select');
-          if (selectElement && target.selected) {
-            selectElement.value =
-              Array.from(selectElement.options).find(
-                (option) => option.defaultSelected,
-              )?.value || '';
-            // intentionally not dispatching a change event, could cause an infinite loop
-            this.dispatch('cleared', { target: selectElement, bubbles: true });
-          }
-        }
-      } else {
-        // eslint-disable-next-line no-param-reassign
-        target.hidden = false;
-      }
-    });
-
-    this.showTargets.forEach((target) => {
-      const match = this.getMatchData(target);
-
-      if (
-        match &&
-        Object.entries(match).every(([key, value]) =>
-          value.includes(String(data[key] || '')),
-        )
-      ) {
-        // eslint-disable-next-line no-param-reassign
-        target.hidden = false;
-      } else {
-        // eslint-disable-next-line no-param-reassign
-        target.hidden = true;
-        if (target instanceof HTMLOptionElement) {
-          const selectElement = target.closest('select');
-          if (selectElement && target.selected) {
-            if (selectElement && target.selected) {
-              selectElement.value =
-                Array.from(selectElement.options).find(
-                  (option) => option.defaultSelected,
-                )?.value || '';
-              // intentionally not dispatching a change event, could cause an infinite loop
-              this.dispatch('cleared', {
-                target: selectElement,
-                bubbles: true,
-              });
-            }
-          }
-        }
-      }
+    [
+      ...this.hideTargets.map((target) => ({ shouldHide: true, target })),
+      ...this.showTargets.map((target) => ({ shouldHide: false, target })),
+    ].forEach(({ shouldHide, target }) => {
+      const isMatch = this.getIsMatch(formData, this.getMatchData(target));
+      this.toggleAttribute(target, shouldHide ? isMatch : !isMatch);
     });
 
     this.dispatch('resolved', { bubbles: true, cancelable: false });
+  }
+
+  getIsMatch(
+    formData: Record<string, FormDataEntryValue>,
+    matchData: Record<string, string[]>,
+  ): boolean {
+    return (
+      matchData &&
+      Object.entries(matchData).every(([key, value]) =>
+        value.includes(String(formData[key] || '')),
+      )
+    );
   }
 
   getMatchData(target: Element): Record<string, string[]> {
@@ -246,6 +158,31 @@ export class CondController extends Controller<HTMLFormElement> {
     this.matchCache[matchStr] = matchData;
 
     return matchData;
+  }
+
+  toggleAttribute(target, shouldRemove = false, attr = 'hidden') {
+    if (shouldRemove) {
+      target.setAttribute(attr, attr);
+    } else {
+      target.removeAttribute(attr);
+    }
+
+    if (shouldRemove && target instanceof HTMLOptionElement) {
+      const selectElement = target.closest('select');
+      if (selectElement && target.selected) {
+        if (selectElement && target.selected) {
+          selectElement.value =
+            Array.from(selectElement.options).find(
+              (option) => option.defaultSelected,
+            )?.value || '';
+          // intentionally not dispatching a change event, could cause an infinite loop
+          this.dispatch('cleared', {
+            target: selectElement,
+            bubbles: true,
+          });
+        }
+      }
+    }
   }
 
   enableTargetDisconnected() {
