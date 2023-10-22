@@ -2,22 +2,31 @@ import { Application } from '@hotwired/stimulus';
 import { CondController } from './CondController';
 import { escapeHtml } from '../utils/text';
 
+jest.useFakeTimers();
+
 describe('CondController', () => {
-  let app;
   const _ = (value) => escapeHtml(JSON.stringify(value));
+
+  let application;
+  let errors = [];
 
   const setup = async (html) => {
     document.body.innerHTML = `<main>${html}</main>`;
 
-    app = Application.start();
-    app.register('w-cond', CondController);
+    application = Application.start();
+    application.register('w-cond', CondController);
 
-    await Promise.resolve();
+    application.handleError = (error, message) => {
+      errors.push({ error, message });
+    };
+
+    await jest.runAllTimersAsync();
   };
 
   afterEach(() => {
-    app?.stop();
+    application?.stop();
     jest.clearAllMocks();
+    errors = [];
   });
 
   describe('basic behaviour for each target type', () => {
@@ -41,12 +50,14 @@ describe('CondController', () => {
       expect(checkbox.checked).toBe(false);
       expect(button.disabled).toBe(true);
 
-      await Promise.resolve(checkbox.click());
+      checkbox.click();
+      await jest.runAllTimersAsync();
 
       expect(checkbox.checked).toBe(true);
       expect(button.disabled).toBe(false);
 
-      await Promise.resolve(checkbox.click());
+      checkbox.click();
+      await jest.runAllTimersAsync();
 
       expect(checkbox.checked).toBe(false);
       expect(button.disabled).toBe(true);
@@ -82,33 +93,34 @@ describe('CondController', () => {
       expect(input.disabled).toBe(true);
 
       select.value = 'search';
-      await Promise.resolve(
-        select.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
 
       expect(select.value).toBe('search');
       expect(input.disabled).toBe(true);
 
       select.value = 'other';
-      await Promise.resolve(
-        select.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(select.value).toBe('other');
       expect(input.disabled).toBe(false);
 
       select.value = 'signage';
-      await Promise.resolve(
-        select.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(select.value).toBe('signage');
       expect(input.disabled).toBe(true);
 
       select.value = 'custom';
-      await Promise.resolve(
-        select.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(select.value).toBe('custom');
       expect(input.disabled).toBe(false);
@@ -140,9 +152,8 @@ describe('CondController', () => {
       document.getElementById('is-author-yes').checked = true;
       document.getElementById('is-author-no').checked = false;
 
-      await Promise.resolve(
-        document.getElementById('form').dispatchEvent(new Event('change')),
-      );
+      document.getElementById('form').dispatchEvent(new Event('change'));
+      await jest.runAllTimersAsync();
 
       expect(container.hidden).toBe(true);
     });
@@ -170,20 +181,40 @@ describe('CondController', () => {
       // add a non-empty email value
       emailField.value = 'joe@email.co';
 
-      await Promise.resolve(
-        emailField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      emailField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(alert.hidden).toBe(true);
 
       // reset the value to empty
       emailField.value = '';
 
-      await Promise.resolve(
-        emailField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      emailField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(alert.hidden).toBe(false);
+    });
+  });
+
+  describe('supporting different data-match attributes', () => {
+    it('should support malformed matching and not error', async () => {
+      await setup(`
+    <form data-controller="w-cond" data-action="change->w-cond#resolve">
+      <input type="text" name="title" value="bad" />
+      <input type="text" name="subtitle" data-w-cond-target="show" data-match="{title:''}" />
+      <div role="alert" data-w-cond-target="show" data-match="title=bad">
+        Careful with this value.
+      </div>
+    </form>
+      `);
+
+      expect(
+        Array.from(document.querySelectorAll('[data-w-cond-target]')).map(
+          (target) => target.hidden,
+        ),
+      ).toEqual([false, false]);
+
+      expect(errors).toHaveLength(0);
     });
   });
 
@@ -211,7 +242,8 @@ describe('CondController', () => {
         document.querySelector('form').getAttribute('data-controller'),
       ).toBe('w-cond');
 
-      await Promise.resolve(document.getElementById('note').remove());
+      document.getElementById('note').remove();
+      await jest.runAllTimersAsync();
 
       expect(
         document.querySelector('form').getAttribute('data-controller'),
@@ -237,42 +269,40 @@ describe('CondController', () => {
 
       expect(handleResolved).not.toHaveBeenCalled();
 
-      await Promise.resolve(
-        document
-          .querySelector('input')
-          .dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      document
+        .querySelector('input')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(handleResolved).not.toHaveBeenCalled();
 
       // add a target & trigger a change event
-      await Promise.resolve(
-        noteField.setAttribute('data-w-cond-target', 'show'),
-      );
+
+      noteField.setAttribute('data-w-cond-target', 'show');
+      await jest.runAllTimersAsync();
 
       expect(handleResolved).toHaveBeenCalledTimes(1);
 
-      await Promise.resolve(
-        noteField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      noteField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(handleResolved).toHaveBeenCalledTimes(2);
 
       // now remove the target and check that the event no longer fires
 
-      await Promise.resolve(noteField.remove());
+      noteField.remove();
 
-      await Promise.resolve(
-        document
-          .querySelector('input')
-          .dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      document
+        .querySelector('input')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
 
       expect(handleResolved).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe('syncing state of targets once connected', () => {
+  describe('syncing the state of the DOM (targets) once connected', () => {
     it('should ensure that the enabled/disabled attributes sync once connected', async () => {
       await setup(`
     <form id="form" data-controller="w-cond">
@@ -365,9 +395,8 @@ describe('CondController', () => {
       // add an email value
       emailField.value = 'joe@email.co';
 
-      await Promise.resolve(
-        emailField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      emailField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       // alert should hide and the email field should become visible
       expect(alert.hidden).toBe(true);
@@ -376,9 +405,8 @@ describe('CondController', () => {
       // now clear the email value
       emailField.value = '';
 
-      await Promise.resolve(
-        emailField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      emailField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(alert.hidden).toBe(false);
       expect(nameField.hidden).toBe(true);
@@ -447,9 +475,9 @@ describe('CondController', () => {
       // now change the filter to width
 
       filterField.value = 'width';
-      await Promise.resolve(
-        filterField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      filterField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(widthField.disabled).toBe(false);
       expect(heightField.disabled).toBe(true);
@@ -458,9 +486,9 @@ describe('CondController', () => {
       // now change the filter to height
 
       filterField.value = 'height';
-      await Promise.resolve(
-        filterField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      filterField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(widthField.disabled).toBe(true);
       expect(heightField.disabled).toBe(false);
@@ -469,9 +497,9 @@ describe('CondController', () => {
       // now change the filter to max
 
       filterField.value = 'max';
-      await Promise.resolve(
-        filterField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      filterField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(widthField.disabled).toBe(false);
       expect(heightField.disabled).toBe(false);
@@ -480,9 +508,9 @@ describe('CondController', () => {
       // now change the filter to fill
 
       filterField.value = 'fill';
-      await Promise.resolve(
-        filterField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      filterField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(widthField.disabled).toBe(false);
       expect(heightField.disabled).toBe(false);
@@ -491,9 +519,9 @@ describe('CondController', () => {
       // set back to original
 
       filterField.value = 'original';
-      await Promise.resolve(
-        filterField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      filterField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(filterField.value).toEqual('original');
       expect(widthField.disabled).toBe(true);
@@ -597,25 +625,22 @@ describe('CondController', () => {
 
       continentField.value = '2'; // Africa
 
-      await Promise.resolve(
-        continentField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      continentField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(getShownOptions()).toEqual(['', '2', '7']);
 
       continentField.value = 1; // Europe - intentionally using int
 
-      await Promise.resolve(
-        continentField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      continentField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(getShownOptions()).toEqual(['', '3', '4', '6', '8']);
 
       continentField.value = ''; // clear selection
 
-      await Promise.resolve(
-        continentField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      continentField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(getShownOptions()).toEqual(allOptions);
     });
@@ -627,17 +652,17 @@ describe('CondController', () => {
       expect(getShownOptions()).toEqual(allOptions);
 
       countryField.value = '8'; // Turkey
-      await Promise.resolve(
-        countryField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+      countryField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
 
       expect(countryField.value).toEqual('8');
 
       // now change the continent to an incompatible value (Africa)
       continentField.value = '2'; // Africa
-      await Promise.resolve(
-        continentField.dispatchEvent(new Event('change', { bubbles: true })),
-      );
+
+      continentField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
 
       expect(getShownOptions()).toEqual(['', '2', '7']);
       expect(countryField.value).toEqual('');

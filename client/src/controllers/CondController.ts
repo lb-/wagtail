@@ -1,6 +1,17 @@
 import { Controller } from '@hotwired/stimulus';
 
 import { castArray } from '../utils/castArray';
+import { debounce } from '../utils/debounce';
+
+/**
+ * ## TODO
+ * - [ ] Add basic debounce/delay support, 50ms default
+ * - [ ] Add Storybook
+ * - [ ] Add tests for match value being entries syntax
+ * - [ ] Add tests for match value being malformed
+ * - [ ] Prepare PR with just show, no persist either
+ * - [ ] Add note somewhere about future classes support & multiple match support (conditional fields ticket?)
+ */
 
 /**
  * Adds the ability for a controlled form element to conditionally
@@ -52,6 +63,7 @@ export class CondController extends Controller<HTMLFormElement> {
 
   initialize() {
     this.matchCache = {};
+    this.resolve = debounce(this.resolve.bind(this), 50);
   }
 
   connect() {
@@ -86,6 +98,7 @@ export class CondController extends Controller<HTMLFormElement> {
    * `data-match` attributes.
    */
   resolve() {
+    // console.log('resolve', this.activeValue);
     if (!this.activeValue) return;
     const form = this.element;
     const formData = Object.fromEntries(new FormData(form).entries());
@@ -97,7 +110,7 @@ export class CondController extends Controller<HTMLFormElement> {
       const isMatch = this.getIsMatch(formData, this.getMatchData(target));
       this.toggleAttribute(
         target,
-        shouldDisable ? isMatch : !isMatch,
+        shouldDisable ? !isMatch : isMatch,
         'disabled',
       );
     });
@@ -107,7 +120,7 @@ export class CondController extends Controller<HTMLFormElement> {
       ...this.showTargets.map((target) => ({ shouldHide: false, target })),
     ].forEach(({ shouldHide, target }) => {
       const isMatch = this.getIsMatch(formData, this.getMatchData(target));
-      this.toggleAttribute(target, shouldHide ? isMatch : !isMatch);
+      this.toggleAttribute(target, shouldHide ? !isMatch : isMatch);
     });
 
     this.dispatch('resolved', { bubbles: true, cancelable: false });
@@ -162,27 +175,31 @@ export class CondController extends Controller<HTMLFormElement> {
 
   toggleAttribute(target, shouldRemove = false, attr = 'hidden') {
     if (shouldRemove) {
-      target.setAttribute(attr, attr);
-    } else {
       target.removeAttribute(attr);
+    } else if (attr === 'hidden') {
+      // eslint-disable-next-line no-param-reassign
+      target.hidden = true;
+    } else if (attr === 'disabled') {
+      // eslint-disable-next-line no-param-reassign
+      target.disabled = true;
+    } else {
+      target.setAttribute(attr, attr);
     }
 
-    if (shouldRemove && target instanceof HTMLOptionElement) {
-      const selectElement = target.closest('select');
-      if (selectElement && target.selected) {
-        if (selectElement && target.selected) {
-          selectElement.value =
-            Array.from(selectElement.options).find(
-              (option) => option.defaultSelected,
-            )?.value || '';
-          // intentionally not dispatching a change event, could cause an infinite loop
-          this.dispatch('cleared', {
-            target: selectElement,
-            bubbles: true,
-          });
-        }
-      }
-    }
+    // special handling of select fields to avoid selected values from being kept as selected
+    if (!(!shouldRemove && target instanceof HTMLOptionElement)) return;
+    const selectElement = target.closest('select');
+
+    if (!(selectElement && target.selected)) return;
+
+    const resetValue =
+      Array.from(selectElement.options).find((option) => option.defaultSelected)
+        ?.value || '';
+
+    selectElement.value = resetValue;
+
+    // intentionally not dispatching a change event, could cause an infinite loop
+    this.dispatch('cleared', { bubbles: true, target: selectElement });
   }
 
   enableTargetDisconnected() {
