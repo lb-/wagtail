@@ -986,6 +986,13 @@ def wagtail_config(context):
             "DISMISSIBLES": reverse("wagtailadmin_dismissibles"),
             "PAGES": reverse("wagtailadmin_explore_root"),
         },
+        "CHOOSER_URLS": {
+            "PAGE_CHOOSER": reverse("wagtailadmin_choose_page"),
+            "EXTERNAL_LINK_CHOOSER": reverse("wagtailadmin_choose_page_external_link"),
+            "EMAIL_LINK_CHOOSER": reverse("wagtailadmin_choose_page_email_link"),
+            "PHONE_LINK_CHOOSER": reverse("wagtailadmin_choose_page_phone_link"),
+            "ANCHOR_LINK_CHOOSER": reverse("wagtailadmin_choose_page_anchor_link"),
+        },
         "I18N_ENABLED": i18n_enabled(),
         "LOCALES": locales(serialize=False),
         "STRINGS": get_js_translation_strings(),

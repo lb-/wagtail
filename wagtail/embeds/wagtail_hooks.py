@@ -22,7 +22,7 @@ def editor_js():
     return format_html(
         """
             <script>
-                window.chooserUrls.embedsChooser = '{0}';
+                window.wagtailConfig.CHOOSER_URLS.EMBEDS_CHOOSER = '{0}';
             </script>
         """,
         reverse("wagtailembeds:chooser"),

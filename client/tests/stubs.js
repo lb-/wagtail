@@ -18,6 +18,16 @@ global.wagtailConfig = {
   ADMIN_URLS: {
     PAGES: '/admin/pages/',
   },
+  CHOOSER_URLS: {
+    // Uncomment once we fully remove global.chooserUrls support
+    // ANCHOR_LINK_CHOOSER: '/admin/choose-anchor-link',
+    // DOCUMENT_CHOOSER: '/admin/documents/chooser/',
+    // EMAIL_LINK_CHOOSER: '/admin/choose-email-link/',
+    // EMBEDS_CHOOSER: '/admin/embeds/chooser/',
+    // EXTERNAL_LINK_CHOOSER: '/admin/choose-external-link/',
+    // IMAGE_CHOOSER: '/admin/images/chooser/',
+    // PAGE_CHOOSER: '/admin/choose-page/',
+  },
   CSRF_TOKEN: 'potato',
   DATE_FORMATTING: {
     DATE_FORMAT: 'MMM. D, YYYY',
@@ -47,6 +57,11 @@ global.wagtailVersion = '1.6a1';
 
 global.wagtail = {};
 
+/**
+ * Once legacy global is removed, will be using wagtailConfig.CHOOSER_URLS (see above).
+ * Keeping this in stubs to ensure unit tests validate legacy support.
+ * @deprecated RemovedInWagtail70
+ */
 global.chooserUrls = {
   documentChooser: '/admin/documents/chooser/',
   emailLinkChooser: '/admin/choose-email-link/',

@@ -63,7 +63,7 @@ def editor_js():
     return format_html(
         """
         <script>
-            window.chooserUrls.imageChooser = '{0}';
+            window.wagtailConfig.CHOOSER_URLS.IMAGE_CHOOSER = '{0}';
         </script>
         """,
         reverse("wagtailimages_chooser:choose"),

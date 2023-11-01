@@ -11,6 +11,8 @@ export interface WagtailConfig {
     PAGES: string;
   };
 
+  CHOOSER_URLS: Record<string, string>;
+
   CSRF_HEADER_NAME: string;
   CSRF_TOKEN: string;
 

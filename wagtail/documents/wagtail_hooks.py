@@ -69,7 +69,7 @@ def editor_js():
     return format_html(
         """
         <script>
-            window.chooserUrls.documentChooser = '{0}';
+            window.wagtailConfig.CHOOSER_URLS.DOCUMENT_CHOOSER = '{0}';
         </script>
         """,
         reverse("wagtaildocs_chooser:choose"),

@@ -3,6 +3,7 @@ import { Component } from 'react';
 import { AtomicBlockUtils, Modifier, RichUtils, EditorState } from 'draft-js';
 import { ENTITY_TYPE, DraftUtils } from 'draftail';
 
+import { WAGTAIL_CONFIG } from '../../../config/wagtailConfig';
 import { gettext } from '../../../utils/gettext';
 import { getSelectionText } from '../DraftUtils';
 
@@ -16,6 +17,24 @@ MUTABILITY[ENTITY_TYPE.LINK] = 'MUTABLE';
 MUTABILITY[DOCUMENT] = 'MUTABLE';
 MUTABILITY[ENTITY_TYPE.IMAGE] = 'IMMUTABLE';
 MUTABILITY[EMBED] = 'IMMUTABLE';
+
+const convertCamelToSnake = (obj) =>
+  Object.entries(obj).reduce(
+    (acc, [key, value]) => ({
+      ...acc,
+      [key.replace(/([A-Z])/g, '_$1').toUpperCase()]: value,
+    }),
+    {},
+  );
+
+const CHOOSER_URLS = {
+  /**
+   * Support global.chooserUrls until fully removed.
+   * @deprecated RemovedInWagtail70
+   */
+  ...convertCamelToSnake(global.chooserUrls || {}),
+  ...(WAGTAIL_CONFIG.CHOOSER_URLS || {}),
+};
 
 /**
  * Interfaces with Wagtail's ModalWorkflow to open the chooser,
@@ -176,13 +195,13 @@ class ImageModalWorkflowSource extends ModalWorkflowSource {
 
     if (entity) {
       const data = entity.getData();
-      url = `${global.chooserUrls.imageChooser}${data.id}/select_format/`;
+      url = `${CHOOSER_URLS.IMAGE_CHOOSER}${data.id}/select_format/`;
       urlParams = {
         format: data.format,
         alt_text: data.alt,
       };
     } else {
-      url = `${global.chooserUrls.imageChooser}?select_format=true`;
+      url = `${CHOOSER_URLS.IMAGE_CHOOSER}?select_format=true`;
       urlParams = {};
     }
     return {
@@ -213,7 +232,7 @@ class EmbedModalWorkflowSource extends ModalWorkflowSource {
       urlParams.url = entity.getData().url;
     }
     return {
-      url: global.chooserUrls.embedsChooser,
+      url: CHOOSER_URLS.EMBEDS_CHOOSER,
       urlParams,
       onload: global.EMBED_CHOOSER_MODAL_ONLOAD_HANDLERS,
       responses: {
@@ -237,7 +256,7 @@ class EmbedModalWorkflowSource extends ModalWorkflowSource {
 
 class LinkModalWorkflowSource extends ModalWorkflowSource {
   getChooserConfig(entity, selectedText) {
-    let url = global.chooserUrls.pageChooser;
+    let url = CHOOSER_URLS.PAGE_CHOOSER;
     const urlParams = {
       page_type: 'wagtailcore.page',
       allow_external_link: true,
@@ -252,21 +271,21 @@ class LinkModalWorkflowSource extends ModalWorkflowSource {
 
       if (data.id) {
         if (data.parentId !== null) {
-          url = `${global.chooserUrls.pageChooser}${data.parentId}/`;
+          url = `${CHOOSER_URLS.PAGE_CHOOSER}${data.parentId}/`;
         } else {
-          url = global.chooserUrls.pageChooser;
+          url = CHOOSER_URLS.PAGE_CHOOSER;
         }
       } else if (data.url.startsWith('mailto:')) {
-        url = global.chooserUrls.emailLinkChooser;
+        url = CHOOSER_URLS.EMAIL_LINK_CHOOSER;
         urlParams.link_url = data.url.replace('mailto:', '');
       } else if (data.url.startsWith('tel:')) {
-        url = global.chooserUrls.phoneLinkChooser;
+        url = CHOOSER_URLS.PHONE_LINK_CHOOSER;
         urlParams.link_url = data.url.replace('tel:', '');
       } else if (data.url.startsWith('#')) {
-        url = global.chooserUrls.anchorLinkChooser;
+        url = CHOOSER_URLS.ANCHOR_LINK_CHOOSER;
         urlParams.link_url = data.url.replace('#', '');
       } else {
-        url = global.chooserUrls.externalLinkChooser;
+        url = CHOOSER_URLS.EXTERNAL_LINK_CHOOSER;
         urlParams.link_url = data.url;
       }
     }
@@ -299,7 +318,7 @@ class LinkModalWorkflowSource extends ModalWorkflowSource {
 class DocumentModalWorkflowSource extends ModalWorkflowSource {
   getChooserConfig() {
     return {
-      url: global.chooserUrls.documentChooser,
+      url: CHOOSER_URLS.DOCUMENT_CHOOSER,
       urlParams: {},
       onload: global.DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS,
       responses: {
