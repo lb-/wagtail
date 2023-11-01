@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import * as StimulusModule from '@hotwired/stimulus';
+import parameterize from 'parameterize';
 
 import { Icon, Portal } from '../..';
 import { coreControllerDefinitions } from '../../controllers';
@@ -31,6 +32,29 @@ wagtail.components = { Icon, Portal };
 window.wagtail = wagtail;
 
 window.escapeHtml = escapeHtml;
+
+/**
+ * Support legacy global URLify which can be called with `allowUnicode` as a third param.
+ * Was not documented and only used in modeladmin prepopulate JS.
+ *
+ * @deprecated RemovedInWagtail70
+ * @see https://github.com/django/django/blob/main/django/contrib/admin/static/admin/js/urlify.js#L156
+ *
+ * @param {string} str
+ * @param {number} numChars
+ * @param {boolean} allowUnicode
+ * @returns {string}
+ */
+window.URLify = (str, numChars, allowUnicode) =>
+  allowUnicode
+    ? str
+        .toLowerCase()
+        .replace(/\[^-_\p{L}\p{N}\s]/g, '')
+        .replace(/^\s+|\s+$/g, '')
+        .replace(/[-\s]+/g, '-')
+        .substring(0, numChars)
+        .replace(/-+$/g, '')
+    : parameterize(str, numChars);
 
 /**
  * Enables a "dirty form check", prompting the user if they are navigating away
