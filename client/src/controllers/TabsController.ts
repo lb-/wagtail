@@ -1,370 +1,373 @@
-import { getElementByContentPath } from '../utils/contentPath';
+import { Controller } from '@hotwired/stimulus';
+import { debounce } from '../utils/debounce';
+
 /**
- *  All tabs and tab content must be nested in an element with the data-tab attribute
- *  All tab buttons need the role="tab" attr and an href with the tab content ID
- *  Tab contents need to have the role="tabpanel" attribute and ID attribute that matches the href of the tab link.
- *  Tab buttons should also be wrapped in an element with the role="tablist" attribute
- *  Use the attribute data-tab-trigger on an Anchor link and set the href to the #ID of the tab you would like to trigger
+ * Returns a promise that will resolve after either the animation, translation
+ * or the max delay of time is reached.
+ *
+ * If maxDelay is provided as zero or a falsey value, the promise resolve immediately.
  */
-class Tabs {
-  constructor(node) {
-    this.tabContainer = node;
-    this.tabButtons = this.tabContainer.querySelectorAll('[role="tab"]');
-    this.tabList = this.tabContainer.querySelector('[role="tablist"]');
-    this.tabPanels = this.tabContainer.querySelectorAll('[role="tabpanel"]');
-    // External anchors that can be used for selecting tabs
-    this.tabTriggerLinks =
-      this.tabContainer.querySelectorAll('[data-tab-trigger]');
-    this.keydownEventListener = this.keydownEventListener.bind(this);
-
-    // Tab Options - Add these data attributes along side the data-tabs attribute
-    // Use this to enable fade-in animations on tab select
-    this.animate = this.tabContainer.hasAttribute('data-tabs-animate');
-    // Disable url hash from appearing on tab select (normally used in modals)
-    this.disableURL = this.tabContainer.hasAttribute('data-tabs-disable-url');
-
-    this.state = {
-      // Tab Settings
-      activeTabID: '',
-      transition: 150,
-      initialPageLoad: true,
-      // CSS Classes
-      css: {
-        animate: 'animate-in',
-      },
-      // Keyboard Keys
-      keys: {
-        end: 'End',
-        home: 'Home',
-        left: 'ArrowLeft',
-        up: 'ArrowUp',
-        right: 'ArrowRight',
-        down: 'ArrowDown',
-      },
-      direction: {
-        ArrowLeft: -1,
-        ArrowRight: 1,
-      },
-    };
-
-    this.onComponentLoaded();
-  }
-
-  onComponentLoaded() {
-    this.bindEvents();
-
-    // Set active tab from url or make first tab active
-    if (this.tabButtons) {
-      // Set each button's aria-controls attribute and select tab if aria-selected has already been set on the element
-      Tabs.setAriaControlsByHref(this.tabButtons);
-      // Check for active items set by the template
-      const tabActive = [...this.tabButtons].find(
-        (button) => button.getAttribute('aria-selected') === 'true',
-      );
-
-      if (window.location.hash && !this.disableURL) {
-        this.selectTabByURLHash();
-      } else if (tabActive) {
-        // If a tab isn't hidden for some reason hide it
-        this.tabPanels.forEach((tab) => {
-          // eslint-disable-next-line no-param-reassign
-          tab.hidden = true;
-        });
-        // Show aria-selected tab
-        this.selectTab(tabActive);
-      } else {
-        this.selectFirstTab();
-      }
-    }
-
-    // Set each external trigger button's aria-controls attribute
-    if (this.tabTriggerLinks) {
-      Tabs.setAriaControlsByHref(this.tabTriggerLinks);
-    }
-  }
-
+const afterTransition = (element: HTMLElement, { maxDelay = 300 } = {}) => {
   /**
-   * @param {string}newTabId
+   * Allow the passing of an initial value to the resolved promise.
+   * If nothings is passed, the event will be passed to the promise.
    */
-  unSelectActiveTab(newTabId) {
-    // IF new tab ID is the current then don't transition out
-    if (newTabId === this.state.activeTabID || !this.state.activeTabID) {
-      return;
-    }
+  let initValue: any;
+  const promise = new Promise<AnimationEvent | TransitionEvent | undefined>(
+    (resolve) => {
+      if (!maxDelay) {
+        resolve(initValue);
+        return;
+      }
+      let timer: number | undefined;
+      const finish = (event: AnimationEvent | TransitionEvent | undefined) => {
+        if (event && event.target !== element) return;
+        window.clearTimeout(timer);
+        element.removeEventListener('transitionend', finish);
+        element.removeEventListener('animationend', finish);
+        resolve(initValue || event);
+      };
+      element.addEventListener('animationend', finish);
+      element.addEventListener('transitionend', finish);
+      timer = window.setTimeout(finish, maxDelay);
+    },
+  );
+  return (init: any) => {
+    initValue = typeof init === 'function' ? init() : init;
+    return promise;
+  };
+};
 
-    // Tab Content to deactivate
-    const tabContent = this.tabContainer.querySelector(
-      `#${this.state.activeTabID}`,
+interface IndexedEventTarget extends EventTarget {
+  index: number;
+}
+
+interface TabLink extends HTMLAnchorElement {
+  index: number;
+}
+
+/**
+ * Adds the ability for the controlled elements to behave as selectable tabs.
+ *
+ * @description
+ * All tabs and tab content must be nested in an element within the scope of the controller.
+ * All tab buttons need the `role="tab"` attribute and a `href` with the tab content `id` with the target `label`.
+ * Tab contents need to have the `role="tabpanel"` attribute and and `id` attribute that matches the `href` of the tab link with the target 'panel'.
+ * Tab buttons should also be wrapped in an element with the `role="tablist"` attribute.
+ * Use the target 'trigger' on an Anchor link and set the `href` to the `id` of the tab you would like to trigger.
+ *
+ * @example
+ * ```html
+ * <div data-controller="w-tabs" data-action="popstate@window->w-tabs#loadHistory" data-w-tabs-selected-class="animate-in">
+ *   <div role="tablist" data-action="keydown.right->w-tabs#selectNext keydown.left->w-tabs#selectPrevious keydown.home->w-tabs#selectFirst keydown.end->w-tabs#selectLast">
+ *     <a id="tab-label-tab-1" href="#tab-tab-1" role="tab" data-w-tabs-target="label" data-action="w-tabs#select:prevent">Tab 1</a>
+ *     <a id="tab-label-tab-2" href="#tab-tab-2" role="tab" data-w-tabs-target="label" data-action="w-tabs#select:prevent">Tab 2</a>
+ *   </div>
+ *   <div class="tab-content">
+ *     <section id="tab-tab-1" role="tabpanel" aria-labelledby="tab-label-tab-1" data-w-tabs-target="panel">
+ *       Tab 1 content
+ *     </section>
+ *     <section id="tab-tab-2" role="tabpanel" aria-labelledby="tab-label-tab-2" data-w-tabs-target="panel">
+ *       Tab 2 content
+ *     </section>
+ *   </div>
+ * </div>
+ * ```
+ */
+
+export class TabsController extends Controller<HTMLElement> {
+  static classes = ['selected'];
+
+  static targets = ['label', 'panel', 'trigger'];
+
+  static values = {
+    animate: { default: false, type: Boolean },
+    selected: { default: '', type: String },
+    syncURLHash: { default: false, type: Boolean },
+    transition: { default: 150, type: Number },
+  };
+
+  /** ID of the currently selected tab. */
+  declare selectedValue: string;
+
+  /** If true, animation will run when a new tab is selected. */
+  declare readonly animateValue: boolean;
+  /** Tab elements, with role='tab', allowing selection of tabs. */
+  declare readonly labelTargets: HTMLAnchorElement[];
+  /** Tab content panels, with role='tabpanel', showing the content for each tab. */
+  declare readonly panelTargets: HTMLElement[];
+  /** Classes to set on the tab panel content when selected. */
+  declare readonly selectedClasses: string[];
+  /** If true, the selected tab will sync with the URL hash. */
+  declare readonly syncURLHashValue: boolean;
+  /** The time in milliseconds for the tab content to transition in and out. */
+  declare readonly transitionValue: number;
+  /** Other elements within the controller's scope that may trigger a specific tab. */
+  declare readonly triggerTargets: HTMLAnchorElement[];
+
+  connect() {
+    this.validate();
+
+    debounce(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, this.transitionValue * 2)();
+
+    this.setAriaControls(this.labelTargets);
+    this.setTabLabelIndex();
+
+    const activeTab = this.labelTargets.find(
+      (button) =>
+        button.getAttribute('aria-selected') === 'true' ||
+        button.getAttribute('aria-controls') === this.selectedValue,
     );
 
-    if (!tabContent) {
+    if (this.selectedClasses.length && activeTab) {
+      activeTab.setAttribute('aria-selected', 'true');
+      activeTab.removeAttribute('tabindex');
+    }
+
+    this.panelTargets.forEach((tab) => {
+      // eslint-disable-next-line no-param-reassign
+      tab.hidden = true;
+    });
+
+    if (window.location.hash && !this.syncURLHashValue) {
+      this.setTabByURLHash();
+    } else if (activeTab) {
+      this.selectedValue = activeTab.getAttribute('aria-controls') as string;
+    } else {
+      this.selectFirst();
+    }
+
+    this.setAriaControls(this.triggerTargets);
+  }
+
+  selectedValueChanged(currentValue: string, previousValue: string) {
+    if (previousValue) {
+      this.hideTabContent(previousValue);
+    }
+
+    const tab = this.getTabLabelByHref(currentValue);
+    if (tab) {
+      tab.setAttribute('aria-selected', 'true');
+      tab.removeAttribute('tabindex');
+    }
+
+    const tabContent = this.getTabPanelByHref(currentValue);
+
+    if (tabContent) {
+      if (this.animateValue) {
+        this.animateIn(tabContent);
+      } else {
+        tabContent.hidden = false;
+      }
+
+      this.dispatch('selected', {
+        cancelable: false,
+        detail: { selected: currentValue },
+        target: tab,
+      });
+
+      if (!this.syncURLHashValue) {
+        this.setURLHash(currentValue);
+      }
+    }
+  }
+
+  getTabLabelByHref(tabId: string): HTMLElement | undefined {
+    return this.labelTargets.find(
+      (tab) => tab.getAttribute('aria-controls') === tabId,
+    );
+  }
+
+  getTabPanelByHref(tabId: string): HTMLElement | undefined {
+    return this.panelTargets.find((tab) => tab.getAttribute('id') === tabId);
+  }
+
+  setAriaControls(tabLinks: HTMLAnchorElement[]) {
+    tabLinks.forEach((tabLink) => {
+      const href = tabLink.getAttribute('href') as string;
+      tabLink.setAttribute('aria-controls', href.replace('#', ''));
+    });
+  }
+
+  setTabLabelIndex() {
+    (this.labelTargets as TabLink[]).forEach((label, index) => {
+      // eslint-disable-next-line no-param-reassign
+      label.index = index;
+    });
+  }
+
+  setURLHash(tabId: string) {
+    if (!window.history.state || window.history.state.tabContent !== tabId) {
+      // Add a new history item to the stack
+      window.history.pushState({ tabContent: tabId }, '', `#${tabId}`);
+    }
+  }
+
+  setTabByURLHash() {
+    if (window.location.hash) {
+      const cleanedHash = window.location.hash
+        .replace(/[^\w\-#]/g, '')
+        .replace('#', '');
+
+      const isCleanHashPresent = this.labelTargets.find(
+        (value) => value.id === cleanedHash,
+      );
+
+      if (cleanedHash && isCleanHashPresent) {
+        this.selectedValue = cleanedHash;
+      } else {
+        // The hash doesn't match a tab on the page then select first tab
+        this.selectFirst();
+      }
+    }
+  }
+
+  animateIn(tabContent: HTMLElement) {
+    const selectedClasses = this.selectedClasses;
+    afterTransition(
+      tabContent,
+      // If there are no classes to add, we can skip the delay before hiding.
+      selectedClasses.length
+        ? { maxDelay: this.transitionValue }
+        : { maxDelay: 0 },
+    )(tabContent.classList.add(...selectedClasses)).then(() => {
+      // eslint-disable-next-line no-param-reassign
+      tabContent.hidden = false;
+    });
+  }
+
+  animateOut(tabContent: HTMLElement) {
+    const selectedClasses = this.selectedClasses;
+    afterTransition(
+      tabContent,
+      // If there are no classes to add, we can skip the delay before hiding.
+      selectedClasses.length
+        ? { maxDelay: this.transitionValue }
+        : { maxDelay: 0 },
+    )(tabContent.classList.remove(...selectedClasses)).then(() => {
+      // eslint-disable-next-line no-param-reassign
+      tabContent.hidden = true;
+    });
+  }
+
+  hideTabContent(tabId: string) {
+    if (tabId === this.selectedValue || !this.selectedValue) {
       return;
     }
 
-    if (this.animate) {
+    const tabContent = this.getTabPanelByHref(tabId);
+
+    if (!tabContent) return;
+
+    if (this.animateValue) {
       this.animateOut(tabContent);
     } else {
       tabContent.hidden = true;
     }
 
-    const tab = this.tabContainer.querySelector(
-      `a[href='#${this.state.activeTabID}']`,
-    );
+    const tab = this.getTabLabelByHref(tabId);
+
+    if (!tab) return;
 
     tab.setAttribute('aria-selected', 'false');
     tab.setAttribute('tabindex', '-1');
   }
 
-  selectTab(tab) {
-    if (!tab) {
-      return;
-    }
-
-    const tabContentId = tab.getAttribute('aria-controls');
-
-    // Unselect currently active tab
-    if (tabContentId) {
-      this.unSelectActiveTab(tabContentId);
-    }
-
-    this.state.activeTabID = tabContentId;
-
-    const linkedTab = this.tabContainer.querySelector(
-      `a[href="${tab.getAttribute('href')}"][role="tab"]`,
-    );
-
-    // If an external button was used to trigger the tab, make sure active tab is marked active
-    if (linkedTab) {
-      linkedTab.setAttribute('aria-selected', 'true');
-      linkedTab.removeAttribute('tabindex');
-    }
-
-    tab.setAttribute('aria-selected', 'true');
-    tab.removeAttribute('tabindex');
-
-    const tabContent = this.tabContainer.querySelector(`#${tabContentId}`);
-    if (!tabContent) {
-      return;
-    }
-
-    if (this.animate) {
-      this.animateIn(tabContent);
-    } else {
-      tabContent.hidden = false;
-    }
-
-    // Dispatch tab selected event for the rest of the admin to hook into if needed
-    // Trigger tab specific switch event
-    this.tabList.dispatchEvent(
-      new CustomEvent('switch', {
-        detail: { tab: tab.getAttribute('href').replace('#', '') },
-      }),
-    );
-    // Dispatch tab-changed event on the document
-    document.dispatchEvent(new CustomEvent('wagtail:tab-changed'));
-
-    // Set URL hash and browser history
-    if (!this.disableURL) {
-      this.setURLHash(tabContentId);
-    }
+  select(event: MouseEvent) {
+    const tabId = (event.target as HTMLElement).getAttribute(
+      'aria-controls',
+    ) as string;
+    this.selectedValue = tabId;
   }
 
-  /**
-   * Fade Up and In animation
-   * @param tabContent{HTMLElement}
-   */
-  animateIn(tabContent) {
-    setTimeout(() => {
-      // eslint-disable-next-line no-param-reassign
-      tabContent.hidden = false;
-      // Wait for hidden attribute to be applied then fade in
-      setTimeout(() => {
-        tabContent.classList.add(this.state.css.animate);
-      }, this.state.transition);
-    }, this.state.transition);
+  selectPrevious(event: Event) {
+    const tabIndex = (event.target as IndexedEventTarget).index;
+    const tab = this.labelTargets[tabIndex + -1];
+
+    if (!tab) return;
+
+    this.selectedValue = tab.getAttribute('aria-controls') as string;
+    tab.focus();
   }
 
-  /**
-   * Fade Down and Out by removing css class
-   * @param tabContent{HTMLElement}
-   */
-  animateOut(tabContent) {
-    // Wait element to transition out and then hide with hidden
-    tabContent.classList.remove(this.state.css.animate);
-    setTimeout(() => {
-      // eslint-disable-next-line no-param-reassign
-      tabContent.hidden = true;
-    }, this.state.transition);
+  selectNext(event: Event) {
+    const tabIndex = (event.target as IndexedEventTarget).index;
+    const tab = this.labelTargets[tabIndex + 1];
+
+    if (!tab) return;
+
+    this.selectedValue = tab.getAttribute('aria-controls') as string;
+    tab.focus();
   }
 
-  bindEvents() {
-    if (this.tabButtons) {
-      this.tabButtons.forEach((tab, index) => {
-        tab.addEventListener('click', (e) => {
-          e.preventDefault();
-          this.selectTab(tab);
-        });
-        tab.addEventListener('keydown', this.keydownEventListener);
-        // Set index of tab used in keyboard controls
-        // eslint-disable-next-line no-param-reassign
-        tab.index = index;
-      });
-
-      // Select previous or next tab using history
-      window.addEventListener('popstate', (e) => {
-        if (e.state && e.state.tabContent) {
-          const tab = this.getTabElementByHref(`#${e.state.tabContent}`);
-          if (tab) {
-            this.selectTab(tab);
-            tab.focus();
-          }
-        }
-      });
-    }
-
-    if (this.tabTriggerLinks) {
-      this.tabTriggerLinks.forEach((trigger) => {
-        trigger.addEventListener('click', (e) => {
-          e.preventDefault();
-          const tab = this.getTabElementByHref(trigger.getAttribute('href'));
-          if (tab) {
-            this.selectTab(tab);
-            tab.focus();
-          }
-        });
-      });
-    }
+  selectFirst(event?: Event) {
+    const tab = this.labelTargets[0];
+    this.selectedValue = tab.getAttribute('aria-controls') as string;
+    if (event) tab.focus();
   }
 
-  /**
-   * A query selector for selecting a tab element by it's href
-   */
-  getTabElementByHref(href) {
-    return this.tabContainer.querySelector(`a[href="${href}"][role="tab"]`);
+  selectLast(event?: Event) {
+    const tab = this.labelTargets[this.labelTargets.length - 1];
+    this.selectedValue = tab.getAttribute('aria-controls') as string;
+    if (event) tab.focus();
   }
 
-  /**
-   *  Handle keydown on tabs
-   * @param {Event}event
-   */
-  keydownEventListener(event) {
-    const keyPressed = event.key;
-    const { keys } = this.state;
-
-    switch (keyPressed) {
-      case keys.left:
-      case keys.right:
-        this.switchTabOnArrowPress(event);
-        break;
-      case keys.end:
-        event.preventDefault();
-        this.focusLastTab();
-        break;
-      case keys.home:
-        event.preventDefault();
-        this.focusFirstTab();
-        break;
-      default:
-        break;
-    }
-  }
-
-  selectTabByURLHash() {
-    if (window.location.hash) {
-      const anchorId = window.location.hash.slice(1);
-      const anchoredElement =
-        document.getElementById(anchorId) || getElementByContentPath();
-      // Support linking straight to a tab, or to an element within a tab.
-      const tabID = anchoredElement
-        ?.closest('[role="tabpanel"]')
-        ?.getAttribute('aria-labelledby');
-      const tab = document.getElementById(tabID);
+  loadHistory(event: PopStateEvent) {
+    if (event.state && event.state.tabContent) {
+      const tab = this.getTabLabelByHref(event.state.tabContent);
       if (tab) {
-        this.selectTab(tab);
-      } else {
-        // The hash doesn't match a tab on the page then select first tab
-        this.selectFirstTab();
+        this.selectedValue = event.state.tabContent;
+        tab.focus();
       }
     }
   }
 
-  /**
-   * Set url to have a tab hash at the end
-   */
-  setURLHash(tabId) {
-    if (
-      !this.state.initialPageLoad &&
-      (!window.history.state || window.history.state.tabContent !== tabId)
-    ) {
-      // Add a new history item to the stack
-      window.history.pushState({ tabContent: tabId }, null, `#${tabId}`);
-    }
-    this.state.initialPageLoad = false;
-  }
+  validate() {
+    const labels = this.labelTargets;
+    const panels = this.panelTargets;
 
-  // Either focus the next, previous, first, or last tab depending on key pressed
-  switchTabOnArrowPress(event) {
-    const pressed = event.key;
-    const { direction } = this.state;
-    const { keys } = this.state;
-    const tabs = this.tabButtons;
+    labels.forEach((label, index) => {
+      const panel = panels[index];
 
-    if (direction[pressed]) {
-      const { target } = event;
-      if (target.index !== undefined) {
-        if (tabs[target.index + direction[pressed]]) {
-          const tab = tabs[target.index + direction[pressed]];
-          tab.focus();
-          this.selectTab(tab);
-        } else if (pressed === keys.left) {
-          this.focusLastTab();
-        } else if (pressed === keys.right) {
-          this.focusFirstTab();
-        }
+      if (label.getAttribute('role') !== 'tab') {
+        // eslint-disable-next-line no-console
+        console.warn(
+          label,
+          "Tab nav elements must have the `role='tab'` attribute set",
+        );
       }
-    }
-  }
 
-  focusFirstTab() {
-    const tab = this.tabButtons[0];
-    tab.focus();
-    this.selectTab(tab);
-  }
+      if (panel.getAttribute('role') !== 'tabpanel') {
+        // eslint-disable-next-line no-console
+        console.warn(
+          panel,
+          "Tab panel elements must have the `role='tabpanel'` attribute set.",
+        );
+      }
 
-  focusLastTab() {
-    const tab = this.tabButtons[this.tabButtons.length - 1];
-    tab.focus();
-    this.selectTab(tab);
-  }
-
-  selectFirstTab() {
-    this.selectTab(this.tabButtons[0]);
-    this.state.activeTabID = this.tabButtons[0].getAttribute('aria-controls');
-  }
-
-  /**
-   *  Populate a list of links aria-controls attributes with their href value
-   * @param links{HTMLAnchorElement[]}
-   */
-  static setAriaControlsByHref(links) {
-    links.forEach((link) => {
-      link.setAttribute(
-        'aria-controls',
-        link.getAttribute('href').replace('#', ''),
-      );
+      if (panel.getAttribute('aria-labelledby') !== label.id) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          panel,
+          'Tab panel element must have `aria-labelledby` set to the id of the tab nav element.',
+        );
+      }
     });
+
+    if (
+      labels.every(
+        (target) =>
+          (target.parentElement as HTMLElement).getAttribute('role') !==
+          'tablist',
+      )
+    ) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        labels,
+        "One or more tab (label) targets are not direct descendants of an element with `role='tablist'`.",
+      );
+    }
   }
 }
-
-export default Tabs;
-
-export const initTabs = (tabs = document.querySelectorAll('[data-tabs]')) => {
-  tabs.forEach((tabSet) => new Tabs(tabSet));
-
-  // Dispatch tab-changed on window load
-  if (tabs) {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.dispatchEvent(new CustomEvent('wagtail:tab-changed'));
-    });
-  }
-};
