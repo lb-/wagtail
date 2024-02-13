@@ -2,6 +2,7 @@ import json
 import warnings
 
 from django.forms import Media, widgets
+from django.urls import reverse
 from django.utils.functional import cached_property
 
 from wagtail.admin.rich_text.converters.contentstate import ContentstateConverter
@@ -63,9 +64,19 @@ class DraftailRichTextArea(widgets.HiddenInput):
 
         return self.converter.from_database_format(value)
 
+    def get_options(self):
+        chooserUrls = {
+            "pageChooser": reverse("wagtailadmin_choose_page"),
+            "externalLinkChooser": reverse("wagtailadmin_choose_page_external_link"),
+            "emailLinkChooser": reverse("wagtailadmin_choose_page_email_link"),
+            "phoneLinkChooser": reverse("wagtailadmin_choose_page_phone_link"),
+            "anchorLinkChooser": reverse("wagtailadmin_choose_page_anchor_link"),
+        }
+        return {**self.options, "chooserUrls": chooserUrls}
+
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        context["widget"]["options_json"] = json.dumps(self.options)
+        context["widget"]["options_json"] = json.dumps(self.get_options())
         return context
 
     def value_from_datadict(self, data, files, name):
@@ -94,7 +105,7 @@ class DraftailRichTextAreaAdapter(WidgetAdapter):
 
     def js_args(self, widget):
         return [
-            widget.options,
+            widget.get_options(),
         ]
 
 
