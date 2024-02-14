@@ -164,7 +164,11 @@ class TestWorkflowHistoryDetail(AdminTemplateTestUtils, WagtailTestUtils, TestCa
             ),
         )
 
-        self.assertContains(response, '<div class="w-tabs" data-tabs>')
+        self.assertContains(
+            response,
+            '<div class="w-tabs" data-controller="w-tabs" data-w-tabs-selected-value="null">',
+        )
+
         self.assertContains(response, '<div class="tab-content">')
 
         soup = self.get_soup(response.content)
@@ -296,7 +300,7 @@ class TestWorkflowHistoryDetail(AdminTemplateTestUtils, WagtailTestUtils, TestCa
             ),
         )
 
-        self.assertContains(response, '<div class="w-tabs" data-tabs>')
+        self.assertContains(response, '<div class="w-tabs" data-controller="w-tabs">')
         self.assertContains(response, '<div class="tab-content">')
 
         soup = self.get_soup(response.content)
