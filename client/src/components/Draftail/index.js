@@ -154,21 +154,6 @@ const initEditor = (selector, originalOptions, currentScript) => {
     field.draftailEditor = ref;
   };
 
-  const getChooserUrls = (type) => {
-    const chooserUrls = {};
-    const chooserUrl = originalOptions.chooserUrls;
-
-    if (type === 'LINK') {
-      chooserUrls.pageChooser = chooserUrl?.pageChooser;
-      chooserUrls.externalLinkChooser = chooserUrl?.externalLinkChooser;
-      chooserUrls.emailLinkChooser = chooserUrl?.emailLinkChooser;
-      chooserUrls.phoneLinkChooser = chooserUrl?.phoneLinkChooser;
-      chooserUrls.anchorLinkChooser = chooserUrl?.anchorLinkChooser;
-    }
-
-    return chooserUrls;
-  };
-
   const getSharedPropsFromOptions = (newOptions) => {
     let ariaDescribedBy = null;
     const enableHorizontalRule = newOptions.enableHorizontalRule
@@ -189,11 +174,7 @@ const initEditor = (selector, originalOptions, currentScript) => {
     entityTypes = entityTypes
       .map(wrapWagtailIcon)
       // Override the properties defined in the JS plugin: Python should be the source of truth.
-      .map((type) => ({
-        ...PLUGINS.entityTypes[type.type],
-        chooserUrls: getChooserUrls(type.type),
-        ...type,
-      }));
+      .map((type) => ({ ...PLUGINS.entityTypes[type.type], ...type }));
 
     controls = controls.map((type) => ({
       ...PLUGINS.controls[type.type],

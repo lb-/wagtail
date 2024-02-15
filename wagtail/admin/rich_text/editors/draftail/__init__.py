@@ -2,7 +2,8 @@ import json
 import warnings
 
 from django.forms import Media, widgets
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy
 from django.utils.functional import cached_property
 
 from wagtail.admin.rich_text.converters.contentstate import ContentstateConverter
@@ -12,6 +13,21 @@ from wagtail.telepath import register
 from wagtail.widget_adapters import WidgetAdapter
 
 
+class LazyStringEncoder(json.JSONEncoder):
+    """
+    Add support for lazy strings to the JSON encoder so that URLs and
+    translations can be resolved when rendering the widget only.
+    """
+
+    lazy_string_types = [type(reverse_lazy("")), type(gettext_lazy(""))]
+
+    def default(self, obj):
+
+        if type(obj) in self.lazy_string_types:
+            return str(obj)
+
+        return json.JSONEncoder.default(self, obj)
+        
 class DraftailRichTextArea(widgets.HiddenInput):
     template_name = "wagtailadmin/widgets/draftail_rich_text_area.html"
     is_hidden = False
@@ -64,19 +80,9 @@ class DraftailRichTextArea(widgets.HiddenInput):
 
         return self.converter.from_database_format(value)
 
-    def get_options(self):
-        chooserUrls = {
-            "pageChooser": reverse("wagtailadmin_choose_page"),
-            "externalLinkChooser": reverse("wagtailadmin_choose_page_external_link"),
-            "emailLinkChooser": reverse("wagtailadmin_choose_page_email_link"),
-            "phoneLinkChooser": reverse("wagtailadmin_choose_page_phone_link"),
-            "anchorLinkChooser": reverse("wagtailadmin_choose_page_anchor_link"),
-        }
-        return {**self.options, "chooserUrls": chooserUrls}
-
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        context["widget"]["options_json"] = json.dumps(self.get_options())
+        context["widget"]["options_json"] = json.dumps(self.options, cls=LazyStringEncoder)
         return context
 
     def value_from_datadict(self, data, files, name):
@@ -105,7 +111,7 @@ class DraftailRichTextAreaAdapter(WidgetAdapter):
 
     def js_args(self, widget):
         return [
-            widget.get_options(),
+            widget.options,
         ]
 
 
