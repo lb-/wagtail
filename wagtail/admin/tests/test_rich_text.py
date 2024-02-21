@@ -3,7 +3,8 @@ import unittest
 from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 from django.test.utils import override_settings
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
+from django.utils.html import format_html
 
 from wagtail.admin.rich_text import DraftailRichTextArea, get_rich_text_editor_widget
 from wagtail.admin.rich_text.converters.editor_html import PageLinkHandler
@@ -11,6 +12,7 @@ from wagtail.admin.rich_text.editors.draftail.features import Feature
 from wagtail.blocks import RichTextBlock
 from wagtail.models import Page, get_page_models
 from wagtail.rich_text import RichText
+from wagtail.rich_text.feature_registry import FeatureRegistry
 from wagtail.test.testapp.models import SingleEventPage
 from wagtail.test.testapp.rich_text import CustomRichTextArea, LegacyRichTextArea
 from wagtail.test.utils import WagtailTestUtils
@@ -491,3 +493,87 @@ class TestDraftailFeature(SimpleTestCase):
         media_html = str(feature.media)
         self.assertRegex(media_html, r"feature.js\?v=(\w+)")
         self.assertRegex(media_html, r"feature.css\?v=(\w+)")
+
+
+class TestEntityFeatureChooserUrls(TestCase):
+    def test_chooser_urls_exist(self):
+        features = FeatureRegistry()
+        image = features.get_editor_plugin("draftail", "image")
+        embed = features.get_editor_plugin("draftail", "embed")
+        document = features.get_editor_plugin("draftail", "document-link")
+        link = features.get_editor_plugin("draftail", "link")
+
+        # imageChooser
+        self.assertIsNotNone(image.data.get("chooserUrls"))
+        self.assertEqual(
+            image.data["chooserUrls"]["imageChooser"],
+            reverse_lazy("wagtailimages_chooser:choose"),
+        )
+        # linkChoosers
+        self.assertIsNotNone(link.data.get("chooserUrls"))
+        self.assertEqual(
+            link.data["chooserUrls"]["pageChooser"],
+            reverse_lazy("wagtailadmin_choose_page"),
+        )
+        self.assertEqual(
+            link.data["chooserUrls"]["externalLinkChooser"],
+            reverse_lazy("wagtailadmin_choose_page_external_link"),
+        )
+        self.assertEqual(
+            link.data["chooserUrls"]["emailLinkChooser"],
+            reverse_lazy("wagtailadmin_choose_page_email_link"),
+        )
+        self.assertEqual(
+            link.data["chooserUrls"]["phoneLinkChooser"],
+            reverse_lazy("wagtailadmin_choose_page_phone_link"),
+        )
+        self.assertEqual(
+            link.data["chooserUrls"]["anchorLinkChooser"],
+            reverse_lazy("wagtailadmin_choose_page_anchor_link"),
+        )
+        # documentChooser
+        self.assertIsNotNone(document.data.get("chooserUrls"))
+        self.assertEqual(
+            document.data["chooserUrls"]["documentChooser"],
+            reverse_lazy("wagtaildocs_chooser:choose"),
+        )
+        # embedsChooser
+        self.assertIsNotNone(embed.data.get("chooserUrls"))
+        self.assertEqual(
+            embed.data["chooserUrls"]["embedsChooser"],
+            reverse_lazy("wagtailembeds:chooser"),
+        )
+
+    def test_lazy_urls_resolution(self):
+        widget = DraftailRichTextArea()
+
+        pageChooser = format_html(
+            "<p>this link_Chooser link : <a href={page_chooser}>{page_chooser}</a></p>",
+            page_chooser=reverse_lazy("wagtailadmin_choose_page"),
+        )
+
+        imageChooser = format_html(
+            "<p>this image_chooser link : <a href={image_chooser}>{image_chooser}</a></p>",
+            image_chooser=reverse_lazy("wagtailimages_chooser:choose"),
+        )
+
+        embedsChooser = format_html(
+            "<p>this embeds_chooser link: <a href={embeds_chooser}>{embeds_chooser}</a></p>",
+            embeds_chooser=reverse_lazy("wagtailembeds:chooser"),
+        )
+
+        documentChooser = format_html(
+            "<p>this document_chooser link: <a href={document_chooser}>{document_chooser}</a></p>",
+            document_chooser=reverse_lazy("wagtaildocs_chooser:choose"),
+        )
+
+        rendered_html_link = widget.render("test_chooserUrls", pageChooser, {})
+        rendered_html_image = widget.render("test_chooserUrls", imageChooser, {})
+        rendered_html_embeds = widget.render("test_chooserUrls", embedsChooser, {})
+        rendered_html_document = widget.render("test_chooserUrls", documentChooser, {})
+
+        # Assert that the lazy URLs has been resolved correctly
+        self.assertIn("/admin/choose-page/", rendered_html_link)
+        self.assertIn("/admin/images/chooser/", rendered_html_image)
+        self.assertIn("/admin/embeds/chooser/", rendered_html_embeds)
+        self.assertIn("/admin/documents/chooser/", rendered_html_document)
