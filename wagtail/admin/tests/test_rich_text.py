@@ -495,21 +495,26 @@ class TestDraftailFeature(SimpleTestCase):
         self.assertRegex(media_html, r"feature.css\?v=(\w+)")
 
 
-class TestEntityFeatureChooserUrls(TestCase):
+class TestRichTextChooserUrls(WagtailTestUtils, BaseRichTextEditHandlerTestCase):
+    def setUp(self):
+        super().setUp()
+
+        # Find root page
+        self.root_page = Page.objects.get(id=2)
+
+        self.login()
+
+    @override_settings(
+        WAGTAILADMIN_RICH_TEXT_EDITORS={
+            "default": {
+                "WIDGET": "wagtail.admin.rich_text.DraftailRichTextArea",
+            },
+        }
+    )
     def test_chooser_urls_exist(self):
         features = FeatureRegistry()
-        image = features.get_editor_plugin("draftail", "image")
-        embed = features.get_editor_plugin("draftail", "embed")
-        document = features.get_editor_plugin("draftail", "document-link")
         link = features.get_editor_plugin("draftail", "link")
 
-        # imageChooser
-        self.assertIsNotNone(image.data.get("chooserUrls"))
-        self.assertEqual(
-            image.data["chooserUrls"]["imageChooser"],
-            reverse_lazy("wagtailimages_chooser:choose"),
-        )
-        # linkChoosers
         self.assertIsNotNone(link.data.get("chooserUrls"))
         self.assertEqual(
             link.data["chooserUrls"]["pageChooser"],
@@ -531,17 +536,28 @@ class TestEntityFeatureChooserUrls(TestCase):
             link.data["chooserUrls"]["anchorLinkChooser"],
             reverse_lazy("wagtailadmin_choose_page_anchor_link"),
         )
-        # documentChooser
-        self.assertIsNotNone(document.data.get("chooserUrls"))
-        self.assertEqual(
-            document.data["chooserUrls"]["documentChooser"],
-            reverse_lazy("wagtaildocs_chooser:choose"),
+
+    def test_lazy_chooser_urls_resolved_correctly(self):
+        response = self.client.get(
+            reverse(
+                "wagtailadmin_pages:add",
+                args=("tests", "defaultrichtextfieldpage", self.root_page.id),
+            )
         )
-        # embedsChooser
-        self.assertIsNotNone(embed.data.get("chooserUrls"))
-        self.assertEqual(
-            embed.data["chooserUrls"]["embedsChooser"],
-            reverse_lazy("wagtailembeds:chooser"),
+
+        self.assertContains(
+            response, '"chooserUrls": {"imageChooser": "/admin/images/chooser/"}'
+        )
+        self.assertContains(
+            response, '"chooserUrls": {"embedsChooser": "/admin/embeds/chooser/"}'
+        )
+        self.assertContains(
+            response, '"chooserUrls": {"documentChooser": "/admin/documents/chooser/"}'
+        )
+
+        self.assertContains(
+            response,
+            '"chooserUrls": {"pageChooser": "/admin/choose-page/", "externalLinkChooser": "/admin/choose-external-link/", "emailLinkChooser": "/admin/choose-email-link/", "phoneLinkChooser": "/admin/choose-phone-link/", "anchorLinkChooser": "/admin/choose-anchor-link/"}',
         )
 
     def test_lazy_urls_resolution(self):

@@ -117,6 +117,10 @@ describe('ModalWorkflowSource', () => {
       entityType: {
         chooserUrls: {
           pageChooser: '/admin/choose-page/',
+          emailLinkChooser: '/admin/choose-email-link/',
+          externalLinkChooser: '/admin/choose-external-link/',
+          anchorLinkChooser: '/admin/choose-anchor-link/',
+          phoneLinkChooser: 'admin/choose-phone-link/',
         },
       },
     });
