@@ -12,10 +12,15 @@
 {% endcomment %}
 
 <td class="bulk-action-checkbox-cell">
-    <input type="checkbox"
-           {% if obj_type == 'page' %}data-page-status="{% if instance.live %}live{% else %}draft{% endif %}"{% endif %}
-           data-object-id="{{ instance.pk|unlocalize|admin_urlquote }}" data-bulk-action-checkbox class="bulk-action-checkbox"
-           aria-label="{% trans "Select" %}"
-           {% if aria_describedby %}aria-describedby="{{ aria_describedby }}"{% endif %}
+    <input
+        type="checkbox"
+        class="bulk-action-checkbox"
+        aria-label="{% trans "Select" %}"
+        {% if aria_describedby %}aria-describedby="{{ aria_describedby }}"{% endif %}
+        name="id"
+        value="{{ instance.pk|unlocalize|admin_urlquote }}"
+        data-bulk-action-checkbox
+        data-object-id="{{ instance.pk|unlocalize|admin_urlquote }}"
+        {% if obj_type == 'page' %}data-page-status="{% if instance.live %}live{% else %}draft{% endif %}"{% endif %}
     />
 </td>

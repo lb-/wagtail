@@ -5,7 +5,6 @@ import { range } from '../utils/range';
 const BULK_ACTION_PAGE_CHECKBOX_INPUT = '[data-bulk-action-checkbox]';
 const BULK_ACTION_SELECT_ALL_CHECKBOX =
   '[data-bulk-action-select-all-checkbox]';
-const BULK_ACTIONS_CHECKBOX_PARENT = '[data-bulk-action-parent-id]';
 const BULK_ACTION_FOOTER = '[data-bulk-action-footer]';
 const BULK_ACTION_NUM_OBJECTS = '[data-bulk-action-num-objects]';
 const BULK_ACTION_NUM_OBJECTS_IN_LISTING =
@@ -172,28 +171,6 @@ function onClickSelectAllInListing(e) {
 }
 
 /**
- * Event listener for bulk actions which appends selected ids to the corresponding action url
- */
-function onClickActionButton(e) {
-  e.preventDefault();
-  const url = e.target.getAttribute('href');
-  const urlParams = new URLSearchParams(window.location.search);
-  if (checkedState.selectAllInListing) {
-    urlParams.append('id', 'all');
-    const parentElement = document.querySelector(BULK_ACTIONS_CHECKBOX_PARENT);
-    if (parentElement) {
-      const parentPageId = parentElement.dataset.bulkActionParentId;
-      urlParams.append('childOf', parentPageId);
-    }
-  } else {
-    checkedState.checkedObjects.forEach((objectId) => {
-      urlParams.append('id', objectId);
-    });
-  }
-  window.location.href = `${url}&${urlParams.toString()}`;
-}
-
-/**
  * Adds all event listeners
  */
 function addBulkActionListeners() {
@@ -213,17 +190,6 @@ function addBulkActionListeners() {
   });
   document.querySelectorAll(BULK_ACTION_SELECT_ALL_CHECKBOX).forEach((el) => {
     el.addEventListener('change', onSelectAllChange);
-  });
-  document
-    .querySelectorAll(`${BULK_ACTION_FOOTER} [data-bulk-action-button]`)
-    .forEach((elem) => elem.addEventListener('click', onClickActionButton));
-  document.addEventListener('w-dropdown:shown', () => {
-    document
-      .querySelectorAll(`${BULK_ACTION_FOOTER} [data-bulk-action-button]`)
-      .forEach((elem) => {
-        elem.removeEventListener('click', onClickActionButton);
-        elem.addEventListener('click', onClickActionButton);
-      });
   });
   const selectAllInListingText = document.querySelector(
     BULK_ACTION_NUM_OBJECTS_IN_LISTING,

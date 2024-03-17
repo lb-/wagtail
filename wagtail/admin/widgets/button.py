@@ -17,10 +17,18 @@ class Button(Component):
     label = ""
     icon_name = None
     url = None
+    as_link = False
     attrs = {}
 
     def __init__(
-        self, label="", url=None, classname="", icon_name=None, attrs={}, priority=1000
+        self,
+        label="",
+        url=None,
+        classname="",
+        icon_name=None,
+        attrs={},
+        priority=1000,
+        as_link=True,  # Intentional default to true to support backwards compatibility
     ):
         if label:
             self.label = label
@@ -35,6 +43,9 @@ class Button(Component):
 
         self.attrs = self.attrs.copy()
         self.attrs.update(attrs)
+
+        if as_link:
+            self.as_link = True
 
         # if a 'title' attribute has been passed, correct that to aria-label
         # as that's what will be picked up in renderings that don't use button.render

@@ -21,7 +21,6 @@ from django.urls.exceptions import NoReverseMatch
 from django.utils import timezone
 from django.utils.encoding import force_str
 from django.utils.html import avoid_wrapping, json_script
-from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.timesince import timesince
 from django.utils.translation import gettext_lazy as _
@@ -526,8 +525,41 @@ def page_header_buttons(context, page, user, view_name):
     }
 
 
-@register.inclusion_tag("wagtailadmin/shared/buttons.html", takes_context=True)
-def bulk_action_choices(context, app_label, model_name):
+class ActualPageListingButton(PageListingButton):
+    as_link = False
+
+
+class ActualButton(Button):
+    as_link = False
+
+
+@register.inclusion_tag("wagtailadmin/bulk_actions/footer.html", takes_context=True)
+def bulk_action_footer(
+    context,
+    app_label,
+    model_name,
+    objects,
+    form="listing-results",
+    parent=None,
+    select_all_obj_text=None,
+):
+    next_url = get_valid_next_url_from_request(context["request"])
+    if not next_url:
+        next_url = context["request"].path
+
+    return {
+        "app_label": app_label,
+        "model_name": model_name,
+        "objects": objects,
+        "form": form,
+        "next_url": next_url,
+        "parent": parent,
+        "select_all_obj_text": select_all_obj_text,
+    }
+
+
+@register.inclusion_tag("wagtailadmin/shared/buttons.html")
+def bulk_action_choices(app_label, model_name, form):
     bulk_actions_list = list(
         bulk_action_registry.get_bulk_actions_for_model(app_label, model_name)
     )
@@ -536,19 +568,16 @@ def bulk_action_choices(context, app_label, model_name):
     bulk_action_more_list = bulk_actions_list[4:]
     bulk_actions_list = bulk_actions_list[:4]
 
-    next_url = get_valid_next_url_from_request(context["request"])
-    if not next_url:
-        next_url = context["request"].path
-
     bulk_action_buttons = [
         PageListingButton(
             action.display_name,
             reverse(
                 "wagtail_bulk_action", args=[app_label, model_name, action.action_type]
-            )
-            + "?"
-            + urlencode({"next": next_url}),
-            attrs={"aria-label": action.aria_label, "data-bulk-action-button": ""},
+            ),
+            attrs={
+                "aria-label": action.aria_label,
+                "form": form,
+            },
             priority=action.action_priority,
             classname=" ".join(action.classes | {"bulk-action-btn"}),
         )
@@ -561,17 +590,15 @@ def bulk_action_choices(context, app_label, model_name):
             attrs={"title": _("More bulk actions")},
             classname="button button-secondary button-small",
             buttons=[
-                Button(
+                ActualButton(
                     label=action.display_name,
                     url=reverse(
                         "wagtail_bulk_action",
                         args=[app_label, model_name, action.action_type],
-                    )
-                    + "?"
-                    + urlencode({"next": next_url}),
+                    ),
                     attrs={
                         "aria-label": action.aria_label,
-                        "data-bulk-action-button": "",
+                        "form": form,
                     },
                     priority=action.action_priority,
                 )

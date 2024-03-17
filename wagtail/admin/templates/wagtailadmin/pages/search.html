@@ -15,6 +15,5 @@
     <div id="page-results">
         {% include "wagtailadmin/pages/search_results.html" %}
     </div>
-    {% trans "Select all pages in listing" as select_all_text %}
-    {% include 'wagtailadmin/bulk_actions/footer.html' with app_label='wagtailcore' model_name='page' objects=page_obj select_all_obj_text=select_all_text %}
+    {% bulk_action_footer app_label="wagtailcore" model_name="page" objects=page_obj form="page-results" select_all_obj_text=_("Select all pages in listing") %}
 {% endblock %}
