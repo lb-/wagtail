@@ -485,7 +485,7 @@ export class PreviewController extends Controller<HTMLElement> {
     // Apply debounce for subsequent updates if not already applied
     if (!('cancel' in this.setPreviewData)) {
       this.setPreviewData = debounce(
-        this.setPreviewData.bind(this),
+        this.setPreviewData,
         this.autoUpdateIntervalValue,
       );
     }
@@ -495,7 +495,7 @@ export class PreviewController extends Controller<HTMLElement> {
     // update itself
     if (!this.updateInterval) {
       this.updateInterval = setInterval(
-        this.checkAndUpdatePreview.bind(this),
+        this.checkAndUpdatePreview,
         this.autoUpdateIntervalValue,
       );
     }
@@ -554,6 +554,8 @@ export class PreviewController extends Controller<HTMLElement> {
 
     this.activatePreview = this.activatePreview.bind(this);
     this.deactivatePreview = this.deactivatePreview.bind(this);
+    this.setPreviewData = this.setPreviewData.bind(this);
+    this.checkAndUpdatePreview = this.checkAndUpdatePreview.bind(this);
 
     this.sidePanelContainer.addEventListener('show', this.activatePreview);
     this.sidePanelContainer.addEventListener('hide', this.deactivatePreview);
