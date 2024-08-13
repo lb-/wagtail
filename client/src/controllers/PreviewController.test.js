@@ -229,7 +229,7 @@ describe('PreviewController', () => {
     expect(setTimeout).not.toHaveBeenCalled();
 
     // Should send the preview data to the preview URL
-    expect(global.fetch).toHaveBeenCalledWith('/admin/pages/1/edit/preview/', {
+    expect(global.fetch).toHaveBeenCalledWith(url, {
       body: expect.any(Object),
       method: 'POST',
     });
@@ -354,13 +354,10 @@ describe('PreviewController', () => {
       await Promise.resolve();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -446,28 +443,22 @@ describe('PreviewController', () => {
       await Promise.resolve();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       fetch.mockResponseSuccessJSON(`{ "success": true }`);
 
       await Promise.resolve();
 
       // Should send a request to clear the preview data
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          headers: {
-            'X-CSRFToken': 'test-token',
-          },
-          method: 'DELETE',
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        headers: {
+          'X-CSRFToken': 'test-token',
         },
-      );
+        method: 'DELETE',
+      });
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -554,13 +545,10 @@ describe('PreviewController', () => {
       newTabLink.click();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       mockWindow({ open: jest.fn() });
       // Run all timers and promises
@@ -570,7 +558,8 @@ describe('PreviewController', () => {
       // be used as the second argument to ensure the same tab is reused if it's
       // already open even when the URL is different, e.g. when the user changes
       // the preview mode
-      expect(window.open).toHaveBeenCalledWith(`http://localhost${url}`, url);
+      const absoluteUrl = `http://localhost${url}`;
+      expect(window.open).toHaveBeenCalledWith(absoluteUrl, url);
     });
 
     it('should show an alert if the update request fails when opening in a new tab', async () => {
@@ -584,13 +573,10 @@ describe('PreviewController', () => {
       newTabLink.click();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       mockWindow({ open: jest.fn(), alert: jest.fn() });
       // Run all timers and promises
@@ -602,7 +588,8 @@ describe('PreviewController', () => {
       );
 
       // Should still open the new tab anyway
-      expect(window.open).toHaveBeenCalledWith(`http://localhost${url}`, url);
+      const absoluteUrl = `http://localhost${url}`;
+      expect(window.open).toHaveBeenCalledWith(absoluteUrl, url);
     });
 
     it('should only show the spinner after 2s when refreshing the preview', async () => {
@@ -635,13 +622,10 @@ describe('PreviewController', () => {
       expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -789,13 +773,10 @@ describe('PreviewController', () => {
       // After 1s (500ms for check interval, 500ms for request debounce),
       // should send the preview data to the preview URL
       await jest.advanceTimersByTime(1000);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
       expect(global.fetch).toHaveBeenCalledTimes(1);
 
       // Should not yet have the has-errors class on the controlled element
@@ -837,13 +818,10 @@ describe('PreviewController', () => {
       // 500ms since the last change
       fetch.mockResponseSuccessJSON(validAvailableResponse);
       await jest.advanceTimersByTime(300);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
       expect(global.fetch).toHaveBeenCalledTimes(1);
 
       // Simulate the request completing
@@ -898,13 +876,10 @@ describe('PreviewController', () => {
       refreshButtonElement.click();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       jest.advanceTimersByTime(1);
       await Promise.resolve();
@@ -948,13 +923,10 @@ describe('PreviewController', () => {
       refreshButtonElement.click();
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       mockWindow({ open: jest.fn(), alert: jest.fn() });
       // Run all timers and promises
@@ -992,13 +964,10 @@ describe('PreviewController', () => {
       await Promise.resolve();
 
       // Should immediately send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       // Simulate the request completing
       await Promise.resolve();
@@ -1020,13 +989,10 @@ describe('PreviewController', () => {
       previewModeElement.dispatchEvent(new Event('change'));
 
       // Should send the preview data to the preview URL
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/admin/pages/1/edit/preview/',
-        {
-          body: expect.any(Object),
-          method: 'POST',
-        },
-      );
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
 
       mockWindow({ open: jest.fn(), alert: jest.fn() });
       // Run all timers and promises
