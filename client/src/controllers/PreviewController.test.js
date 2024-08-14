@@ -559,7 +559,7 @@ describe('PreviewController', () => {
       // already open even when the URL is different, e.g. when the user changes
       // the preview mode
       const absoluteUrl = `http://localhost${url}`;
-      expect(window.open).toHaveBeenCalledWith(absoluteUrl, url);
+      expect(window.open).toHaveBeenCalledWith(absoluteUrl, absoluteUrl);
     });
 
     it('should show an alert if the update request fails when opening in a new tab', async () => {
@@ -589,7 +589,7 @@ describe('PreviewController', () => {
 
       // Should still open the new tab anyway
       const absoluteUrl = `http://localhost${url}`;
-      expect(window.open).toHaveBeenCalledWith(absoluteUrl, url);
+      expect(window.open).toHaveBeenCalledWith(absoluteUrl, absoluteUrl);
     });
 
     it('should only show the spinner after 2s when refreshing the preview', async () => {
@@ -1001,6 +1001,47 @@ describe('PreviewController', () => {
       // Should call window.alert() with the correct message
       expect(window.alert).toHaveBeenCalledWith(
         'Error while sending preview data.',
+      );
+    });
+  });
+
+  describe('using different URLs for sending vs rendering the preview data', () => {
+    beforeEach(() => {
+      // Add the render URL value to the preview controller
+      const element = document.querySelector('[data-controller="w-preview"]');
+      element.setAttribute(
+        'data-w-preview-render-url-value',
+        'https://app.example.com/preview/foo/7/',
+      );
+    });
+
+    it('should send the preview data to the urlValue and the render should load with renderUrlValue', async () => {
+      await initializeOpenedPanel(
+        `https://app.example.com/preview/foo/7/?in_preview_panel=true`,
+      );
+
+      // Should also make sure the new tab link uses the render URL value
+      // (without the in_preview_panel param)
+      const newTabLink = document.querySelector(
+        '[data-w-preview-target="newTab"]',
+      );
+      expect(newTabLink.href).toEqual('https://app.example.com/preview/foo/7/');
+    });
+
+    it('should also set the preview mode query param on the render URL if the mode selector exists', async () => {
+      const element = document.querySelector('[data-controller="w-preview"]');
+      element.insertAdjacentHTML('beforeend', modeSelect);
+      await initializeOpenedPanel(
+        `https://app.example.com/preview/foo/7/?mode=form&in_preview_panel=true`,
+      );
+
+      // Should also make sure the new tab link uses the render URL value
+      // (with the mode param but without the in_preview_panel param)
+      const newTabLink = document.querySelector(
+        '[data-w-preview-target="newTab"]',
+      );
+      expect(newTabLink.href).toEqual(
+        'https://app.example.com/preview/foo/7/?mode=form',
       );
     });
   });

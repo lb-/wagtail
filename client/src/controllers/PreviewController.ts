@@ -100,6 +100,7 @@ export class PreviewController extends Controller<HTMLElement> {
 
   static values = {
     url: { default: '', type: String },
+    renderUrl: { default: '', type: String },
     autoUpdate: { default: true, type: Boolean },
     autoUpdateInterval: { default: 500, type: Number },
     deviceWidthProperty: { default: '--preview-device-width', type: String },
@@ -130,6 +131,7 @@ export class PreviewController extends Controller<HTMLElement> {
   declare readonly deviceWidthPropertyValue: string;
   declare readonly panelWidthPropertyValue: string;
   declare readonly deviceLocalStorageKeyValue: string;
+  declare renderUrlValue: string;
 
   declare readonly hasWProgressOutlet: boolean;
   declare readonly wProgressOutlet: ProgressController;
@@ -167,6 +169,27 @@ export class PreviewController extends Controller<HTMLElement> {
     return (
       this.sizeTargets.find((input) => input.checked) || this.defaultSizeInput
     );
+  }
+
+  /**
+   * The URL of the preview iframe and the new tab button.
+   * This takes into account the currently selected preview mode.
+   */
+  get renderUrl(): URL {
+    const url = new URL(this.renderUrlValue, window.location.href);
+    if (this.hasModeTarget) {
+      url.searchParams.set('mode', this.modeTarget.value);
+    }
+    return url;
+  }
+
+  /**
+   * Updates the URL of the new tab button with the currently selected preview mode.
+   */
+  updateNewTabLink() {
+    if (this.hasNewTabTarget) {
+      this.newTabTarget.href = this.renderUrl.toString();
+    }
   }
 
   /**
@@ -281,10 +304,7 @@ export class PreviewController extends Controller<HTMLElement> {
     // The iframe does not have an src attribute on initial load,
     // so we need to set it here. For subsequent loads, it's fine to set it
     // again to ensure it's in sync with the selected preview mode.
-    const url = new URL(this.urlValue, window.location.href);
-    if (this.hasModeTarget) {
-      url.searchParams.set('mode', this.modeTarget.value);
-    }
+    const url = this.renderUrl;
     url.searchParams.set('in_preview_panel', 'true');
     newIframe.src = url.toString();
 
@@ -449,7 +469,9 @@ export class PreviewController extends Controller<HTMLElement> {
     // Use the base URL value (without any params) as the target (identifier)
     // for the window, so that if the user switches between preview modes,
     // the same window will be reused.
-    window.open(new URL(link.href).toString(), this.urlValue) as Window;
+    const url = new URL(link.href);
+    url.search = '';
+    window.open(link.href, url.toString()) as Window;
 
     return valid;
   }
@@ -513,17 +535,11 @@ export class PreviewController extends Controller<HTMLElement> {
   }
 
   /**
-   * Sets the preview mode in the iframe and new tab URLs,
+   * Update the new tab link with the currently selected preview mode,
    * then updates the preview.
-   * @param event Event from the `<select>` element
    */
-  setPreviewMode(event: Event) {
-    const mode = (event.target as HTMLSelectElement).value;
-    const url = new URL(this.urlValue, window.location.href);
-
-    // Update the new tab link
-    url.searchParams.set('mode', mode);
-    this.newTabTarget.href = url.toString();
+  setPreviewMode() {
+    this.updateNewTabLink();
 
     // Make sure data is updated and an alert is displayed if an error occurs
     this.setPreviewDataWithAlert();
@@ -564,6 +580,16 @@ export class PreviewController extends Controller<HTMLElement> {
     this.checksSidePanel?.addEventListener('hide', this.deactivatePreview);
 
     this.restoreLastSavedPreferences();
+  }
+
+  renderUrlValueChanged(newValue: string) {
+    // Allow the rendering URL to be different from the URL used for sending the
+    // preview data (e.g. for a headless setup), but make it optional and use
+    // the latter as the default.
+    if (!newValue) {
+      this.renderUrlValue = this.urlValue;
+    }
+    this.updateNewTabLink();
   }
 
   disconnect(): void {
