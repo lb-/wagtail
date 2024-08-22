@@ -15,6 +15,7 @@ jest.spyOn(global, 'setTimeout');
 describe('PreviewController', () => {
   let application;
   let windowSpy;
+  const handleReady = jest.fn();
   const originalWindow = { ...window };
   const mockWindow = (props) =>
     windowSpy.mockImplementation(() => ({
@@ -162,6 +163,8 @@ describe('PreviewController', () => {
         </div>
       </div>
     `;
+
+    document.addEventListener('w-preview:ready', handleReady);
   });
 
   afterEach(() => {
@@ -170,6 +173,7 @@ describe('PreviewController', () => {
     jest.clearAllTimers();
     windowSpy.mockRestore();
     localStorage.removeItem('wagtail:preview-panel-device');
+    document.removeEventListener('w-preview:ready', handleReady);
   });
 
   const expectIframeReloaded = async (
@@ -203,7 +207,7 @@ describe('PreviewController', () => {
     );
 
     // Clear the fetch call history
-    jest.clearAllMocks();
+    fetch.mockClear();
   };
 
   const initializeOpenedPanel = async (expectedUrl) => {
@@ -336,6 +340,7 @@ describe('PreviewController', () => {
   describe('basic behaviour', () => {
     it('should initialize the preview when the side panel is opened', async () => {
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(handleReady).not.toHaveBeenCalled();
 
       application = Application.start();
       application.register('w-preview', PreviewController);
@@ -343,6 +348,7 @@ describe('PreviewController', () => {
 
       // Should not have fetched the preview URL
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(handleReady).not.toHaveBeenCalled();
 
       fetch.mockResponseSuccessJSON(validAvailableResponse);
 
@@ -358,6 +364,7 @@ describe('PreviewController', () => {
         body: expect.any(Object),
         method: 'POST',
       });
+      expect(handleReady).not.toHaveBeenCalled();
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -379,6 +386,7 @@ describe('PreviewController', () => {
       expect(newIframe.style.height).toEqual('0px');
       expect(newIframe.style.opacity).toEqual('0');
       expect(newIframe.style.position).toEqual('absolute');
+      expect(handleReady).not.toHaveBeenCalled();
 
       // Mock the iframe's scroll method
       newIframe.contentWindow.scroll = jest.fn();
@@ -406,10 +414,13 @@ describe('PreviewController', () => {
 
       // By the end, there should only be one fetch call
       expect(global.fetch).toHaveBeenCalledTimes(1);
+      // Should now be ready for further updates
+      expect(handleReady).toHaveBeenCalledTimes(1);
     });
 
     it('should clear the preview data if the data is invalid on initial load', async () => {
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(handleReady).not.toHaveBeenCalled();
 
       // Set to a non-default preview size
       localStorage.setItem('wagtail:preview-panel-device', 'desktop');
@@ -432,6 +443,7 @@ describe('PreviewController', () => {
 
       // Should not have fetched the preview URL
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(handleReady).not.toHaveBeenCalled();
 
       fetch.mockResponseSuccessJSON(invalidAvailableResponse);
 
@@ -447,6 +459,7 @@ describe('PreviewController', () => {
         body: expect.any(Object),
         method: 'POST',
       });
+      expect(handleReady).not.toHaveBeenCalled();
 
       fetch.mockResponseSuccessJSON(`{ "success": true }`);
 
@@ -459,6 +472,7 @@ describe('PreviewController', () => {
         },
         method: 'DELETE',
       });
+      expect(handleReady).not.toHaveBeenCalled();
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -480,6 +494,7 @@ describe('PreviewController', () => {
       expect(newIframe.style.height).toEqual('0px');
       expect(newIframe.style.opacity).toEqual('0');
       expect(newIframe.style.position).toEqual('absolute');
+      expect(handleReady).not.toHaveBeenCalled();
 
       // Mock the iframe's scroll method
       newIframe.contentWindow.scroll = jest.fn();
@@ -532,6 +547,8 @@ describe('PreviewController', () => {
       // By the end, there should only be two fetch calls: one to send the invalid
       // preview data and one to clear the preview data
       expect(global.fetch).toHaveBeenCalledTimes(2);
+      // Should now be ready for further updates
+      expect(handleReady).toHaveBeenCalledTimes(1);
     });
 
     it('should update the preview data when opening in a new tab', async () => {
@@ -757,9 +774,12 @@ describe('PreviewController', () => {
 
   describe('auto update cycle from opening the panel with a valid form -> invalid form -> valid form -> closing the panel', () => {
     it('should behave correctly', async () => {
+      expect(handleReady).not.toHaveBeenCalled();
       const element = document.querySelector('[data-controller="w-preview"]');
       element.dataset.wPreviewAutoUpdateValue = 'true';
       await initializeOpenedPanel();
+      // Should now be ready for further updates
+      expect(handleReady).toHaveBeenCalledTimes(1);
 
       // If there are no changes, should not send any request to update the preview
       await jest.advanceTimersByTime(10000);
@@ -792,7 +812,7 @@ describe('PreviewController', () => {
       const iframes = document.querySelectorAll('iframe');
       expect(iframes.length).toEqual(1);
 
-      jest.clearAllMocks();
+      fetch.mockClear();
 
       // If there are no changes, should not send any request to update the preview
       await jest.advanceTimersByTime(10000);
@@ -844,6 +864,8 @@ describe('PreviewController', () => {
       input.value = 'Changes should be ignored';
       await jest.advanceTimersByTime(10000);
       expect(global.fetch).not.toHaveBeenCalled();
+      // Should only dispatch the ready event once
+      expect(handleReady).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -178,7 +178,7 @@ export class PreviewController extends Controller<HTMLElement> {
   spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
   /** Interval for the auto-update. */
   updateInterval: ReturnType<typeof setInterval> | null = null;
-  /** Whether the preview data has been "cleared" for future updates.
+  /** Whether the preview is ready for further updates.
    *
    * The preview data is stored in the session, which means:
    * - After logging out and logging back in, the session is cleared, so the
@@ -205,17 +205,16 @@ export class PreviewController extends Controller<HTMLElement> {
    * preview panel displays the "Preview is not available" screen instead of an
    * outdated preview.
    *
-   * This flag is used to determine whether the preview data has been "cleared"
-   * for further updates – i.e. this will be true if the preview data has been
-   * cleared after an invalid initial load, or if the preview data is already
-   * valid on initial load.
+   * This flag determines whether the preview is "ready" for further updates –
+   * i.e. this is true if the preview data has been cleared after an invalid
+   * initial load, or if the preview data is already valid on initial load.
    *
    * An alternative approach would be to handle the initial state of the
    * session's preview data in the backend, but this would require the logic to
    * be applied in all the different places (i.e. page and snippets create and
    * edit views).
    */
-  cleared = false;
+  ready = false;
   /** Whether the preview is currently available. This is used to distinguish
    * whether we are rendering a preview or the "Preview is not available"
    * screen. So even if the preview is currently outdated, this is still `true`
@@ -363,8 +362,9 @@ export class PreviewController extends Controller<HTMLElement> {
     if (this.hasWProgressOutlet) {
       this.wProgressOutlet.loadingValue = false;
     }
-    if (!this.cleared) {
-      this.cleared = true;
+    if (!this.ready) {
+      this.ready = true;
+      this.dispatch('ready', { cancelable: false });
     }
     this.updatePromise = null;
 
@@ -483,7 +483,8 @@ export class PreviewController extends Controller<HTMLElement> {
 
         if (data.is_valid) {
           this.reloadIframe();
-        } else if (!this.cleared) {
+        } else if (!this.ready) {
+          // The preview may contain stale data from the previous session, clear it
           this.updatePromise = this.clearPreviewData().then(() => false);
         } else {
           // Finish the process when the data is invalid to prepare for the next update
