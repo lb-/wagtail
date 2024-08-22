@@ -113,41 +113,125 @@ export class PreviewController extends Controller<HTMLElement> {
 
   static outlets = ['w-progress'];
 
+  /** CSS class to indicate that there are errors in the form. */
   declare readonly hasErrorsClass: string;
+  /** CSS class for the currently selected device size. */
   declare readonly selectedSizeClass: string;
 
+  /** Device size `<input type="radio">` elements. */
   declare readonly sizeTargets: HTMLInputElement[];
   declare readonly hasNewTabTarget: boolean;
+  /** New tab button. */
   declare readonly newTabTarget: HTMLAnchorElement;
   declare readonly hasSpinnerTarget: boolean;
+  /** Loading spinner. */
   declare readonly spinnerTarget: HTMLDivElement;
   declare readonly hasModeTarget: boolean;
+  /** Preview mode `<select>` element. */
   declare readonly modeTarget: HTMLSelectElement;
+  /** The main preview `<iframe>` that is currently displayed. */
   declare readonly iframeTarget: HTMLIFrameElement;
+  /** All preview `<iframes>` that are currently in the DOM.
+   * This contains the currently displayed `<iframe>` and may also contain
+   * the new `<iframe>` that will replace the current one. */
   declare readonly iframeTargets: HTMLIFrameElement[];
+
+  /** URL for updating the preview data. Also used for rendering the preview if `renderUrlValue` is unset. */
   declare readonly urlValue: string;
+  /** Whether auto-update is enabled. */
   declare readonly autoUpdateValue: boolean;
+  /** Interval in milliseconds when the form is checked for changes.
+   * Also used as the debounce duration for the update request. */
   declare readonly autoUpdateIntervalValue: number;
+  /** CSS property for setting the device width. */
   declare readonly deviceWidthPropertyValue: string;
+  /** CSS property for the current width of the panel, to maintain the device scaling. */
   declare readonly panelWidthPropertyValue: string;
+  /** Key for storing the last selected device size in localStorage. */
   declare readonly deviceLocalStorageKeyValue: string;
+  /** URL for rendering the preview, defaults to `urlValue`.
+   * Useful for headless setups where the front-end may be hosted at a different URL. */
   declare renderUrlValue: string;
 
   declare readonly hasWProgressOutlet: boolean;
+  /** ProgressController for the refresh button that may be displayed when auto-update is turned off. */
   declare readonly wProgressOutlet: ProgressController;
 
   // Instance variables with initial values set in connect()
+
+  /** Main editor form. */
   declare editForm: HTMLFormElement;
+  /** Side panel element of the preview panel, i.e. the element with the
+   * `data-side-panel` attribute. Useful for listening to show/hide events.
+   * Normally, this is the parent element of the controller element.
+   */
   declare sidePanelContainer: HTMLDivElement;
+  /** Side panel for content checks. */
   declare checksSidePanel: HTMLDivElement | null;
+  /** ResizeObserver to observe when the panel is resized
+   * so we can maintain the device size scaling. */
   declare resizeObserver: ResizeObserver;
 
   // Instance variables with initial values set here
+
+  /** Timeout before displaying the loading spinner. */
   spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** Interval for the auto-update. */
   updateInterval: ReturnType<typeof setInterval> | null = null;
+  /** Whether the preview data has been "cleared" for future updates.
+   *
+   * The preview data is stored in the session, which means:
+   * - After logging out and logging back in, the session is cleared, so the
+   *   client must send the preview data on initial editor load in order for
+   *   Wagtail to render the preview.
+   * - The preview data can persist after a full-page reload, as long as they
+   *   use the same key in the session.
+   *
+   * To ensure the preview data is available when the preview panel is opened,
+   * we send an update request immediately. This can result in two scenarios:
+   *
+   * In edit views, the form is usually valid on initial load, as the object was
+   * successfully saved before. In this case, we can go ahead with rendering the
+   * preview and updating it with any new data.
+   *
+   * However, there may be cases where the form is invalid on initial load, e.g.
+   * if the "expiry date" in the publishing schedule has become in the past.
+   * Another common example is in create views, where the form is likely invalid
+   * on initial load due to missing required fields (e.g. `title`).
+   *
+   * When this happens, Wagtail will not update the preview data in the session,
+   * which means it may still contain the outdated preview data from the
+   * previous full-page load. We want to clear this data immediately so that the
+   * preview panel displays the "Preview is not available" screen instead of an
+   * outdated preview.
+   *
+   * This flag is used to determine whether the preview data has been "cleared"
+   * for further updates – i.e. this will be true if the preview data has been
+   * cleared after an invalid initial load, or if the preview data is already
+   * valid on initial load.
+   *
+   * An alternative approach would be to handle the initial state of the
+   * session's preview data in the backend, but this would require the logic to
+   * be applied in all the different places (i.e. page and snippets create and
+   * edit views).
+   */
   cleared = false;
+  /** Whether the preview is currently available. This is used to distinguish
+   * whether we are rendering a preview or the "Preview is not available"
+   * screen. So even if the preview is currently outdated, this is still `true`
+   * as long as the preview data is available and the preview is rendered (e.g.
+   * if the form becomes invalid after the preview is successfully rendered).
+   */
   available = true;
+  /** Promise for the current update request. This is resolved as soon as the
+   * update request is successful, so the preview iframe may not have been
+   * fully reloaded.
+   */
   updatePromise: Promise<boolean> | null = null;
+  /** Serialized form payload to be compared in between intervals to determine
+   * whether an update should be performed. Note that we currently do not handle
+   * file inputs.
+   */
   formPayload = '';
 
   /**
