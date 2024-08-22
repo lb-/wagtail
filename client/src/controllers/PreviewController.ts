@@ -89,9 +89,30 @@ const runAccessibilityChecks = async (
   );
 };
 
+interface PreviewDataResponse {
+  is_valid: boolean;
+  is_available: boolean;
+}
+
 /**
  * Controls the preview panel component to submit the current form state and
  * update the preview iframe if the form is valid.
+ *
+ * Dispatches the following events, in order:
+ * - `update` before sending the preview data to the server. Cancelable.
+ * - `json` after the preview data update request is completed. Note that the
+ *   data may not be valid and the iframe is not reloaded yet at this point.
+ *   Event `detail`:
+ *   - `data`: the response data that indicates whether the submitted data was
+ *     valid and whether the preview is available.
+ * - `error` when an error occurs while updating the preview data.
+ *   Event `detail`:
+ *   - `error`: the error object that was thrown.
+ * - `load` before reloading the preview iframe. Cancelable.
+ * - `loaded` after the preview iframe has been reloaded.
+ * - `ready` when the preview is ready for further updates – only fired on initial load.
+ * - `updated` after an update cycle is finished. This may or may not involve a
+ *   refresh of the iframe (e.g. in the case of an invalid form).
  */
 export class PreviewController extends Controller<HTMLElement> {
   static classes = ['hasErrors', 'selectedSize'];
@@ -362,15 +383,17 @@ export class PreviewController extends Controller<HTMLElement> {
     if (this.hasWProgressOutlet) {
       this.wProgressOutlet.loadingValue = false;
     }
-    if (!this.ready) {
-      this.ready = true;
-      this.dispatch('ready', { cancelable: false });
-    }
     this.updatePromise = null;
 
     // Ensure the width is set to the default size if the preview is unavailable,
     // or the currently selected device size if the preview is available.
     this.setPreviewWidth();
+
+    if (!this.ready) {
+      this.ready = true;
+      this.dispatch('ready', { cancelable: false });
+    }
+    this.dispatch('updated', { cancelable: false });
   }
 
   /**
@@ -382,6 +405,14 @@ export class PreviewController extends Controller<HTMLElement> {
    * iframe from flashing when reloading.
    */
   reloadIframe() {
+    const loadEvent = this.dispatch('load');
+    if (loadEvent.defaultPrevented) {
+      // The load event is cancelled, so don't reload the iframe
+      // and immediately finish the update
+      this.finishUpdate();
+      return;
+    }
+
     // Copy the iframe element
     const newIframe = this.iframeTarget.cloneNode() as HTMLIFrameElement;
 
@@ -426,6 +457,8 @@ export class PreviewController extends Controller<HTMLElement> {
     // Make the new iframe visible
     newIframe.removeAttribute('style');
 
+    this.dispatch('loaded', { cancelable: false });
+
     runContentChecks();
 
     const onClickSelector = () => this.newTabTarget.click();
@@ -462,6 +495,9 @@ export class PreviewController extends Controller<HTMLElement> {
     // Bail out if there is already a pending update
     if (this.updatePromise) return this.updatePromise;
 
+    const updateEvent = this.dispatch('update');
+    if (updateEvent.defaultPrevented) return undefined;
+
     // Store the promise so that subsequent calls to setPreviewData will
     // return the same promise as long as it hasn't finished yet
     this.updatePromise = (async () => {
@@ -476,7 +512,9 @@ export class PreviewController extends Controller<HTMLElement> {
           method: 'POST',
           body: new FormData(this.editForm),
         });
-        const data = await response.json();
+        const data: PreviewDataResponse = await response.json();
+
+        this.dispatch('json', { cancelable: false, detail: { data } });
 
         this.element.classList.toggle(this.hasErrorsClass, !data.is_valid);
         this.available = data.is_available;
@@ -494,6 +532,7 @@ export class PreviewController extends Controller<HTMLElement> {
 
         return data.is_valid as boolean;
       } catch (error) {
+        this.dispatch('error', { cancelable: false, detail: { error } });
         this.finishUpdate();
         // Re-throw error so it can be handled by setPreviewDataWithAlert
         throw error;

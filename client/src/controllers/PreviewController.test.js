@@ -15,7 +15,22 @@ jest.spyOn(global, 'setTimeout');
 describe('PreviewController', () => {
   let application;
   let windowSpy;
-  const handleReady = jest.fn();
+
+  const identifier = 'w-preview';
+
+  const events = {
+    update: [],
+    json: [],
+    error: [],
+    load: [],
+    loaded: [],
+    ready: [],
+    updated: [],
+  };
+
+  const pushEvent = (event) =>
+    events[event.type.substring(identifier.length + 1)].push(event);
+
   const originalWindow = { ...window };
   const mockWindow = (props) =>
     windowSpy.mockImplementation(() => ({
@@ -81,6 +96,18 @@ describe('PreviewController', () => {
       <option value="landing">Landing page</option>
     </select>
   `;
+
+  beforeAll(() => {
+    Object.keys(events).forEach((name) => {
+      document.addEventListener(`${identifier}:${name}`, pushEvent);
+    });
+  });
+
+  afterAll(() => {
+    Object.keys(events).forEach((name) => {
+      document.removeEventListener(`${identifier}:${name}`, pushEvent);
+    });
+  });
 
   beforeEach(() => {
     windowSpy = jest.spyOn(global, 'window', 'get');
@@ -163,8 +190,6 @@ describe('PreviewController', () => {
         </div>
       </div>
     `;
-
-    document.addEventListener('w-preview:ready', handleReady);
   });
 
   afterEach(() => {
@@ -173,7 +198,9 @@ describe('PreviewController', () => {
     jest.clearAllTimers();
     windowSpy.mockRestore();
     localStorage.removeItem('wagtail:preview-panel-device');
-    document.removeEventListener('w-preview:ready', handleReady);
+    Object.keys(events).forEach((name) => {
+      events[name] = [];
+    });
   });
 
   const expectIframeReloaded = async (
@@ -212,9 +239,18 @@ describe('PreviewController', () => {
 
   const initializeOpenedPanel = async (expectedUrl) => {
     expect(global.fetch).not.toHaveBeenCalled();
+    expect(events).toMatchObject({
+      update: [],
+      json: [],
+      error: [],
+      load: [],
+      loaded: [],
+      ready: [],
+      updated: [],
+    });
 
     application = Application.start();
-    application.register('w-preview', PreviewController);
+    application.register(identifier, PreviewController);
     await Promise.resolve();
 
     // Should not have fetched the preview URL
@@ -251,13 +287,22 @@ describe('PreviewController', () => {
     await Promise.resolve();
 
     await expectIframeReloaded(expectedUrl);
+    expect(events).toMatchObject({
+      update: [expect.any(Event)],
+      json: [expect.any(Event)],
+      error: [],
+      load: [expect.any(Event)],
+      loaded: [expect.any(Event)],
+      ready: [expect.any(Event)],
+      updated: [expect.any(Event)],
+    });
   };
 
   describe('controlling the preview size', () => {
     it('should load the last device size from localStorage', async () => {
       localStorage.setItem('wagtail:preview-panel-device', 'tablet');
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
 
       const element = document.querySelector('[data-controller="w-preview"]');
       await Promise.resolve();
@@ -275,7 +320,7 @@ describe('PreviewController', () => {
 
     it('should set the device size accordingly when the input changes', async () => {
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
 
       const element = document.querySelector('[data-controller="w-preview"]');
       await Promise.resolve();
@@ -318,7 +363,7 @@ describe('PreviewController', () => {
       expect(ResizeObserverMock).not.toHaveBeenCalled();
 
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
 
       await Promise.resolve();
 
@@ -340,15 +385,15 @@ describe('PreviewController', () => {
   describe('basic behaviour', () => {
     it('should initialize the preview when the side panel is opened', async () => {
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.ready).toHaveLength(0);
 
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
       await Promise.resolve();
 
       // Should not have fetched the preview URL
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(0);
 
       fetch.mockResponseSuccessJSON(validAvailableResponse);
 
@@ -364,7 +409,9 @@ describe('PreviewController', () => {
         body: expect.any(Object),
         method: 'POST',
       });
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(1);
+      expect(events.json).toHaveLength(0);
+      expect(events.load).toHaveLength(0);
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -373,6 +420,8 @@ describe('PreviewController', () => {
       expect(iframes[0].src).toEqual('');
 
       await Promise.resolve();
+      expect(events.json).toHaveLength(1);
+      expect(events.load).toHaveLength(1);
 
       const expectedUrl = `http://localhost${url}?in_preview_panel=true`;
 
@@ -386,13 +435,16 @@ describe('PreviewController', () => {
       expect(newIframe.style.height).toEqual('0px');
       expect(newIframe.style.opacity).toEqual('0');
       expect(newIframe.style.position).toEqual('absolute');
-      expect(handleReady).not.toHaveBeenCalled();
 
       // Mock the iframe's scroll method
       newIframe.contentWindow.scroll = jest.fn();
 
-      // Simulate the iframe loading
       await Promise.resolve();
+      expect(events.loaded).toHaveLength(0);
+      expect(events.ready).toHaveLength(0);
+      expect(events.updated).toHaveLength(0);
+
+      // Simulate the iframe loading
       newIframe.dispatchEvent(new Event('load'));
 
       // Should remove the old iframe and make the new one visible
@@ -414,19 +466,27 @@ describe('PreviewController', () => {
 
       // By the end, there should only be one fetch call
       expect(global.fetch).toHaveBeenCalledTimes(1);
-      // Should now be ready for further updates
-      expect(handleReady).toHaveBeenCalledTimes(1);
+
+      expect(events).toMatchObject({
+        update: [expect.any(Event)],
+        json: [expect.any(Event)],
+        error: [],
+        load: [expect.any(Event)],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event)],
+      });
     });
 
     it('should clear the preview data if the data is invalid on initial load', async () => {
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.ready).toHaveLength(0);
 
       // Set to a non-default preview size
       localStorage.setItem('wagtail:preview-panel-device', 'desktop');
 
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
       await Promise.resolve();
 
       const element = document.querySelector('[data-controller="w-preview"]');
@@ -443,8 +503,9 @@ describe('PreviewController', () => {
 
       // Should not have fetched the preview URL
       expect(global.fetch).not.toHaveBeenCalled();
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(0);
 
+      // Mock stale preview data
       fetch.mockResponseSuccessJSON(invalidAvailableResponse);
 
       // Open the side panel
@@ -459,11 +520,16 @@ describe('PreviewController', () => {
         body: expect.any(Object),
         method: 'POST',
       });
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(1);
+      expect(events.json).toHaveLength(0);
 
+      // Mock successful response to clear the preview data
       fetch.mockResponseSuccessJSON(`{ "success": true }`);
 
+      // Simulate the POST request completing with invalidAvailableResponse,
+      // which will kick off a DELETE request immediately to clear the stale data
       await Promise.resolve();
+      expect(events.json).toHaveLength(1);
 
       // Should send a request to clear the preview data
       expect(global.fetch).toHaveBeenCalledWith(url, {
@@ -472,7 +538,8 @@ describe('PreviewController', () => {
         },
         method: 'DELETE',
       });
-      expect(handleReady).not.toHaveBeenCalled();
+      // Should not try to reload the iframe yet
+      expect(events.load).toHaveLength(0);
 
       // Initially, the iframe src should be empty so it doesn't load the preview
       // until after the request is complete
@@ -480,7 +547,9 @@ describe('PreviewController', () => {
       expect(iframes.length).toEqual(1);
       expect(iframes[0].src).toEqual('');
 
+      // Simulate the DELETE request completing
       await Promise.resolve();
+      expect(events.load).toHaveLength(1);
 
       const expectedUrl = `http://localhost${url}?in_preview_panel=true`;
 
@@ -494,13 +563,17 @@ describe('PreviewController', () => {
       expect(newIframe.style.height).toEqual('0px');
       expect(newIframe.style.opacity).toEqual('0');
       expect(newIframe.style.position).toEqual('absolute');
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.ready).toHaveLength(0);
 
       // Mock the iframe's scroll method
       newIframe.contentWindow.scroll = jest.fn();
 
-      // Simulate the iframe loading
       await Promise.resolve();
+      expect(events.loaded).toHaveLength(0);
+      expect(events.ready).toHaveLength(0);
+      expect(events.updated).toHaveLength(0);
+
+      // Simulate the iframe loading
       newIframe.dispatchEvent(new Event('load'));
 
       // Should remove the old iframe and make the new one visible
@@ -547,8 +620,22 @@ describe('PreviewController', () => {
       // By the end, there should only be two fetch calls: one to send the invalid
       // preview data and one to clear the preview data
       expect(global.fetch).toHaveBeenCalledTimes(2);
-      // Should now be ready for further updates
-      expect(handleReady).toHaveBeenCalledTimes(1);
+
+      expect(events).toMatchObject({
+        update: [expect.any(Event)],
+        json: [
+          // Initial is invalid but there is an existing preview available,
+          // so it should be cleared
+          expect.objectContaining({
+            detail: { data: { is_valid: false, is_available: true } },
+          }),
+        ],
+        error: [],
+        load: [expect.any(Event)],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event)],
+      });
     });
 
     it('should update the preview data when opening in a new tab', async () => {
@@ -594,6 +681,7 @@ describe('PreviewController', () => {
         body: expect.any(Object),
         method: 'POST',
       });
+      expect(events.update).toHaveLength(2);
 
       mockWindow({ open: jest.fn(), alert: jest.fn() });
       // Run all timers and promises
@@ -607,6 +695,19 @@ describe('PreviewController', () => {
       // Should still open the new tab anyway
       const absoluteUrl = `http://localhost${url}`;
       expect(window.open).toHaveBeenCalledWith(absoluteUrl, absoluteUrl);
+
+      expect(events).toMatchObject({
+        update: [expect.any(Event), expect.any(Event)], // Initial, error
+        json: [expect.any(Event)], // Initial
+        error: [
+          // Error
+          expect.objectContaining({ detail: { error: expect.any(Error) } }),
+        ],
+        load: [expect.any(Event)], // Initial
+        loaded: [expect.any(Event)], // Initial
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event), expect.any(Event)], // Initial, error
+      });
     });
 
     it('should only show the spinner after 2s when refreshing the preview', async () => {
@@ -620,7 +721,7 @@ describe('PreviewController', () => {
       expect(global.fetch).not.toHaveBeenCalled();
 
       application = Application.start();
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
       await Promise.resolve();
 
       // Should not have fetched the preview URL
@@ -734,7 +835,7 @@ describe('PreviewController', () => {
       const element = document.querySelector('[data-controller="w-preview"]');
       const controller = application.getControllerForElementAndIdentifier(
         element,
-        'w-preview',
+        identifier,
       );
       jest.spyOn(element.parentElement, 'removeEventListener');
 
@@ -758,7 +859,7 @@ describe('PreviewController', () => {
 
       application = Application.start();
       application.handleError = handleError;
-      application.register('w-preview', PreviewController);
+      application.register(identifier, PreviewController);
       await Promise.resolve();
 
       expect(handleError).toHaveBeenCalledWith(
@@ -767,23 +868,22 @@ describe('PreviewController', () => {
             'The preview panel controller requires the data-w-preview-url-value attribute to be set',
         }),
         'Error connecting controller',
-        expect.objectContaining({ identifier: 'w-preview' }),
+        expect.objectContaining({ identifier }),
       );
     });
   });
 
   describe('auto update cycle from opening the panel with a valid form -> invalid form -> valid form -> closing the panel', () => {
     it('should behave correctly', async () => {
-      expect(handleReady).not.toHaveBeenCalled();
+      expect(events.ready).toHaveLength(0);
       const element = document.querySelector('[data-controller="w-preview"]');
       element.dataset.wPreviewAutoUpdateValue = 'true';
       await initializeOpenedPanel();
-      // Should now be ready for further updates
-      expect(handleReady).toHaveBeenCalledTimes(1);
 
       // If there are no changes, should not send any request to update the preview
       await jest.advanceTimersByTime(10000);
       expect(global.fetch).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(1); // Only contains the initial fetch
 
       // Simulate an invalid form submission
       const input = document.querySelector('input[name="title"');
@@ -798,12 +898,14 @@ describe('PreviewController', () => {
         method: 'POST',
       });
       expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(events.update).toHaveLength(2);
 
       // Should not yet have the has-errors class on the controlled element
       expect(element.classList).not.toContain('w-preview--has-errors');
 
       // Simulate the request completing
       await Promise.resolve();
+      expect(events.json).toHaveLength(2);
 
       // Should set the has-errors class on the controlled element
       expect(element.classList).toContain('w-preview--has-errors');
@@ -811,6 +913,8 @@ describe('PreviewController', () => {
       // Should not create a new iframe for reloading the preview
       const iframes = document.querySelectorAll('iframe');
       expect(iframes.length).toEqual(1);
+      // Should not dispatch a load event (only the initial load event exists)
+      expect(events.load).toHaveLength(1);
 
       fetch.mockClear();
 
@@ -843,15 +947,22 @@ describe('PreviewController', () => {
         method: 'POST',
       });
       expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(events.update).toHaveLength(3);
 
       // Simulate the request completing
+      expect(events.json).toHaveLength(2);
+      expect(events.load).toHaveLength(1);
       await Promise.resolve();
+      expect(events.json).toHaveLength(3);
+      expect(events.load).toHaveLength(2);
 
       // Should no longer have the has-errors class on the controlled element
       expect(element.classList).not.toContain('w-preview--has-errors');
 
       // Expect the iframe to be reloaded
+      expect(events.loaded).toHaveLength(1);
       await expectIframeReloaded();
+      expect(events.loaded).toHaveLength(2);
 
       // Close the side panel
       const sidePanelContainer = document.querySelector(
@@ -864,8 +975,29 @@ describe('PreviewController', () => {
       input.value = 'Changes should be ignored';
       await jest.advanceTimersByTime(10000);
       expect(global.fetch).not.toHaveBeenCalled();
-      // Should only dispatch the ready event once
-      expect(handleReady).toHaveBeenCalledTimes(1);
+
+      expect(events).toMatchObject({
+        // Initial, invalid, valid
+        update: [expect.any(Event), expect.any(Event), expect.any(Event)],
+        json: [
+          expect.objectContaining({
+            detail: { data: { is_valid: true, is_available: true } },
+          }),
+          expect.objectContaining({
+            detail: { data: { is_valid: false, is_available: true } },
+          }),
+          expect.objectContaining({
+            detail: { data: { is_valid: true, is_available: true } },
+          }),
+        ],
+        error: [],
+        // Initial, valid (the invalid form submission does not reload the iframe)
+        load: [expect.any(Event), expect.any(Event)],
+        loaded: [expect.any(Event), expect.any(Event)],
+        ready: [expect.any(Event)],
+        // Initial, invalid, valid
+        updated: [expect.any(Event), expect.any(Event), expect.any(Event)],
+      });
     });
   });
 
@@ -1065,6 +1197,172 @@ describe('PreviewController', () => {
       expect(newTabLink.href).toEqual(
         'https://app.example.com/preview/foo/7/?mode=form',
       );
+    });
+  });
+
+  describe('cancelling specific parts of the process using events', () => {
+    let refreshButtonElement;
+
+    beforeEach(async () => {
+      await initializeOpenedPanel();
+      application.register('w-progress', ProgressController);
+
+      // Add the refresh button to the preview panel to ease testing
+      const element = document.querySelector('[data-controller="w-preview"]');
+      element.insertAdjacentHTML('beforeend', refreshButton);
+      refreshButtonElement = element.querySelector(
+        '[data-controller="w-progress"]',
+      );
+    });
+
+    it('should allow an entire update request to be cancelled', async () => {
+      document.addEventListener(
+        'w-preview:update',
+        (event) => {
+          event.preventDefault();
+        },
+        { once: true },
+      );
+
+      fetch.mockResponseSuccessJSON(validAvailableResponse);
+
+      // Simulate a click on the refresh button
+      refreshButtonElement.click();
+
+      await jest.runAllTimersAsync();
+
+      // Should not send the preview data to the preview URL
+      expect(global.fetch).not.toHaveBeenCalled();
+
+      // Should have an additional update event, but the rest stay the same
+      // as after the initial load
+      expect(events).toMatchObject({
+        update: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+        ],
+        json: [expect.any(Event)],
+        error: [],
+        load: [expect.any(Event)],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event)],
+      });
+
+      refreshButtonElement.click();
+
+      await jest.runAllTimersAsync();
+
+      // Should update the preview, as the event listener is only called once
+      // and at this point we're waiting for the iframe to load
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(events).toMatchObject({
+        update: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+          expect.objectContaining({ defaultPrevented: false }),
+        ],
+        json: [expect.any(Event), expect.any(Event)],
+        error: [],
+        load: [expect.any(Event), expect.any(Event)],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event)],
+      });
+
+      await expectIframeReloaded();
+      expect(events).toMatchObject({
+        update: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+          expect.objectContaining({ defaultPrevented: false }),
+        ],
+        json: [expect.any(Event), expect.any(Event)],
+        error: [],
+        load: [expect.any(Event), expect.any(Event)],
+        loaded: [expect.any(Event), expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event), expect.any(Event)],
+      });
+    });
+
+    it('should allow only the iframe reload to be cancelled', async () => {
+      document.addEventListener(
+        'w-preview:load',
+        (event) => {
+          event.preventDefault();
+        },
+        { once: true },
+      );
+
+      fetch.mockResponseSuccessJSON(validAvailableResponse);
+
+      // Simulate a click on the refresh button
+      refreshButtonElement.click();
+
+      await jest.runAllTimersAsync();
+
+      // Should send the preview data to the preview URL
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+
+      // Should have additional events like a regular update, except the loaded
+      // event as the iframe load was cancelled by the load event listener.
+      // The updated event should still be dispatched to indicate that the
+      // process has finished.
+      expect(events).toMatchObject({
+        update: [expect.any(Event), expect.any(Event)],
+        json: [expect.any(Event), expect.any(Event)],
+        error: [],
+        load: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+        ],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event), expect.any(Event)],
+      });
+
+      // Should not create a new iframe for reloading the preview
+      const iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+
+      fetch.mockResponseSuccessJSON(validAvailableResponse);
+
+      refreshButtonElement.click();
+
+      await jest.runAllTimersAsync();
+
+      // Should update the preview and reload the iframe, as the event listener
+      // is only called once and at this point we're waiting for the iframe to load
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(events).toMatchObject({
+        update: [expect.any(Event), expect.any(Event), expect.any(Event)],
+        json: [expect.any(Event), expect.any(Event), expect.any(Event)],
+        error: [],
+        load: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+          expect.objectContaining({ defaultPrevented: false }),
+        ],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event), expect.any(Event)],
+      });
+
+      await expectIframeReloaded();
+      expect(events).toMatchObject({
+        update: [expect.any(Event), expect.any(Event), expect.any(Event)],
+        json: [expect.any(Event), expect.any(Event), expect.any(Event)],
+        error: [],
+        load: [
+          expect.any(Event),
+          expect.objectContaining({ defaultPrevented: true }),
+          expect.objectContaining({ defaultPrevented: false }),
+        ],
+        loaded: [expect.any(Event), expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event), expect.any(Event), expect.any(Event)],
+      });
     });
   });
 });
