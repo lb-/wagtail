@@ -1,6 +1,4 @@
-{% load i18n wagtailadmin_tags %}
-
-{% wagtail_config as settings %}
+{% load i18n l10n wagtailadmin_tags %}
 
 <div
     class="w-preview"
@@ -8,8 +6,7 @@
     data-w-preview-has-errors-class="w-preview--has-errors"
     data-w-preview-selected-size-class="w-preview__size-button--selected"
     data-w-preview-url-value="{{ preview_url }}"
-    data-w-preview-auto-update-value="{{ settings.WAGTAIL_AUTO_UPDATE_PREVIEW|yesno:'true,false' }}"
-    data-w-preview-auto-update-interval-value="{{ settings.WAGTAIL_AUTO_UPDATE_PREVIEW_INTERVAL }}"
+    data-w-preview-auto-update-interval-value="{{ auto_update_interval|unlocalize }}"
     data-w-preview-w-progress-outlet="[data-controller='w-preview'] [data-controller='w-progress']"
 >
     <div class="w-preview__sizes">
@@ -33,7 +30,7 @@
         {% endblock %}
     </div>
 
-    {% if settings.WAGTAIL_AUTO_UPDATE_PREVIEW %}
+    {% if auto_update_interval %}
         <div class="w-preview__spinner" data-w-preview-target="spinner" hidden>
             {% icon name="spinner" classname="default" %}
             <span class="w-sr-only">{% trans 'Loading'%}</span>

@@ -127,8 +127,7 @@ describe('PreviewController', () => {
           data-w-preview-has-errors-class="w-preview--has-errors"
           data-w-preview-selected-size-class="w-preview__size-button--selected"
           data-w-preview-url-value="${url}"
-          data-w-preview-auto-update-value="false"
-          data-w-preview-auto-update-interval-value="500"
+          data-w-preview-auto-update-interval-value="0"
           data-w-preview-w-progress-outlet="[data-controller='w-preview'] [data-controller='w-progress']"
         >
           <label>
@@ -877,7 +876,7 @@ describe('PreviewController', () => {
     it('should behave correctly', async () => {
       expect(events.ready).toHaveLength(0);
       const element = document.querySelector('[data-controller="w-preview"]');
-      element.dataset.wPreviewAutoUpdateValue = 'true';
+      element.setAttribute('data-w-preview-auto-update-interval-value', '500');
       await initializeOpenedPanel();
 
       // If there are no changes, should not send any request to update the preview

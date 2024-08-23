@@ -16,6 +16,7 @@ import { WAGTAIL_CONFIG } from '../config/wagtailConfig';
 import { debounce } from '../utils/debounce';
 import { gettext } from '../utils/gettext';
 import type { ProgressController } from './ProgressController';
+import { setOptionalInterval } from '../utils/interval';
 
 const runContentChecks = async () => {
   axe.registerPlugin(wagtailPreviewPlugin);
@@ -122,7 +123,6 @@ export class PreviewController extends Controller<HTMLElement> {
   static values = {
     url: { default: '', type: String },
     renderUrl: { default: '', type: String },
-    autoUpdate: { default: true, type: Boolean },
     autoUpdateInterval: { default: 500, type: Number },
     deviceWidthProperty: { default: '--preview-device-width', type: String },
     panelWidthProperty: { default: '--preview-panel-width', type: String },
@@ -159,8 +159,6 @@ export class PreviewController extends Controller<HTMLElement> {
 
   /** URL for updating the preview data. Also used for rendering the preview if `renderUrlValue` is unset. */
   declare readonly urlValue: string;
-  /** Whether auto-update is enabled. */
-  declare readonly autoUpdateValue: boolean;
   /** Interval in milliseconds when the form is checked for changes.
    * Also used as the debounce duration for the update request. */
   declare readonly autoUpdateIntervalValue: number;
@@ -198,7 +196,7 @@ export class PreviewController extends Controller<HTMLElement> {
   /** Timeout before displaying the loading spinner. */
   spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
   /** Interval for the auto-update. */
-  updateInterval: ReturnType<typeof setInterval> | null = null;
+  updateInterval: ReturnType<typeof setOptionalInterval> = null;
   /** Whether the preview is ready for further updates.
    *
    * The preview data is stored in the session, which means:
@@ -625,26 +623,40 @@ export class PreviewController extends Controller<HTMLElement> {
     // Immediately update the preview when the panel is opened
     this.checkAndUpdatePreview();
 
-    // Skip setting up the interval if auto update is disabled
-    if (!this.autoUpdateValue) return;
-
-    // Apply debounce for subsequent updates if not already applied
-    if (!('cancel' in this.setPreviewData)) {
-      this.setPreviewData = debounce(
-        this.setPreviewData,
-        this.autoUpdateIntervalValue,
-      );
-    }
-
     // Only set the interval while the panel is shown
+    this.addInterval();
+  }
+
+  autoUpdateIntervalValueChanged() {
+    // If the value is changed, only update the interval if it's currently active
+    // as we don't want to start the interval when the panel is hidden
+    if (this.updateInterval) this.addInterval();
+  }
+
+  addInterval() {
+    this.clearInterval();
     // This interval performs the checks for changes but not necessarily the
     // update itself
-    if (!this.updateInterval) {
-      this.updateInterval = setInterval(
-        this.checkAndUpdatePreview,
-        this.autoUpdateIntervalValue,
-      );
+    this.updateInterval = setOptionalInterval(
+      this.checkAndUpdatePreview,
+      this.autoUpdateIntervalValue,
+    );
+
+    if (this.updateInterval) {
+      // Apply debounce for subsequent updates if not already applied
+      if (!('cancel' in this.setPreviewData)) {
+        this.setPreviewData = debounce(
+          this.setPreviewData,
+          this.autoUpdateIntervalValue,
+        );
+      }
     }
+  }
+
+  clearInterval() {
+    if (!this.updateInterval) return;
+    window.clearInterval(this.updateInterval);
+    this.updateInterval = null;
   }
 
   /**
@@ -653,9 +665,7 @@ export class PreviewController extends Controller<HTMLElement> {
    * If auto-update is enabled, clear the auto-update interval.
    */
   deactivatePreview() {
-    if (!this.updateInterval) return;
-    clearInterval(this.updateInterval);
-    this.updateInterval = null;
+    this.clearInterval();
   }
 
   /**
