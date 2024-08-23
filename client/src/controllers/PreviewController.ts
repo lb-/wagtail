@@ -578,8 +578,20 @@ export class PreviewController extends Controller<HTMLElement> {
         if (data.is_valid) {
           this.reloadIframe();
         } else if (!this.ready) {
-          // The preview may contain stale data from the previous session, clear it
-          this.updatePromise = this.clearPreviewData().then(() => false);
+          // This is the first update and the form data is not valid.
+
+          // If the preview contains stale valid data from the previous session
+          // (hence available), we want to clear it immediately to show the
+          // "Preview is not available" screen instead of the outdated preview.
+          if (data.is_available) {
+            this.updatePromise = this.clearPreviewData().then(() => false);
+          } else {
+            // There is no stale data, but we still need to load the iframe to
+            // show the "Preview is not available" screen, because initially
+            // the iframe is empty (to prevent loading the iframe when the panel
+            // is never opened).
+            this.reloadIframe();
+          }
         } else {
           // Finish the process when the data is invalid to prepare for the next update
           // and avoid elements like the loading spinner to be shown indefinitely

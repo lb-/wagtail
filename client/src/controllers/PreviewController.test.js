@@ -481,7 +481,165 @@ describe('PreviewController', () => {
       });
     });
 
-    it('should clear the preview data if the data is invalid on initial load', async () => {
+    it('should not clear the preview data if the data is invalid and unavailable on initial load', async () => {
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(events.ready).toHaveLength(0);
+
+      // Set to a non-default preview size
+      localStorage.setItem('wagtail:preview-panel-device', 'desktop');
+
+      application = Application.start();
+      application.register(identifier, PreviewController);
+      await Promise.resolve();
+
+      const element = document.querySelector('[data-controller="w-preview"]');
+      const selectedSizeInput = document.querySelector(
+        'input[name="preview-size"]:checked',
+      );
+      expect(selectedSizeInput.value).toEqual('desktop');
+      const selectedSizeLabel = selectedSizeInput.labels[0];
+      expect(
+        selectedSizeLabel.classList.contains(
+          'w-preview__size-button--selected',
+        ),
+      ).toBe(true);
+
+      // Should not have fetched the preview URL
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(events.update).toHaveLength(0);
+
+      // Mock invalid data but no stale preview available
+      fetch.mockResponseSuccessJSON(unavailableResponse);
+
+      // Open the side panel
+      const sidePanelContainer = document.querySelector(
+        '[data-side-panel="preview"]',
+      );
+      sidePanelContainer.dispatchEvent(new Event('show'));
+      await Promise.resolve();
+
+      // Should send the preview data to the preview URL
+      expect(global.fetch).toHaveBeenCalledWith(url, {
+        body: expect.any(Object),
+        method: 'POST',
+      });
+      expect(events.update).toHaveLength(1);
+      expect(events.json).toHaveLength(0);
+
+      // Initially, the iframe src should be empty so it doesn't load the preview
+      // until after the request is complete
+      let iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+      expect(iframes[0].src).toEqual('');
+      expect(events.load).toHaveLength(0);
+
+      // Simulate the POST request completing with unavailableResponse
+      await Promise.resolve();
+      expect(events.json).toHaveLength(1);
+
+      await Promise.resolve();
+
+      // Should NOT send a request to clear the preview data, as there is no
+      // stale data that needs to be cleared
+      expect(global.fetch).not.toHaveBeenCalledWith(url, {
+        headers: {
+          'X-CSRFToken': 'test-token',
+        },
+        method: 'DELETE',
+      });
+
+      // Should now try to reload the iframe
+      expect(events.load).toHaveLength(1);
+
+      const expectedUrl = `http://localhost${url}?in_preview_panel=true`;
+
+      // Should create a new invisible iframe with the correct URL
+      iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(2);
+      const oldIframe = iframes[0];
+      const newIframe = iframes[1];
+      expect(newIframe.src).toEqual(expectedUrl);
+      expect(newIframe.style.width).toEqual('0px');
+      expect(newIframe.style.height).toEqual('0px');
+      expect(newIframe.style.opacity).toEqual('0');
+      expect(newIframe.style.position).toEqual('absolute');
+      expect(events.ready).toHaveLength(0);
+
+      // Mock the iframe's scroll method
+      newIframe.contentWindow.scroll = jest.fn();
+
+      await Promise.resolve();
+      expect(events.loaded).toHaveLength(0);
+      expect(events.ready).toHaveLength(0);
+      expect(events.updated).toHaveLength(0);
+
+      // Simulate the iframe loading
+      newIframe.dispatchEvent(new Event('load'));
+
+      // Should remove the old iframe and make the new one visible
+      iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+      expect(iframes[0]).toBe(newIframe);
+      expect(newIframe.src).toEqual(expectedUrl);
+      expect(newIframe.getAttribute('style')).toBeNull();
+      expect(newIframe.contentWindow.scroll).toHaveBeenCalledWith(
+        oldIframe.contentWindow.scrollX,
+        oldIframe.contentWindow.scrollY,
+      );
+
+      // Should set the has-errors class on the controlled element
+      expect(element.classList).toContain('w-preview--has-errors');
+
+      // The "selected" preview size button should remain the same (desktop)
+      const currentSizeInput = document.querySelector(
+        'input[name="preview-size"]:checked',
+      );
+      expect(currentSizeInput.value).toEqual('desktop');
+      const currentSizeLabel = currentSizeInput.labels[0];
+      expect(
+        currentSizeLabel.classList.contains('w-preview__size-button--selected'),
+      ).toBe(true);
+      const defaultSizeInput = document.querySelector(
+        'input[name="preview-size"][data-default-size]',
+      );
+      expect(defaultSizeInput.value).toEqual('mobile');
+      const defaultSizeLabel = defaultSizeInput.labels[0];
+      expect(
+        defaultSizeLabel.classList.contains('w-preview__size-button--selected'),
+      ).toBe(false);
+
+      // However, the actual rendered size should be the default size
+      // (This is because the "Preview is unavailable" screen is actually the
+      // rendered preview response in the iframe instead of elements directly
+      // rendered in the controller's DOM. To ensure the screen is readable and
+      // not scaled down, the iframe is set to the default size.)
+      expect(element.style.getPropertyValue('--preview-device-width')).toEqual(
+        '375',
+      );
+
+      // By the end, there should only be one fetch call: one to send the initial invalid
+      // preview data. No fetch calls to clear the preview data should have been made,
+      // as there was no stale data to clear.
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+
+      expect(events).toMatchObject({
+        update: [expect.any(Event)],
+        json: [
+          // Initial is invalid but there is an existing preview available,
+          // so it should be cleared
+          expect.objectContaining({
+            detail: { data: { is_valid: false, is_available: false } },
+          }),
+        ],
+        error: [],
+        load: [expect.any(Event)],
+        loaded: [expect.any(Event)],
+        ready: [expect.any(Event)],
+        updated: [expect.any(Event)],
+      });
+    });
+
+    it('should clear the preview data if the data is invalid but available on initial load', async () => {
       expect(global.fetch).not.toHaveBeenCalled();
       expect(events.ready).toHaveLength(0);
 
