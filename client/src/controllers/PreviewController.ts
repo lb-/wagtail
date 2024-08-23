@@ -25,6 +25,11 @@ const runContentChecks = async () => {
     targetElement: 'main, [role="main"], body',
   });
 
+  // This requires Wagtail's preview plugin for axe to be registered in the
+  // preview iframe, which is not done in tests as the registration happens via
+  // the userbar.
+  if (!contentMetrics) return;
+
   renderContentMetrics({
     wordCount: contentMetrics.wordCount,
     readingTime: contentMetrics.readingTime,

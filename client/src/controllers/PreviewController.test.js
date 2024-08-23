@@ -180,7 +180,7 @@ describe('PreviewController', () => {
           <!-- preview mode select -->
 
           <iframe
-            id="preview-iframe"
+            id="w-preview-iframe"
             title="Preview"
             data-w-preview-target="iframe"
             data-action="load->w-preview#replaceIframe"
