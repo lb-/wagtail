@@ -285,12 +285,173 @@ export class PreviewController extends Controller<HTMLElement> {
     return url;
   }
 
+  connect() {
+    if (!this.urlValue) {
+      throw new Error(
+        `The preview panel controller requires the data-${this.identifier}-url-value attribute to be set`,
+      );
+    }
+
+    this.resizeObserver = this.observePanelSize();
+
+    this.editForm = document.querySelector<HTMLFormElement>(
+      '[data-edit-form]',
+    ) as HTMLFormElement;
+
+    // This controller is encapsulated as a child of the side panel element,
+    // so we need to listen to the show/hide events on the parent element
+    // (the one with [data-side-panel]).
+    // If we had support for data-controller attribute on the side panels,
+    // we could remove the intermediary element and make the [data-side-panel]
+    // element to also act as the controller.
+    this.sidePanelContainer = this.element.parentElement as HTMLDivElement;
+
+    this.checksSidePanel = document.querySelector('[data-side-panel="checks"]');
+
+    this.activatePreview = this.activatePreview.bind(this);
+    this.deactivatePreview = this.deactivatePreview.bind(this);
+    this.setPreviewData = this.setPreviewData.bind(this);
+    this.checkAndUpdatePreview = this.checkAndUpdatePreview.bind(this);
+
+    this.sidePanelContainer.addEventListener('show', this.activatePreview);
+    this.sidePanelContainer.addEventListener('hide', this.deactivatePreview);
+
+    this.checksSidePanel?.addEventListener('show', this.activatePreview);
+    this.checksSidePanel?.addEventListener('hide', this.deactivatePreview);
+
+    this.restoreLastSavedPreferences();
+  }
+
+  renderUrlValueChanged(newValue: string) {
+    // Allow the rendering URL to be different from the URL used for sending the
+    // preview data (e.g. for a headless setup), but make it optional and use
+    // the latter as the default.
+    if (!newValue) {
+      this.renderUrlValue = this.urlValue;
+    }
+    this.updateNewTabLink();
+  }
+
+  autoUpdateIntervalValueChanged() {
+    // If the value is changed, only update the interval if it's currently active
+    // as we don't want to start the interval when the panel is hidden
+    if (this.updateInterval) this.addInterval();
+  }
+
+  /**
+   * Restores the last saved preferences.
+   * Currently, only the last selected device size is restored.
+   */
+  restoreLastSavedPreferences() {
+    // Remember last selected device size
+    let lastDevice: string | null = null;
+    try {
+      lastDevice = localStorage.getItem(this.deviceLocalStorageKeyValue);
+    } catch (e) {
+      // Initialise with the default device if the last one cannot be restored.
+    }
+    const lastDeviceInput =
+      this.sizeTargets.find((input) => input.value === lastDevice) ||
+      this.defaultSizeInput;
+    lastDeviceInput.click();
+    // If lastDeviceInput resolves to the defaultSizeInput, the click event will
+    // not trigger the togglePreviewSize method, so we need to apply the
+    // selected size class manually.
+    this.applySelectedSizeClass(lastDeviceInput.value);
+  }
+
+  /**
+   * Activates the preview mechanism.
+   * The preview data is immediately updated. If auto-update is enabled,
+   * an interval is set up to automatically check the form and update the
+   * preview data.
+   */
+  activatePreview() {
+    // Immediately update the preview when the panel is opened
+    this.checkAndUpdatePreview();
+
+    // Only set the interval while the panel is shown
+    this.addInterval();
+  }
+
+  /**
+   * Sets the interval for auto-updating the preview and applies debouncing to
+   * `setPreviewData` for subsequent calls.
+   */
+  addInterval() {
+    this.clearInterval();
+    // This interval performs the checks for changes but not necessarily the
+    // update itself
+    this.updateInterval = setOptionalInterval(
+      this.checkAndUpdatePreview,
+      this.autoUpdateIntervalValue,
+    );
+
+    if (this.updateInterval) {
+      // Apply debounce for subsequent updates if not already applied
+      if (!('cancel' in this.setPreviewData)) {
+        this.setPreviewData = debounce(
+          this.setPreviewData,
+          this.autoUpdateIntervalValue,
+        );
+      }
+    }
+  }
+
+  /**
+   * Clears the auto-update interval.
+   */
+  clearInterval() {
+    if (!this.updateInterval) return;
+    window.clearInterval(this.updateInterval);
+    this.updateInterval = null;
+  }
+
+  /**
+   * Deactivates the preview mechanism.
+   *
+   * If auto-update is enabled, clear the auto-update interval.
+   */
+  deactivatePreview() {
+    this.clearInterval();
+  }
+
+  /**
+   * Updates the new tab link with the currently selected preview mode,
+   * then updates the preview.
+   */
+  setPreviewMode() {
+    this.updateNewTabLink();
+
+    // Make sure data is updated and an alert is displayed if an error occurs
+    this.setPreviewDataWithAlert();
+  }
+
   /**
    * Updates the URL of the new tab button with the currently selected preview mode.
    */
   updateNewTabLink() {
     if (this.hasNewTabTarget) {
       this.newTabTarget.href = this.renderUrl.toString();
+    }
+  }
+
+  /**
+   * Toggles the preview size based on the selected input.
+   * The selected device name (`input[value]`) is stored in localStorage.
+   * @param event `InputEvent` from the size input
+   */
+  togglePreviewSize(event: InputEvent) {
+    const target = event.target as HTMLInputElement;
+    const device = target.value;
+    const deviceWidth = target.dataset.deviceWidth;
+
+    this.setPreviewWidth(deviceWidth);
+    this.applySelectedSizeClass(device);
+    try {
+      localStorage.setItem(this.deviceLocalStorageKeyValue, device);
+    } catch (e) {
+      // Skip saving the device if localStorage fails.
     }
   }
 
@@ -316,25 +477,6 @@ export class PreviewController extends Controller<HTMLElement> {
       this.deviceWidthPropertyValue,
       deviceWidth as string,
     );
-  }
-
-  /**
-   * Toggles the preview size based on the selected input.
-   * The selected device name (`input[value]`) is stored in localStorage.
-   * @param event `InputEvent` from the size input
-   */
-  togglePreviewSize(event: InputEvent) {
-    const target = event.target as HTMLInputElement;
-    const device = target.value;
-    const deviceWidth = target.dataset.deviceWidth;
-
-    this.setPreviewWidth(deviceWidth);
-    this.applySelectedSizeClass(device);
-    try {
-      localStorage.setItem(this.deviceLocalStorageKeyValue, device);
-    } catch (e) {
-      // Skip saving the device if localStorage fails.
-    }
   }
 
   /**
@@ -368,30 +510,104 @@ export class PreviewController extends Controller<HTMLElement> {
   }
 
   /**
-   * Resets the preview panel state to be ready for the next update.
+   * Like `setPreviewData`, but only updates the preview if there is no pending
+   * update and the form has not changed.
+   * @returns whether the data is valid
    */
-  finishUpdate() {
-    if (this.spinnerTimeout) {
-      clearTimeout(this.spinnerTimeout);
-      this.spinnerTimeout = null;
-    }
-    if (this.hasSpinnerTarget) {
-      this.spinnerTarget.hidden = true;
-    }
-    if (this.hasWProgressOutlet) {
-      this.wProgressOutlet.loadingValue = false;
-    }
-    this.updatePromise = null;
+  async checkAndUpdatePreview() {
+    // Small performance optimisation: the hasChanges() method will not be called
+    // if there is a pending update due to the || operator short-circuiting
+    if (this.updatePromise || !this.hasChanges()) return undefined;
+    return this.setPreviewData();
+  }
 
-    // Ensure the width is set to the default size if the preview is unavailable,
-    // or the currently selected device size if the preview is available.
-    this.setPreviewWidth();
+  /**
+   * Checks whether the form data has changed since the last call to this method.
+   * @returns whether the form data has changed
+   */
+  hasChanges() {
+    // https://github.com/microsoft/TypeScript/issues/30584
+    const newPayload = new URLSearchParams(
+      new FormData(this.editForm) as unknown as Record<string, string>,
+    ).toString();
+    const changed = this.formPayload !== newPayload;
 
-    if (!this.ready) {
-      this.ready = true;
-      this.dispatch('ready', { cancelable: false });
-    }
-    this.dispatch('updated', { cancelable: false });
+    this.formPayload = newPayload;
+    return changed;
+  }
+
+  /**
+   * Updates the preview data in the session. If the data is valid, the preview
+   * iframe will be reloaded. If the data is invalid, the preview panel will
+   * display an error message.
+   * @returns whether the data is valid
+   */
+  async setPreviewData() {
+    // Bail out if there is already a pending update
+    if (this.updatePromise) return this.updatePromise;
+
+    const updateEvent = this.dispatch('update');
+    if (updateEvent.defaultPrevented) return undefined;
+
+    // Store the promise so that subsequent calls to setPreviewData will
+    // return the same promise as long as it hasn't finished yet
+    this.updatePromise = (async () => {
+      if (this.hasSpinnerTarget) {
+        this.spinnerTimeout = setTimeout(() => {
+          this.spinnerTarget.hidden = false;
+        }, 2000);
+      }
+
+      try {
+        const response = await fetch(this.urlValue, {
+          method: 'POST',
+          body: new FormData(this.editForm),
+        });
+        const data: PreviewDataResponse = await response.json();
+
+        this.dispatch('json', { cancelable: false, detail: { data } });
+
+        this.element.classList.toggle(this.hasErrorsClass, !data.is_valid);
+        this.available = data.is_available;
+
+        if (data.is_valid) {
+          this.reloadIframe();
+        } else if (!this.ready) {
+          // The preview may contain stale data from the previous session, clear it
+          this.updatePromise = this.clearPreviewData().then(() => false);
+        } else {
+          // Finish the process when the data is invalid to prepare for the next update
+          // and avoid elements like the loading spinner to be shown indefinitely
+          this.finishUpdate();
+        }
+
+        return data.is_valid as boolean;
+      } catch (error) {
+        this.dispatch('error', { cancelable: false, detail: { error } });
+        this.finishUpdate();
+        // Re-throw error so it can be handled by setPreviewDataWithAlert
+        throw error;
+      }
+    })();
+
+    return this.updatePromise;
+  }
+
+  /**
+   * Clears the preview data from the session.
+   * @returns `Response` from the fetch `DELETE` request
+   */
+  async clearPreviewData() {
+    return fetch(this.urlValue, {
+      headers: {
+        [WAGTAIL_CONFIG.CSRF_HEADER_NAME]: WAGTAIL_CONFIG.CSRF_TOKEN,
+      },
+      method: 'DELETE',
+    }).then((response) => {
+      this.available = false;
+      this.reloadIframe();
+      return response;
+    });
   }
 
   /**
@@ -467,89 +683,30 @@ export class PreviewController extends Controller<HTMLElement> {
   }
 
   /**
-   * Clears the preview data from the session.
-   * @returns `Response` from the fetch `DELETE` request
+   * Resets the preview panel state to be ready for the next update.
    */
-  async clearPreviewData() {
-    return fetch(this.urlValue, {
-      headers: {
-        [WAGTAIL_CONFIG.CSRF_HEADER_NAME]: WAGTAIL_CONFIG.CSRF_TOKEN,
-      },
-      method: 'DELETE',
-    }).then((response) => {
-      this.available = false;
-      this.reloadIframe();
-      return response;
-    });
-  }
+  finishUpdate() {
+    if (this.spinnerTimeout) {
+      clearTimeout(this.spinnerTimeout);
+      this.spinnerTimeout = null;
+    }
+    if (this.hasSpinnerTarget) {
+      this.spinnerTarget.hidden = true;
+    }
+    if (this.hasWProgressOutlet) {
+      this.wProgressOutlet.loadingValue = false;
+    }
+    this.updatePromise = null;
 
-  /**
-   * Updates the preview data in the session. If the data is valid, the preview
-   * iframe will be reloaded. If the data is invalid, the preview panel will
-   * display an error message.
-   * @returns whether the data is valid
-   */
-  async setPreviewData() {
-    // Bail out if there is already a pending update
-    if (this.updatePromise) return this.updatePromise;
+    // Ensure the width is set to the default size if the preview is unavailable,
+    // or the currently selected device size if the preview is available.
+    this.setPreviewWidth();
 
-    const updateEvent = this.dispatch('update');
-    if (updateEvent.defaultPrevented) return undefined;
-
-    // Store the promise so that subsequent calls to setPreviewData will
-    // return the same promise as long as it hasn't finished yet
-    this.updatePromise = (async () => {
-      if (this.hasSpinnerTarget) {
-        this.spinnerTimeout = setTimeout(() => {
-          this.spinnerTarget.hidden = false;
-        }, 2000);
-      }
-
-      try {
-        const response = await fetch(this.urlValue, {
-          method: 'POST',
-          body: new FormData(this.editForm),
-        });
-        const data: PreviewDataResponse = await response.json();
-
-        this.dispatch('json', { cancelable: false, detail: { data } });
-
-        this.element.classList.toggle(this.hasErrorsClass, !data.is_valid);
-        this.available = data.is_available;
-
-        if (data.is_valid) {
-          this.reloadIframe();
-        } else if (!this.ready) {
-          // The preview may contain stale data from the previous session, clear it
-          this.updatePromise = this.clearPreviewData().then(() => false);
-        } else {
-          // Finish the process when the data is invalid to prepare for the next update
-          // and avoid elements like the loading spinner to be shown indefinitely
-          this.finishUpdate();
-        }
-
-        return data.is_valid as boolean;
-      } catch (error) {
-        this.dispatch('error', { cancelable: false, detail: { error } });
-        this.finishUpdate();
-        // Re-throw error so it can be handled by setPreviewDataWithAlert
-        throw error;
-      }
-    })();
-
-    return this.updatePromise;
-  }
-
-  /**
-   * Like `setPreviewData`, but only updates the preview if there is no pending
-   * update and the form has not changed.
-   * @returns whether the data is valid
-   */
-  async checkAndUpdatePreview() {
-    // Small performance optimisation: the hasChanges() method will not be called
-    // if there is a pending update due to the || operator short-circuiting
-    if (this.updatePromise || !this.hasChanges()) return undefined;
-    return this.setPreviewData();
+    if (!this.ready) {
+      this.ready = true;
+      this.dispatch('ready', { cancelable: false });
+    }
+    this.dispatch('updated', { cancelable: false });
   }
 
   /**
@@ -598,134 +755,6 @@ export class PreviewController extends Controller<HTMLElement> {
     return valid;
   }
 
-  /**
-   * Checks whether the form data has changed since the last call to this method.
-   * @returns whether the form data has changed
-   */
-  hasChanges() {
-    // https://github.com/microsoft/TypeScript/issues/30584
-    const newPayload = new URLSearchParams(
-      new FormData(this.editForm) as unknown as Record<string, string>,
-    ).toString();
-    const changed = this.formPayload !== newPayload;
-
-    this.formPayload = newPayload;
-    return changed;
-  }
-
-  /**
-   * Activates the preview mechanism.
-   * The preview data is immediately updated. If auto-update is enabled,
-   * debounce is applied to setPreviewData for subsequent calls, and an interval
-   * is set up to automatically check the form and update the preview data.
-   */
-  activatePreview() {
-    // Immediately update the preview when the panel is opened
-    this.checkAndUpdatePreview();
-
-    // Only set the interval while the panel is shown
-    this.addInterval();
-  }
-
-  autoUpdateIntervalValueChanged() {
-    // If the value is changed, only update the interval if it's currently active
-    // as we don't want to start the interval when the panel is hidden
-    if (this.updateInterval) this.addInterval();
-  }
-
-  addInterval() {
-    this.clearInterval();
-    // This interval performs the checks for changes but not necessarily the
-    // update itself
-    this.updateInterval = setOptionalInterval(
-      this.checkAndUpdatePreview,
-      this.autoUpdateIntervalValue,
-    );
-
-    if (this.updateInterval) {
-      // Apply debounce for subsequent updates if not already applied
-      if (!('cancel' in this.setPreviewData)) {
-        this.setPreviewData = debounce(
-          this.setPreviewData,
-          this.autoUpdateIntervalValue,
-        );
-      }
-    }
-  }
-
-  clearInterval() {
-    if (!this.updateInterval) return;
-    window.clearInterval(this.updateInterval);
-    this.updateInterval = null;
-  }
-
-  /**
-   * Deactivates the preview mechanism.
-   *
-   * If auto-update is enabled, clear the auto-update interval.
-   */
-  deactivatePreview() {
-    this.clearInterval();
-  }
-
-  /**
-   * Update the new tab link with the currently selected preview mode,
-   * then updates the preview.
-   */
-  setPreviewMode() {
-    this.updateNewTabLink();
-
-    // Make sure data is updated and an alert is displayed if an error occurs
-    this.setPreviewDataWithAlert();
-  }
-
-  connect() {
-    if (!this.urlValue) {
-      throw new Error(
-        `The preview panel controller requires the data-${this.identifier}-url-value attribute to be set`,
-      );
-    }
-
-    this.resizeObserver = this.observePanelSize();
-
-    this.editForm = document.querySelector<HTMLFormElement>(
-      '[data-edit-form]',
-    ) as HTMLFormElement;
-
-    // This controller is encapsulated as a child of the side panel element,
-    // so we need to listen to the show/hide events on the parent element
-    // (the one with [data-side-panel]).
-    // If we had support for data-controller attribute on the side panels,
-    // we could remove the intermediary element and make the [data-side-panel]
-    // element to also act as the controller.
-    this.sidePanelContainer = this.element.parentElement as HTMLDivElement;
-
-    this.checksSidePanel = document.querySelector('[data-side-panel="checks"]');
-
-    this.activatePreview = this.activatePreview.bind(this);
-    this.deactivatePreview = this.deactivatePreview.bind(this);
-    this.setPreviewData = this.setPreviewData.bind(this);
-    this.checkAndUpdatePreview = this.checkAndUpdatePreview.bind(this);
-
-    this.sidePanelContainer.addEventListener('show', this.activatePreview);
-    this.sidePanelContainer.addEventListener('hide', this.deactivatePreview);
-
-    this.checksSidePanel?.addEventListener('show', this.activatePreview);
-    this.checksSidePanel?.addEventListener('hide', this.deactivatePreview);
-
-    this.restoreLastSavedPreferences();
-  }
-
-  renderUrlValueChanged(newValue: string) {
-    // Allow the rendering URL to be different from the URL used for sending the
-    // preview data (e.g. for a headless setup), but make it optional and use
-    // the latter as the default.
-    if (!newValue) {
-      this.renderUrlValue = this.urlValue;
-    }
-    this.updateNewTabLink();
-  }
-
   disconnect(): void {
     this.sidePanelContainer.removeEventListener('show', this.activatePreview);
     this.sidePanelContainer.removeEventListener('hide', this.deactivatePreview);
@@ -734,27 +763,5 @@ export class PreviewController extends Controller<HTMLElement> {
     this.checksSidePanel?.removeEventListener('hide', this.deactivatePreview);
 
     this.resizeObserver.disconnect();
-  }
-
-  /**
-   * Restores the last saved preferences.
-   * Currently, only the last selected device size is restored.
-   */
-  restoreLastSavedPreferences() {
-    // Remember last selected device size
-    let lastDevice: string | null = null;
-    try {
-      lastDevice = localStorage.getItem(this.deviceLocalStorageKeyValue);
-    } catch (e) {
-      // Initialise with the default device if the last one cannot be restored.
-    }
-    const lastDeviceInput =
-      this.sizeTargets.find((input) => input.value === lastDevice) ||
-      this.defaultSizeInput;
-    lastDeviceInput.click();
-    // If lastDeviceInput resolves to the defaultSizeInput, the click event will
-    // not trigger the togglePreviewSize method, so we need to apply the
-    // selected size class manually.
-    this.applySelectedSizeClass(lastDeviceInput.value);
   }
 }
