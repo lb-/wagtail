@@ -630,6 +630,9 @@ export class PreviewController extends Controller<HTMLElement> {
     // Copy the iframe element
     const newIframe = this.iframeTarget.cloneNode() as HTMLIFrameElement;
 
+    // Remove the ID to avoid duplicate IDs in the DOM
+    newIframe.removeAttribute('id');
+
     // The iframe does not have an src attribute on initial load,
     // so we need to set it here. For subsequent loads, it's fine to set it
     // again to ensure it's in sync with the selected preview mode.
@@ -652,6 +655,7 @@ export class PreviewController extends Controller<HTMLElement> {
    * @param event The `load` event from the new iframe
    */
   replaceIframe(event: Event) {
+    const id = this.iframeTarget.id;
     const newIframe = event.target as HTMLIFrameElement;
 
     // Restore scroll position
@@ -668,7 +672,8 @@ export class PreviewController extends Controller<HTMLElement> {
     // the following line and see that the array contains two and then one iframe.
     this.iframeTarget.remove();
 
-    // Make the new iframe visible
+    // Set the id and make the new iframe visible
+    newIframe.id = id;
     newIframe.removeAttribute('style');
 
     this.dispatch('loaded', { cancelable: false });

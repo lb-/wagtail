@@ -210,6 +210,9 @@ describe('PreviewController', () => {
     expect(iframes.length).toEqual(2);
     const oldIframe = iframes[0];
     const newIframe = iframes[1];
+    const oldIframeId = oldIframe.id;
+    expect(oldIframeId).toBeTruthy();
+    expect(newIframe.hasAttribute('id')).toBe(false);
     expect(newIframe.src).toEqual(expectedUrl);
     expect(newIframe.style.width).toEqual('0px');
     expect(newIframe.style.height).toEqual('0px');
@@ -225,6 +228,7 @@ describe('PreviewController', () => {
     iframes = document.querySelectorAll('iframe');
     expect(iframes.length).toEqual(1);
     expect(iframes[0]).toBe(newIframe);
+    expect(newIframe.id).toEqual(oldIframeId);
     expect(newIframe.src).toEqual(expectedUrl);
     expect(newIframe.getAttribute('style')).toBeNull();
     expect(newIframe.contentWindow.scroll).toHaveBeenCalledWith(
