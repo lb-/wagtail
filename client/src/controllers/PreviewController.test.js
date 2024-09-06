@@ -1032,6 +1032,50 @@ describe('PreviewController', () => {
         expect.objectContaining({ identifier }),
       );
     });
+
+    it('should not immediately dispatch the loaded event if the iframe src is empty', async () => {
+      application = Application.start();
+      application.register(identifier, PreviewController);
+      await Promise.resolve();
+
+      // Simulate Firefox's behaviour where the initial iframe without the src
+      // attribute immediately dispatches the load event
+      let iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+      const iframe = iframes[0];
+      iframe.dispatchEvent(new Event('load'));
+      await Promise.resolve();
+
+      // Should not dispatch the loaded event, because we haven't actualy loaded
+      // the preview yet
+      expect(events.loaded).toHaveLength(0);
+
+      // Should not create a new iframe or remove the existing one
+      iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+    });
+
+    it('should not remove the only iframe if the load event is fired', async () => {
+      await initializeOpenedPanel();
+
+      let iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+      const iframe = iframes[0];
+
+      // Simulate changing the iframe src, which will reload the iframe
+      iframe.setAttribute('src', iframe.src + '&test=1');
+      await Promise.resolve();
+      iframe.contentWindow.scroll = jest.fn();
+      iframe.dispatchEvent(new Event('load'));
+      await Promise.resolve();
+
+      // Should dispatch the loaded event
+      expect(events.loaded).toHaveLength(2);
+
+      // Should not create a new iframe or remove the existing one
+      iframes = document.querySelectorAll('iframe');
+      expect(iframes.length).toEqual(1);
+    });
   });
 
   describe('auto update cycle from opening the panel with a valid form -> invalid form -> valid form -> closing the panel', () => {

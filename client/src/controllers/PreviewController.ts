@@ -675,19 +675,26 @@ export class PreviewController extends Controller<HTMLElement> {
     const id = this.iframeTarget.id;
     const newIframe = event.target as HTMLIFrameElement;
 
+    // On Firefox, the `load` event is also fired even when the iframe has no
+    // `src` attribute, like in the initial render from the server template. Do
+    // not run the replacement logic in this case.
+    if (!newIframe.src) return;
+
     // Restore scroll position
     newIframe.contentWindow?.scroll(
       this.iframeTarget.contentWindow?.scrollX as number,
       this.iframeTarget.contentWindow?.scrollY as number,
     );
 
-    // Remove the old iframe
-    // This will disconnect the old iframe target, but it's fine because
-    // the new iframe has been connected when we copy the attributes over,
-    // thus subsequent references to this.iframeTarget will be the new iframe.
-    // To verify, you can add console.log(this.iframeTargets) before and after
-    // the following line and see that the array contains two and then one iframe.
-    this.iframeTarget.remove();
+    // Remove any other existing iframes. Normally there are two iframes at this
+    // point, the old one and the new one. However, the `load` event may be fired
+    // more than once for the same iframe, e.g. if the `src` attribute is changed
+    // – in which case there is only one iframe and that is also the new one.
+    this.iframeTargets.forEach((iframe) => {
+      if (iframe !== newIframe) {
+        iframe.remove();
+      }
+    });
 
     // Set the id and make the new iframe visible
     newIframe.id = id;
