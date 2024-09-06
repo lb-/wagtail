@@ -104,104 +104,136 @@ interface PreviewDataResponse {
  * Controls the preview panel component to submit the current form state and
  * update the preview iframe if the form is valid.
  *
- * Dispatches the following events, in order:
- * - `update` before sending the preview data to the server. Cancelable.
- * - `json` after the preview data update request is completed. Note that the
- *   data may not be valid and the iframe is not reloaded yet at this point.
- *   Event `detail`:
- *   - `data`: the response data that indicates whether the submitted data was
- *     valid and whether the preview is available.
- * - `error` when an error occurs while updating the preview data.
- *   Event `detail`:
- *   - `error`: the error object that was thrown.
- * - `load` before reloading the preview iframe. Cancelable.
- * - `loaded` after the preview iframe has been reloaded.
- * - `ready` when the preview is ready for further updates – only fired on initial load.
- * - `updated` after an update cycle is finished. This may or may not involve a
- *   refresh of the iframe (e.g. in the case of an invalid form).
+ * Dispatches the following events in this order.
+ *
+ * @fires PreviewController#update - Before sending the preview data to the server. Cancelable.
+ * @fires PreviewController#json - After the preview data update request is completed.
+ * @fires PreviewController#error - When an error occurs while updating the preview data.
+ * @fires PreviewController#load - Before reloading the preview iframe. Cancelable.
+ * @fires PreviewController#loaded - After the preview iframe has been reloaded.
+ * @fires PreviewController#ready - When the preview is ready for further updates – only fired on initial load.
+ * @fires PreviewController#updated - After an update cycle is finished – may or may not involve reloading the iframe.
+ *
+ * @event PreviewController#update
+ * @type {CustomEvent}
+ * @property {boolean} cancelable - Is cancelable
+ * @property {string} name - `w-preview:update`
+ *
+ * @event PreviewController#json
+ * @type {CustomEvent}
+ * @property {Object} detail
+ * @property {PreviewDataResponse} detail.data - The response data that indicates whether the submitted data was valid and whether the preview is available.
+ * @property {string} name - `w-preview:json`
+ *
+ * @event PreviewController#error
+ * @type {CustomEvent}
+ * @property {Object} detail
+ * @property {Error} detail.error - The error object that was thrown.
+ * @property {string} name - `w-preview:error`
+ *
+ * @event PreviewController#load
+ * @type {CustomEvent}
+ * @property {boolean} cancelable - Is cancelable
+ * @property {string} name - `w-preview:load`
+ *
+ * @event PreviewController#loaded
+ * @type {CustomEvent}
+ * @property {string} name - `w-preview:loaded`
+ *
+ * @event PreviewController#ready
+ * @type {CustomEvent}
+ * @property {string} name - `w-preview:ready`
+ *
+ * @event PreviewController#updated
+ * @type {CustomEvent}
+ * @property {string} name - `w-preview:updated`
  */
 export class PreviewController extends Controller<HTMLElement> {
   static classes = ['hasErrors', 'selectedSize'];
 
-  static targets = ['size', 'newTab', 'spinner', 'mode', 'iframe'];
+  static targets = ['iframe', 'mode', 'newTab', 'size', 'spinner'];
 
   static values = {
-    url: { default: '', type: String },
-    renderUrl: { default: '', type: String },
     autoUpdateInterval: { default: 500, type: Number },
-    deviceWidthProperty: { default: '--preview-device-width', type: String },
-    panelWidthProperty: { default: '--preview-panel-width', type: String },
     deviceLocalStorageKey: {
       default: 'wagtail:preview-panel-device',
       type: String,
     },
+    deviceWidthProperty: { default: '--preview-device-width', type: String },
+    panelWidthProperty: { default: '--preview-panel-width', type: String },
+    renderUrl: { default: '', type: String },
+    url: { default: '', type: String },
   };
 
   static outlets = ['w-progress'];
+
+  // Classes
 
   /** CSS class to indicate that there are errors in the form. */
   declare readonly hasErrorsClass: string;
   /** CSS class for the currently selected device size. */
   declare readonly selectedSizeClass: string;
 
-  /** Device size `<input type="radio">` elements. */
-  declare readonly sizeTargets: HTMLInputElement[];
-  declare readonly hasNewTabTarget: boolean;
-  /** New tab button. */
-  declare readonly newTabTarget: HTMLAnchorElement;
-  declare readonly hasSpinnerTarget: boolean;
-  /** Loading spinner. */
-  declare readonly spinnerTarget: HTMLDivElement;
-  declare readonly hasModeTarget: boolean;
-  /** Preview mode `<select>` element. */
-  declare readonly modeTarget: HTMLSelectElement;
+  // Targets
+
   /** The main preview `<iframe>` that is currently displayed. */
   declare readonly iframeTarget: HTMLIFrameElement;
   /** All preview `<iframes>` that are currently in the DOM.
    * This contains the currently displayed `<iframe>` and may also contain
    * the new `<iframe>` that will replace the current one. */
   declare readonly iframeTargets: HTMLIFrameElement[];
+  /** Preview mode `<select>` element. */
+  declare readonly modeTarget: HTMLSelectElement;
+  declare readonly hasModeTarget: boolean;
+  /** New tab button. */
+  declare readonly newTabTarget: HTMLAnchorElement;
+  declare readonly hasNewTabTarget: boolean;
+  /** Device size `<input type="radio">` elements. */
+  declare readonly sizeTargets: HTMLInputElement[];
+  /** Loading spinner. */
+  declare readonly spinnerTarget: HTMLDivElement;
+  declare readonly hasSpinnerTarget: boolean;
 
-  /** URL for updating the preview data. Also used for rendering the preview if `renderUrlValue` is unset. */
-  declare readonly urlValue: string;
+  // Values
+
   /** Interval in milliseconds when the form is checked for changes.
    * Also used as the debounce duration for the update request. */
   declare readonly autoUpdateIntervalValue: number;
+  /** Key for storing the last selected device size in localStorage. */
+  declare readonly deviceLocalStorageKeyValue: string;
   /** CSS property for setting the device width. */
   declare readonly deviceWidthPropertyValue: string;
   /** CSS property for the current width of the panel, to maintain the device scaling. */
   declare readonly panelWidthPropertyValue: string;
-  /** Key for storing the last selected device size in localStorage. */
-  declare readonly deviceLocalStorageKeyValue: string;
   /** URL for rendering the preview, defaults to `urlValue`.
    * Useful for headless setups where the front-end may be hosted at a different URL. */
   declare renderUrlValue: string;
+  /** URL for updating the preview data. Also used for rendering the preview if `renderUrlValue` is unset. */
+  declare readonly urlValue: string;
 
-  declare readonly hasWProgressOutlet: boolean;
+  // Outlets
+
   /** ProgressController for the refresh button that may be displayed when auto-update is turned off. */
   declare readonly wProgressOutlet: ProgressController;
+  declare readonly hasWProgressOutlet: boolean;
 
   // Instance variables with initial values set in connect()
 
+  /** Side panel for content checks. */
+  declare checksSidePanel: HTMLDivElement | null;
   /** Main editor form. */
   declare editForm: HTMLFormElement;
+  /** ResizeObserver to observe when the panel is resized
+   * so we can maintain the device size scaling. */
+  declare resizeObserver: ResizeObserver;
   /** Side panel element of the preview panel, i.e. the element with the
    * `data-side-panel` attribute. Useful for listening to show/hide events.
    * Normally, this is the parent element of the controller element.
    */
   declare sidePanelContainer: HTMLDivElement;
-  /** Side panel for content checks. */
-  declare checksSidePanel: HTMLDivElement | null;
-  /** ResizeObserver to observe when the panel is resized
-   * so we can maintain the device size scaling. */
-  declare resizeObserver: ResizeObserver;
 
   // Instance variables with initial values set here
 
-  /** Timeout before displaying the loading spinner. */
-  spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
-  /** Interval for the auto-update. */
-  updateInterval: ReturnType<typeof setOptionalInterval> = null;
   /** Whether the preview is ready for further updates.
    *
    * The preview data is stored in the session, which means:
@@ -239,6 +271,7 @@ export class PreviewController extends Controller<HTMLElement> {
    * edit views).
    */
   ready = false;
+
   /** Whether the preview is currently available. This is used to distinguish
    * whether we are rendering a preview or the "Preview is not available"
    * screen. So even if the preview is currently outdated, this is still `true`
@@ -246,16 +279,24 @@ export class PreviewController extends Controller<HTMLElement> {
    * if the form becomes invalid after the preview is successfully rendered).
    */
   available = true;
-  /** Promise for the current update request. This is resolved as soon as the
-   * update request is successful, so the preview iframe may not have been
-   * fully reloaded.
-   */
-  updatePromise: Promise<boolean> | null = null;
+
   /** Serialized form payload to be compared in between intervals to determine
    * whether an update should be performed. Note that we currently do not handle
    * file inputs.
    */
   formPayload = '';
+
+  /** Timeout before displaying the loading spinner. */
+  spinnerTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  /** Interval for the auto-update. */
+  updateInterval: ReturnType<typeof setOptionalInterval> = null;
+
+  /** Promise for the current update request. This is resolved as soon as the
+   * update request is successful, so the preview iframe may not have been
+   * fully reloaded.
+   */
+  updatePromise: Promise<boolean> | null = null;
 
   /**
    * The default size input element.
