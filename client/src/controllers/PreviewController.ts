@@ -149,7 +149,7 @@ interface PreviewDataResponse {
  * @property {string} name - `w-preview:updated`
  */
 export class PreviewController extends Controller<HTMLElement> {
-  static classes = ['hasErrors', 'selectedSize'];
+  static classes = ['hasErrors', 'proxy', 'selectedSize'];
 
   static targets = ['iframe', 'mode', 'newTab', 'size', 'spinner'];
 
@@ -171,6 +171,8 @@ export class PreviewController extends Controller<HTMLElement> {
 
   /** CSS class to indicate that there are errors in the form. */
   declare readonly hasErrorsClass: string;
+  /** CSS class for elements that are invisible and only rendered for functionality purposes. */
+  declare readonly proxyClass: string;
   /** CSS class for the currently selected device size. */
   declare readonly selectedSizeClass: string;
 
@@ -699,10 +701,7 @@ export class PreviewController extends Controller<HTMLElement> {
     newIframe.src = url.toString();
 
     // Make the new iframe invisible
-    newIframe.style.width = '0';
-    newIframe.style.height = '0';
-    newIframe.style.opacity = '0';
-    newIframe.style.position = 'absolute';
+    newIframe.classList.add(this.proxyClass);
 
     // Put it in the DOM so it loads the page
     this.iframeTarget.insertAdjacentElement('afterend', newIframe);
@@ -739,7 +738,7 @@ export class PreviewController extends Controller<HTMLElement> {
 
     // Set the id and make the new iframe visible
     newIframe.id = id;
-    newIframe.removeAttribute('style');
+    newIframe.classList.remove(this.proxyClass);
 
     this.dispatch('loaded', { cancelable: false });
 

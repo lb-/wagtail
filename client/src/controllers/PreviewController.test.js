@@ -125,6 +125,7 @@ describe('PreviewController', () => {
           class="w-preview"
           data-controller="w-preview"
           data-w-preview-has-errors-class="w-preview--has-errors"
+          data-w-preview-proxy-class="w-preview__proxy"
           data-w-preview-selected-size-class="w-preview__size-button--selected"
           data-w-preview-url-value="${url}"
           data-w-preview-auto-update-interval-value="0"
@@ -214,10 +215,7 @@ describe('PreviewController', () => {
     expect(oldIframeId).toBeTruthy();
     expect(newIframe.hasAttribute('id')).toBe(false);
     expect(newIframe.src).toEqual(expectedUrl);
-    expect(newIframe.style.width).toEqual('0px');
-    expect(newIframe.style.height).toEqual('0px');
-    expect(newIframe.style.opacity).toEqual('0');
-    expect(newIframe.style.position).toEqual('absolute');
+    expect(newIframe.classList.contains('w-preview__proxy')).toBe(true);
 
     // Simulate the iframe loading
     const mockScroll = jest.fn();
@@ -434,10 +432,7 @@ describe('PreviewController', () => {
       const oldIframe = iframes[0];
       const newIframe = iframes[1];
       expect(newIframe.src).toEqual(expectedUrl);
-      expect(newIframe.style.width).toEqual('0px');
-      expect(newIframe.style.height).toEqual('0px');
-      expect(newIframe.style.opacity).toEqual('0');
-      expect(newIframe.style.position).toEqual('absolute');
+      expect(newIframe.classList.contains('w-preview__proxy')).toBe(true);
 
       // Mock the iframe's scroll method
       newIframe.contentWindow.scroll = jest.fn();
@@ -559,10 +554,7 @@ describe('PreviewController', () => {
       const oldIframe = iframes[0];
       const newIframe = iframes[1];
       expect(newIframe.src).toEqual(expectedUrl);
-      expect(newIframe.style.width).toEqual('0px');
-      expect(newIframe.style.height).toEqual('0px');
-      expect(newIframe.style.opacity).toEqual('0');
-      expect(newIframe.style.position).toEqual('absolute');
+      expect(newIframe.classList.contains('w-preview__proxy')).toBe(true);
       expect(events.ready).toHaveLength(0);
 
       // Mock the iframe's scroll method
@@ -720,10 +712,7 @@ describe('PreviewController', () => {
       const oldIframe = iframes[0];
       const newIframe = iframes[1];
       expect(newIframe.src).toEqual(expectedUrl);
-      expect(newIframe.style.width).toEqual('0px');
-      expect(newIframe.style.height).toEqual('0px');
-      expect(newIframe.style.opacity).toEqual('0');
-      expect(newIframe.style.position).toEqual('absolute');
+      expect(newIframe.classList.contains('w-preview__proxy')).toBe(true);
       expect(events.ready).toHaveLength(0);
 
       // Mock the iframe's scroll method
@@ -931,10 +920,7 @@ describe('PreviewController', () => {
       const oldIframe = iframes[0];
       const newIframe = iframes[1];
       expect(newIframe.src).toEqual(expectedUrl);
-      expect(newIframe.style.width).toEqual('0px');
-      expect(newIframe.style.height).toEqual('0px');
-      expect(newIframe.style.opacity).toEqual('0');
-      expect(newIframe.style.position).toEqual('absolute');
+      expect(newIframe.classList.contains('w-preview__proxy')).toBe(true);
       // The spinner should still be visible while the iframe is loading
       expect(spinnerElement.hidden).toBe(false);
 

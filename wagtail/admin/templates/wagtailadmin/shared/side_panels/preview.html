@@ -4,6 +4,7 @@
     class="w-preview"
     data-controller="w-preview"
     data-w-preview-has-errors-class="w-preview--has-errors"
+    data-w-preview-proxy-class="w-preview__proxy"
     data-w-preview-selected-size-class="w-preview__size-button--selected"
     data-w-preview-auto-update-interval-value="{{ auto_update_interval|unlocalize }}"
     data-w-preview-url-value="{{ preview_url }}"
@@ -13,15 +14,15 @@
         {% block size_buttons %}
             <label class="w-preview__size-button">
                 {% icon name="mobile-alt" %}
-                <input type="radio" name="preview-size" value="mobile" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="375" data-default-size checked aria-label="{% trans 'Preview in mobile size' %}" />
+                <input type="radio" class="w-preview__proxy" name="preview-size" value="mobile" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="375" data-default-size checked aria-label="{% trans 'Preview in mobile size' %}" />
             </label>
             <label class="w-preview__size-button">
                 {% icon name="tablet-alt" %}
-                <input type="radio" name="preview-size" value="tablet" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="768" aria-label="{% trans 'Preview in tablet size' %}" />
+                <input type="radio" class="w-preview__proxy" name="preview-size" value="tablet" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="768" aria-label="{% trans 'Preview in tablet size' %}" />
             </label>
             <label class="w-preview__size-button">
                 {% icon name="desktop" %}
-                <input type="radio" name="preview-size" value="desktop" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="1280" aria-label="{% trans 'Preview in desktop size' %}" />
+                <input type="radio" class="w-preview__proxy" name="preview-size" value="desktop" data-action="w-preview#togglePreviewSize" data-w-preview-target="size" data-device-width="1280" aria-label="{% trans 'Preview in desktop size' %}" />
             </label>
         {% endblock %}
 
