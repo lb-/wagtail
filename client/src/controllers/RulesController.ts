@@ -1,6 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
 
-import { castArray } from '../utils/castArray';
 import { debounce } from '../utils/debounce';
 
 /**
@@ -26,6 +25,7 @@ export class RulesController extends Controller<HTMLFormElement> {
 
   /** Targets will be enabled if the `data-rule` matches the scoped form data, otherwise will be disabled. */
   declare readonly enableTargets: HTMLElement[];
+  /** Value set on connect to ensure there are valid targets available, to avoid running rules when not needed. */
   declare readonly hasEnableTarget: boolean;
 
   declare active: boolean;
@@ -54,37 +54,31 @@ export class RulesController extends Controller<HTMLFormElement> {
   resolve() {
     if (!this.active) return;
 
-    const form = this.element;
-    const formData = Object.fromEntries(new FormData(form).entries());
+    const formData = new FormData(this.element);
 
-    [
-      ...this.enableTargets.map((target) => ({ shouldDisable: false, target })),
-    ].forEach(({ shouldDisable, target }) => {
-      this.toggleAttribute(
-        target,
-        this.getIsMatch(formData, this.getRuleData(target))
-          ? !shouldDisable
-          : shouldDisable,
-        'disabled',
+    this.enableTargets.forEach((target) => {
+      const shouldEnable = Object.entries(this.getRule(target)).every(
+        ([fieldName, validValues]) => {
+          const fieldValues = formData.getAll(fieldName);
+          return validValues.some((validValue) =>
+            fieldValues.includes(validValue),
+          );
+        },
       );
+
+      if (shouldEnable === target.hasAttribute('disabled')) return;
+
+      if (shouldEnable) {
+        target.removeAttribute('disabled');
+      } else {
+        target.setAttribute('disabled', '');
+      }
     });
 
     this.dispatch('resolved', { bubbles: true, cancelable: false });
   }
 
-  getIsMatch(
-    formData: Record<string, FormDataEntryValue>,
-    ruleData: Record<string, string[]>,
-  ): boolean {
-    return (
-      ruleData &&
-      Object.entries(ruleData).every(([key, value]) =>
-        value.includes(String(formData[key] || '')),
-      )
-    );
-  }
-
-  getRuleData(target: Element): Record<string, string[]> {
+  getRule(target: Element): Record<string, string[]> {
     if (!target) return {};
     const ruleStr = target.getAttribute('data-rule');
     if (!ruleStr) return {};
@@ -93,56 +87,16 @@ export class RulesController extends Controller<HTMLFormElement> {
     const cachedRule = this.ruleCache[ruleStr];
     if (cachedRule) return cachedRule;
 
-    // prepare parsed rule data
-    let rule = {};
+    // parse rule data, assume it' correctly formatted & let Stimulus handle errors & logging
+    const parsedRule = JSON.parse(ruleStr);
 
-    if (ruleStr) {
-      try {
-        rule = JSON.parse(ruleStr);
-        if (Array.isArray(rule)) rule = Object.fromEntries(rule);
-      } catch (e) {
-        // Safely ignore JSON parsing errors
-      }
-    }
+    const rule = Array.isArray(parsedRule)
+      ? Object.fromEntries(parsedRule)
+      : parsedRule;
 
-    // Map through values and convert to array of strings
-    // Allowing falsey values to be treated as an empty string
-    const ruleData = Object.fromEntries(
-      Object.entries(rule).map(([key, value = null]) => [
-        key,
-        castArray(value).map((item) => (item ? String(item) : '')),
-      ]),
-    );
+    this.ruleCache[ruleStr] = rule;
 
-    this.ruleCache[ruleStr] = ruleData;
-
-    return ruleData;
-  }
-
-  toggleAttribute(target, shouldRemove = false, attr = 'hidden') {
-    if (shouldRemove) {
-      target.removeAttribute(attr);
-    } else if (attr === 'disabled') {
-      // eslint-disable-next-line no-param-reassign
-      target.disabled = true;
-    } else {
-      target.setAttribute(attr, attr);
-    }
-
-    // special handling of select fields to avoid selected values from being kept as selected
-    if (!(!shouldRemove && target instanceof HTMLOptionElement)) return;
-    const selectElement = target.closest('select');
-
-    if (!(selectElement && target.selected)) return;
-
-    const resetValue =
-      Array.from(selectElement.options).find((option) => option.defaultSelected)
-        ?.value || '';
-
-    selectElement.value = resetValue;
-
-    // intentionally not dispatching a change event, could cause an infinite loop
-    this.dispatch('cleared', { bubbles: true, target: selectElement });
+    return rule;
   }
 
   enableTargetDisconnected() {
