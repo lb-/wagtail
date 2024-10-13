@@ -187,6 +187,8 @@ ActiveFilter = namedtuple(
 
 
 class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
+    BASE_ATTRS = {"id": "listing-results",}
+
     template_name = "wagtailadmin/generic/listing.html"
     results_template_name = "wagtailadmin/generic/listing_results.html"
     results_only = False  # If true, just render the results as an HTML fragment
@@ -204,6 +206,7 @@ class BaseListingView(WagtailAdminTemplateMixin, BaseListView):
     filterset_class = None
     verbose_name_plural = None
     _show_breadcrumbs = True
+    # would be good to add support for attrs &/or classes
 
     def get_template_names(self):
         if self.results_only:

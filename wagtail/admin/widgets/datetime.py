@@ -35,6 +35,10 @@ class AdminDateInput(widgets.DateInput):
         }
 
     def get_context(self, name, value, attrs):
+
+        attrs = attrs or {}
+        attrs["data-w-init-event-value"] = "w-date-chooser:init"
+        attrs["data-w-init-detail-value"] = json.dumps(self.get_config())
         context = super().get_context(name, value, attrs)
 
         context["widget"]["config_json"] = json.dumps(self.get_config())
@@ -63,10 +67,13 @@ register(AdminDateInputAdapter(), AdminDateInput)
 
 
 class AdminTimeInput(widgets.TimeInput):
-    template_name = "wagtailadmin/widgets/time_input.html"
 
     def __init__(self, attrs=None, format=None):
-        default_attrs = {"autocomplete": "off"}
+        default_attrs = {
+            "autocomplete": "off",
+            "data-controller": "w-init",
+            "data-w-init-event-value": "w-time-chooser:init",
+        }
         if attrs:
             default_attrs.update(attrs)
         fmt = format
@@ -76,11 +83,15 @@ class AdminTimeInput(widgets.TimeInput):
         super().__init__(attrs=default_attrs, format=fmt)
 
     def get_config(self):
-        return {"format": self.js_format, "formatTime": self.js_format}
+        return {
+            "format": self.js_format,
+            "formatTime": self.js_format,
+        }
 
     def get_context(self, name, value, attrs):
+        attrs = attrs or {}
+        attrs["data-w-init-detail-value"] = json.dumps(self.get_config())
         context = super().get_context(name, value, attrs)
-        context["widget"]["config_json"] = json.dumps(self.get_config())
         return context
 
     @property

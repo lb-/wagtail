@@ -103,4 +103,13 @@ export class SlugController extends Controller<HTMLInputElement> {
 
     return newValue;
   }
+
+  /**
+   * Allow for file names, with paths, to be cleaned into normalised
+   * values for use in titles or descriptions.
+   */
+  tidy(event: CustomEvent<{ value: string }> | { detail: { value: string } }) {
+    const { value = this.element.value } = event?.detail || {};
+    console.log('clean title', { value });
+  }
 }

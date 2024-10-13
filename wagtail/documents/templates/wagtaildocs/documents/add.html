@@ -5,7 +5,7 @@
 {% block extra_js %}
     {{ block.super }}
 
-    <script>
+    {% comment %} <script>
         $(function() {
             $('#id_file').on(
                 'change',
@@ -33,7 +33,7 @@
                 }
             );
         });
-    </script>
+    </script> {% endcomment %}
 {% endblock %}
 
 {% block actions %}

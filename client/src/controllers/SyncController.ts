@@ -26,6 +26,7 @@ export class SyncController extends Controller<HTMLInputElement> {
     delay: { default: 0, type: Number },
     disabled: { default: false, type: Boolean },
     quiet: { default: false, type: Boolean },
+    ref: String,
     target: String,
   };
 
@@ -33,6 +34,11 @@ export class SyncController extends Controller<HTMLInputElement> {
   declare delayValue: number;
   declare disabledValue: boolean;
   declare quietValue: boolean;
+  /**
+   * A reference value to support differentiation between events.
+   */
+  declare refValue: boolean;
+
   declare readonly targetValue: string;
 
   /**
@@ -131,13 +137,32 @@ export class SyncController extends Controller<HTMLInputElement> {
     ];
 
     const elements = targetElements.filter((target) => {
+      const element = this.element;
+      const value = element.value;
+      const ref = this.refValue;
+
+      const normalized =
+        element.type === 'file'
+          ? value
+              .split('\\')
+              .slice(-1)[0]
+              .replace(/\.[^.]+$/, '')
+          : value;
+
+      const maxLength = Number(target.getAttribute('maxlength')) || null;
+      const required = !!target.hasAttribute('required');
+
+      /** need a way to support legacy event approach */
+
       const event = this.dispatch(eventName, {
-        bubbles: false,
+        bubbles: true, // argh - this should be true but not sure if it will break other things
         cancelable: true,
         ...options, // allow overriding some options but not detail & target
-        detail: { element: this.element, value: this.element.value },
+        detail: { element, maxLength, normalized, ref, required, value },
         target: target as HTMLInputElement,
       });
+
+      console.log(event);
 
       return !event.defaultPrevented;
     });
@@ -147,5 +172,82 @@ export class SyncController extends Controller<HTMLInputElement> {
     }
 
     return elements;
+  }
+
+  /**
+   * Could use afterload or something to add backwards compatibility with documented
+   * 'wagtail:images|documents-upload' approach.
+   */
+  static afterLoad(identifier: string) {
+    console.log('is this working?', { identifier });
+    if (identifier !== 'w-sync') return;
+
+    // domReady().then(() => {
+    console.log('is this working?');
+
+    /**
+     * Need to think this through.
+     * I only really want this on specific fields
+     * We could normalize all values but is that bad?
+     * Need to consider issues with bubbling actions
+     * Maybe... using Ping instead for now?
+     */
+
+    const handleEvent = (
+      event: CustomEvent<{
+        normalized: string;
+        value: string;
+        maxLength: number | null;
+        ref: string;
+      }>,
+    ) => {
+      console.log('sync apply! before', event);
+      const {
+        /** Will be the target title field */
+        target,
+      } = event;
+      if (!target || !(target instanceof HTMLElement)) return;
+      const form = target.closest('form');
+      if (!form) return;
+
+      console.log('sync apply!', event);
+
+      const {
+        maxLength: maxTitleLength,
+        normalized: title,
+        ref,
+        value: filename,
+      } = event.detail;
+
+      const data = { title };
+
+      const wrapperEvent = form.dispatchEvent(
+        new CustomEvent(`wagtail:${ref}-upload`, {
+          bubbles: true,
+          cancelable: true,
+          detail: {
+            ...event.detail,
+            data,
+            filename,
+            maxTitleLength,
+          },
+        }),
+      );
+
+      if (!wrapperEvent) {
+        // Do not set a title if event.preventDefault(); is called by handler
+        event.preventDefault();
+      }
+
+      if (data.title !== title) {
+        // If the title has been modified through another listener, update the title field
+        //  or we just always do this???
+        event.preventDefault();
+        target.setAttribute('value', data.title);
+      }
+    };
+
+    document.addEventListener('w-sync:apply', handleEvent as EventListener);
+    // });
   }
 }

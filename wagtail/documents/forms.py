@@ -60,7 +60,15 @@ class BaseDocumentForm(BaseCollectionMemberForm):
         return self.instance
 
     class Meta:
-        widgets = {"tags": AdminTagWidget, "file": forms.FileInput()}
+        widgets = {
+            "tags": AdminTagWidget,
+            "file": forms.FileInput(attrs={
+                'data-controller': 'w-sync',
+                'data-action': 'change->w-sync#apply',
+                'data-w-sync-ref-value': 'documents',
+                'data-w-sync-target-value': '#id_title',
+            }),
+        }
 
     def clean_tags(self):
         tags = self.cleaned_data["tags"]
@@ -99,6 +107,12 @@ def get_document_form(model):
         tag_model = model._meta.get_field("tags").related_model
         widgets = BaseForm._meta.widgets.copy()
         widgets["tags"] = AdminTagWidget(tag_model=tag_model)
+
+    print('docs form widgets')
+    print(BaseForm._meta.widgets)
+
+    print('docs form fields')
+    print(fields)
 
     return modelform_factory(
         model,

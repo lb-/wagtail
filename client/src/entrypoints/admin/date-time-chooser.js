@@ -100,6 +100,12 @@ function initTimeChooser(id, opts) {
     );
   }
 }
+
+document.addEventListener('w-time-chooser:init', (event) => {
+  initTimeChooser(event.target.id, event.detail);
+});
+
+/** @deprecated RemovedInWagtail70 - Remove global.initTimeChooser in a future release */
 window.initTimeChooser = initTimeChooser;
 
 function initDateTimeChooser(id, opts) {

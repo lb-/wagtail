@@ -487,13 +487,16 @@ class BaseDateTimeWidget extends Widget {
   }
 
   render(placeholder, name, id, initialState) {
-    const element = document.createElement('input');
-    element.type = 'text';
-    element.name = name;
-    element.id = id;
-    placeholder.replaceWith(element);
+    const element = Object.assign(document.createElement('input'), {
+      id,
+      name,
+      'type': 'text',
+      'data-controller': 'w-init',
+      'data-w-init-event-value': this.initEventName,
+      'data-w-init-detail-value': JSON.stringify({ ...this.options }),
+    });
 
-    this.initChooserFn(id, this.options);
+    placeholder.replaceWith(element);
 
     const widget = {
       getValue() {
@@ -526,7 +529,7 @@ class AdminDateInput extends BaseDateTimeWidget {
 window.telepath.register('wagtail.widgets.AdminDateInput', AdminDateInput);
 
 class AdminTimeInput extends BaseDateTimeWidget {
-  initChooserFn = window.initTimeChooser;
+  initEventName = 'w-time-chooser:init';
 }
 window.telepath.register('wagtail.widgets.AdminTimeInput', AdminTimeInput);
 
