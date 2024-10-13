@@ -25,14 +25,35 @@ export class SyncController extends Controller<HTMLInputElement> {
     debounce: { default: 100, type: Number },
     delay: { default: 0, type: Number },
     disabled: { default: false, type: Boolean },
+    normalize: { default: false, type: Boolean },
     quiet: { default: false, type: Boolean },
-    ref: String,
-    target: String,
+    ref: { default: '', type: String },
+    target: { default: '', type: String },
   };
 
+  /**
+   * The delay, in milliseconds, to wait before running apply if called multiple
+   * times consecutively.
+   */
   declare debounceValue: number;
+  /**
+   * The delay, in milliseconds, to wait before applying the value to the target elements.
+   */
   declare delayValue: number;
+  /**
+   * If true, the sync controller will not apply the value to the target elements.
+   * Dynamically set when there are no valid target elements to sync with or
+   * when all target elements have the apply event prevented.
+   */
   declare disabledValue: boolean;
+  /**
+   * If true, the value to sync will be normalized.
+   * @example If the value is a file path, the normalized value will be the file name.
+   */
+  declare normalizeValue: boolean;
+  /**
+   * If true, the value will be set on the target elements without dispatching a change event.
+   */
   declare quietValue: boolean;
   /**
    * A reference value to support differentiation between events.
@@ -47,7 +68,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    * default.
    */
   connect() {
-    this.processTargetElements('start', true);
+    this.processTargetElements('start', { resetDisabledValue: true });
     this.apply = debounce(this.apply.bind(this), this.debounceValue);
   }
 
@@ -56,7 +77,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    * whether this sync controller should be disabled.
    */
   check() {
-    this.processTargetElements('check', true);
+    this.processTargetElements('check', { resetDisabledValue: true });
   }
 
   /**
@@ -68,6 +89,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    * based on the controller's `delayValue`.
    */
   apply(event?: Event & { params?: { apply?: string } }) {
+    // valueToApply is the value to apply to the target elements - ARG this should be normalized
     const valueToApply = event?.params?.apply || this.element.value;
 
     const applyValue = (target) => {
@@ -115,7 +137,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    * Simple method to dispatch a ping event to the targeted elements.
    */
   ping() {
-    this.processTargetElements('ping', false, { bubbles: true });
+    this.processTargetElements('ping');
   }
 
   /**
@@ -125,8 +147,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    */
   processTargetElements(
     eventName: string,
-    resetDisabledValue = false,
-    options = {},
+    { resetDisabledValue = false } = {},
   ) {
     if (!resetDisabledValue && this.disabledValue) {
       return [];
@@ -138,16 +159,17 @@ export class SyncController extends Controller<HTMLInputElement> {
 
     const elements = targetElements.filter((target) => {
       const element = this.element;
-      const value = element.value;
+      const valueRaw = element.value;
       const ref = this.refValue;
 
-      const normalized =
+      // this wont work as the value set is in the apply method
+      const value =
         element.type === 'file'
-          ? value
+          ? valueRaw
               .split('\\')
               .slice(-1)[0]
               .replace(/\.[^.]+$/, '')
-          : value;
+          : valueRaw;
 
       const maxLength = Number(target.getAttribute('maxlength')) || null;
       const required = !!target.hasAttribute('required');
@@ -155,10 +177,16 @@ export class SyncController extends Controller<HTMLInputElement> {
       /** need a way to support legacy event approach */
 
       const event = this.dispatch(eventName, {
-        bubbles: true, // argh - this should be true but not sure if it will break other things
+        bubbles: true,
         cancelable: true,
-        ...options, // allow overriding some options but not detail & target
-        detail: { element, maxLength, normalized, ref, required, value },
+        detail: {
+          element,
+          maxLength,
+          ref,
+          required,
+          value,
+          valueRaw,
+        },
         target: target as HTMLInputElement,
       });
 
@@ -195,10 +223,10 @@ export class SyncController extends Controller<HTMLInputElement> {
 
     const handleEvent = (
       event: CustomEvent<{
-        normalized: string;
-        value: string;
         maxLength: number | null;
         ref: string;
+        value: string;
+        valueRaw: string;
       }>,
     ) => {
       console.log('sync apply! before', event);
@@ -214,9 +242,9 @@ export class SyncController extends Controller<HTMLInputElement> {
 
       const {
         maxLength: maxTitleLength,
-        normalized: title,
         ref,
-        value: filename,
+        value: title,
+        valueRaw: filename,
       } = event.detail;
 
       const data = { title };
@@ -236,6 +264,7 @@ export class SyncController extends Controller<HTMLInputElement> {
 
       if (!wrapperEvent) {
         // Do not set a title if event.preventDefault(); is called by handler
+        // This will disable the controller if the event is prevented?!?!?
         event.preventDefault();
       }
 
