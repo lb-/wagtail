@@ -25,9 +25,9 @@ export class SyncController extends Controller<HTMLInputElement> {
     debounce: { default: 100, type: Number },
     delay: { default: 0, type: Number },
     disabled: { default: false, type: Boolean },
+    name: { default: '', type: String },
     normalize: { default: false, type: Boolean },
     quiet: { default: false, type: Boolean },
-    ref: { default: '', type: String },
     target: { default: '', type: String },
   };
 
@@ -42,10 +42,14 @@ export class SyncController extends Controller<HTMLInputElement> {
   declare delayValue: number;
   /**
    * If true, the sync controller will not apply the value to the target elements.
-   * Dynamically set when there are no valid target elements to sync with or
-   * when all target elements have the apply event prevented.
+   * Dynamically set when there are no valid target elements to sync with or when all
+   * target elements have the apply event prevented on either the `start` or `check` methods.
    */
   declare disabledValue: boolean;
+  /**
+   * A name value to support differentiation between events.
+   */
+  declare nameValue: string;
   /**
    * If true, the value to sync will be normalized.
    * @example If the value is a file path, the normalized value will be the file name.
@@ -55,10 +59,6 @@ export class SyncController extends Controller<HTMLInputElement> {
    * If true, the value will be set on the target elements without dispatching a change event.
    */
   declare quietValue: boolean;
-  /**
-   * A reference value to support differentiation between events.
-   */
-  declare refValue: boolean;
 
   declare readonly targetValue: string;
 
@@ -89,12 +89,11 @@ export class SyncController extends Controller<HTMLInputElement> {
    * based on the controller's `delayValue`.
    */
   apply(event?: Event & { params?: { apply?: string } }) {
-    // valueToApply is the value to apply to the target elements - ARG this should be normalized
-    const valueToApply = event?.params?.apply || this.element.value;
+    const value = this.prepareValue(event?.params?.apply || this.element.value);
 
     const applyValue = (target) => {
       /* use setter to correctly update value in non-inputs (e.g. select) */ // eslint-disable-next-line no-param-reassign
-      target.value = valueToApply;
+      target.value = value;
 
       if (this.quietValue) return;
 
@@ -105,7 +104,7 @@ export class SyncController extends Controller<HTMLInputElement> {
       });
     };
 
-    this.processTargetElements('apply').forEach((target) => {
+    this.processTargetElements('apply', { value }).forEach((target) => {
       if (this.delayValue) {
         setTimeout(() => {
           applyValue(target);
@@ -140,6 +139,19 @@ export class SyncController extends Controller<HTMLInputElement> {
     this.processTargetElements('ping');
   }
 
+  prepareValue(value: string) {
+    if (!this.normalizeValue) return value;
+
+    if (this.element.type === 'file') {
+      return value
+        .split('\\')
+        .slice(-1)[0]
+        .replace(/\.[^.]+$/, '');
+    }
+
+    return value;
+  }
+
   /**
    * Returns the non-default prevented elements that are targets of this sync
    * controller. Additionally allows this processing to enable or disable
@@ -147,7 +159,7 @@ export class SyncController extends Controller<HTMLInputElement> {
    */
   processTargetElements(
     eventName: string,
-    { resetDisabledValue = false } = {},
+    { resetDisabledValue = false, value = '' } = {},
   ) {
     if (!resetDisabledValue && this.disabledValue) {
       return [];
@@ -157,40 +169,21 @@ export class SyncController extends Controller<HTMLInputElement> {
       ...document.querySelectorAll<HTMLElement>(this.targetValue),
     ];
 
+    const element = this.element;
+    const name = this.nameValue;
+
     const elements = targetElements.filter((target) => {
-      const element = this.element;
-      const valueRaw = element.value;
-      const ref = this.refValue;
-
-      // this wont work as the value set is in the apply method
-      const value =
-        element.type === 'file'
-          ? valueRaw
-              .split('\\')
-              .slice(-1)[0]
-              .replace(/\.[^.]+$/, '')
-          : valueRaw;
-
       const maxLength = Number(target.getAttribute('maxlength')) || null;
       const required = !!target.hasAttribute('required');
-
-      /** need a way to support legacy event approach */
 
       const event = this.dispatch(eventName, {
         bubbles: true,
         cancelable: true,
-        detail: {
-          element,
-          maxLength,
-          ref,
-          required,
-          value,
-          valueRaw,
-        },
-        target: target as HTMLInputElement,
+        detail: { element, maxLength, name, required, value },
+        target,
       });
 
-      console.log(event);
+      // console.log(event);
 
       return !event.defaultPrevented;
     });
@@ -211,6 +204,8 @@ export class SyncController extends Controller<HTMLInputElement> {
     if (identifier !== 'w-sync') return;
 
     // domReady().then(() => {
+    // Why does domReady not work???
+
     console.log('is this working?');
 
     /**
@@ -224,9 +219,8 @@ export class SyncController extends Controller<HTMLInputElement> {
     const handleEvent = (
       event: CustomEvent<{
         maxLength: number | null;
-        ref: string;
+        name: string;
         value: string;
-        valueRaw: string;
       }>,
     ) => {
       console.log('sync apply! before', event);
@@ -234,23 +228,22 @@ export class SyncController extends Controller<HTMLInputElement> {
         /** Will be the target title field */
         target,
       } = event;
-      if (!target || !(target instanceof HTMLElement)) return;
+      if (!target || !(target instanceof HTMLInputElement)) return;
       const form = target.closest('form');
       if (!form) return;
 
       console.log('sync apply!', event);
 
-      const {
-        maxLength: maxTitleLength,
-        ref,
-        value: title,
-        valueRaw: filename,
-      } = event.detail;
+      const { maxLength: maxTitleLength, name, value: title } = event.detail;
+
+      if (!name || !title) return;
 
       const data = { title };
 
+      const filename = target.value;
+
       const wrapperEvent = form.dispatchEvent(
-        new CustomEvent(`wagtail:${ref}-upload`, {
+        new CustomEvent(name, {
           bubbles: true,
           cancelable: true,
           detail: {
@@ -264,15 +257,15 @@ export class SyncController extends Controller<HTMLInputElement> {
 
       if (!wrapperEvent) {
         // Do not set a title if event.preventDefault(); is called by handler
-        // This will disable the controller if the event is prevented?!?!?
         event.preventDefault();
       }
 
       if (data.title !== title) {
-        // If the title has been modified through another listener, update the title field
+        // If the title has been modified through another listener, update the title field manually, ignoring the default behaviour
         //  or we just always do this???
         event.preventDefault();
-        target.setAttribute('value', data.title);
+        target.value = data.title;
+        // maybe dispatch change event - check what jQuery .val does out of the box & check docs!!
       }
     };
 
