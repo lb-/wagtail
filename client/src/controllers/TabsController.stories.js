@@ -34,7 +34,7 @@ const Template = ({ debug = false }) => {
             id="tab-label-tab-1"
             href="#tab-tab-1"
             role="tab"
-            data-w-tabs-target="label"
+            data-w-tabs-target="tab"
             data-action="w-tabs#select:prevent"
           >
             Tab 1
@@ -43,7 +43,7 @@ const Template = ({ debug = false }) => {
             id="tab-label-tab-2"
             href="#tab-tab-2"
             role="tab"
-            data-w-tabs-target="label"
+            data-w-tabs-target="tab"
             data-action="w-tabs#select:prevent"
           >
             Tab 2

@@ -2,10 +2,18 @@ import { Controller } from '@hotwired/stimulus';
 import { debounce } from '../utils/debounce';
 
 /**
+ * TODO
+ * - GOSH
+ * - consistent label/tab/button usage - just pick one
+ * - Look at flow of instantiation, it's a bit broken
+ */
+
+
+/**
  * Returns a promise that will resolve after either the animation, translation
  * or the max delay of time is reached.
  *
- * If maxDelay is provided as zero or a falsey value, the promise resolve immediately.
+ * If `maxDelay` is provided as zero or a falsey value, the promise resolve immediately.
  */
 const afterTransition = (element: HTMLElement, { maxDelay = 300 } = {}) => {
   /**
@@ -39,67 +47,69 @@ const afterTransition = (element: HTMLElement, { maxDelay = 300 } = {}) => {
 };
 
 interface IndexedEventTarget extends EventTarget {
-  index: number;
+  index: number; // really want to get rid of this!!
 }
 
 interface TabLink extends HTMLAnchorElement {
-  index: number;
+  index: number; // really want to get rid of this!!
 }
 
 /**
  * Adds the ability for the controlled elements to behave as selectable tabs.
  *
  * @description
- * All tabs and tab content must be nested in an element within the scope of the controller.
- * All tab buttons need the `role="tab"` attribute and a `href` with the tab content `id` with the target `label`.
- * Tab contents need to have the `role="tabpanel"` attribute and and `id` attribute that matches the `href` of the tab link with the target 'panel'.
- * Tab buttons should also be wrapped in an element with the `role="tablist"` attribute.
- * Use the target 'trigger' on an Anchor link and set the `href` to the `id` of the tab you would like to trigger.
+ * - All tabs and tab content must be nested in an element within the scope of the controller.
+ * - All tab buttons need the `role="tab"` attribute and a `href` with the tab content `id` with the target `tab`.
+ * - Tab contents need to have the `role="tabpanel"` attribute and and `id` attribute that matches the `href` of the tab link with the target 'panel'.
+ * - Tab buttons should also be wrapped in an element with the `role="tablist"` attribute.
+ * - Use the target 'trigger' on an Anchor link and set the `href` to the `id` of the tab you would like to trigger.
  *
  * @example
  * ```html
  * <div data-controller="w-tabs" data-action="popstate@window->w-tabs#loadHistory" data-w-tabs-selected-class="animate-in">
  *   <div role="tablist" data-action="keydown.right->w-tabs#selectNext keydown.left->w-tabs#selectPrevious keydown.home->w-tabs#selectFirst keydown.end->w-tabs#selectLast">
- *     <a id="tab-label-tab-1" href="#tab-tab-1" role="tab" data-w-tabs-target="label" data-action="w-tabs#select:prevent">Tab 1</a>
- *     <a id="tab-label-tab-2" href="#tab-tab-2" role="tab" data-w-tabs-target="label" data-action="w-tabs#select:prevent">Tab 2</a>
+ *     <a id="tab-1" href="#tab-panel-1" role="tab" data-w-tabs-target="tab" data-action="w-tabs#select:prevent">Tab 1</a>
+ *     <a id="tab-2" href="#tab-panel-2" role="tab" data-w-tabs-target="tab" data-action="w-tabs#select:prevent">Tab 2</a>
  *   </div>
  *   <div class="tab-content">
- *     <section id="tab-tab-1" role="tabpanel" aria-labelledby="tab-label-tab-1" data-w-tabs-target="panel">
+ *     <section id="tab-tab-1" role="tabpanel" aria-labelledby="tab-1" data-w-tabs-target="panel">
  *       Tab 1 content
  *     </section>
- *     <section id="tab-tab-2" role="tabpanel" aria-labelledby="tab-label-tab-2" data-w-tabs-target="panel">
+ *     <section id="tab-tab-2" role="tabpanel" aria-labelledby="tab-2" data-w-tabs-target="panel">
  *       Tab 2 content
  *     </section>
  *   </div>
  * </div>
  * ```
  */
-
 export class TabsController extends Controller<HTMLElement> {
   static classes = ['selected'];
 
-  static targets = ['label', 'panel', 'trigger'];
+  /**
+   * @todo - it would be nice to not need the trigger... could we throw an error on select? might be good enough.
+   */
+  static targets = ['panel', 'tab', 'trigger'];
 
   static values = {
-    animate: { default: false, type: Boolean },
+    // animate: { default: false, type: Boolean },
     selected: { default: '', type: String },
-    syncURLHash: { default: false, type: Boolean },
-    transition: { default: 150, type: Number },
+    syncLocation: { default: false, type: Boolean },
+    transition: { default: 150, type: Number }, // should change to transitionDuration
   };
 
+  // /** If true, animation will run when a new tab is selected. */
+  // declare animateValue: boolean;
   /** ID of the currently selected tab. */
   declare selectedValue: string;
 
-  /** If true, animation will run when a new tab is selected. */
-  declare readonly animateValue: boolean;
-  /** Tab elements, with role='tab', allowing selection of tabs. */
-  declare readonly labelTargets: HTMLAnchorElement[];
   /** Tab content panels, with role='tabpanel', showing the content for each tab. */
   declare readonly panelTargets: HTMLElement[];
   /** Classes to set on the tab panel content when selected. */
   declare readonly selectedClasses: string[];
+  /** Tab elements, with role='tab', allowing selection of tabs. */
+  declare readonly tabTargets: HTMLAnchorElement[];
   /** If true, the selected tab will sync with the URL hash. */
-  declare readonly syncURLHashValue: boolean;
+  declare readonly syncLocationValue: boolean;
   /** The time in milliseconds for the tab content to transition in and out. */
   declare readonly transitionValue: number;
   /** Other elements within the controller's scope that may trigger a specific tab. */
@@ -112,14 +122,16 @@ export class TabsController extends Controller<HTMLElement> {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, this.transitionValue * 2)();
 
-    this.setAriaControls(this.labelTargets);
+    this.setAriaControls(this.tabTargets);
     this.setTabLabelIndex();
 
-    const activeTab = this.labelTargets.find(
-      (button) =>
-        button.getAttribute('aria-selected') === 'true' ||
-        button.getAttribute('aria-controls') === this.selectedValue,
+    const activeTab = this.tabTargets.find(
+      (target) =>
+        target.getAttribute('aria-selected') === 'true' ||
+        target.getAttribute('aria-controls') === this.selectedValue,
     );
+
+    // console.log({ activeTab, id: activeTab?.id });
 
     if (this.selectedClasses.length && activeTab) {
       activeTab.setAttribute('aria-selected', 'true');
@@ -131,9 +143,10 @@ export class TabsController extends Controller<HTMLElement> {
       tab.hidden = true;
     });
 
-    if (window.location.hash && !this.syncURLHashValue) {
+    if (window.location.hash && this.syncLocationValue) {
       this.setTabByURLHash();
     } else if (activeTab) {
+      // console.log('active tab exists');
       this.selectedValue = activeTab.getAttribute('aria-controls') as string;
     } else {
       this.selectFirst();
@@ -148,6 +161,8 @@ export class TabsController extends Controller<HTMLElement> {
     }
 
     const tab = this.getTabLabelByHref(currentValue);
+    // console.log('selectedValueChanged', { tab, currentValue });
+
     if (tab) {
       tab.setAttribute('aria-selected', 'true');
       tab.removeAttribute('tabindex');
@@ -168,14 +183,14 @@ export class TabsController extends Controller<HTMLElement> {
         target: tab,
       });
 
-      if (!this.syncURLHashValue) {
+      if (!this.syncLocationValue) {
         this.setURLHash(currentValue);
       }
     }
   }
 
   getTabLabelByHref(tabId: string): HTMLElement | undefined {
-    return this.labelTargets.find(
+    return this.tabTargets.find(
       (tab) => tab.getAttribute('aria-controls') === tabId,
     );
   }
@@ -192,7 +207,7 @@ export class TabsController extends Controller<HTMLElement> {
   }
 
   setTabLabelIndex() {
-    (this.labelTargets as TabLink[]).forEach((label, index) => {
+    (this.tabTargets as TabLink[]).forEach((label, index) => {
       // eslint-disable-next-line no-param-reassign
       label.index = index;
     });
@@ -211,7 +226,7 @@ export class TabsController extends Controller<HTMLElement> {
         .replace(/[^\w\-#]/g, '')
         .replace('#', '');
 
-      const isCleanHashPresent = this.labelTargets.find(
+      const isCleanHashPresent = this.tabTargets.find(
         (value) => value.id === cleanedHash,
       );
 
@@ -224,8 +239,13 @@ export class TabsController extends Controller<HTMLElement> {
     }
   }
 
+  // Should have a selectTab and unselectTab method that handles the transition and hiding
+  // or a showPanel hidePanel would be better - because it's about the panel not the selection!!
+
+
   animateIn(tabContent: HTMLElement) {
     const selectedClasses = this.selectedClasses;
+    console.log('animate in called?', {selectedClasses, maxDelay: this.transitionValue})
     afterTransition(
       tabContent,
       // If there are no classes to add, we can skip the delay before hiding.
@@ -284,7 +304,7 @@ export class TabsController extends Controller<HTMLElement> {
 
   selectPrevious(event: Event) {
     const tabIndex = (event.target as IndexedEventTarget).index;
-    const tab = this.labelTargets[tabIndex + -1];
+    const tab = this.tabTargets[tabIndex + -1];
 
     if (!tab) return;
 
@@ -294,7 +314,7 @@ export class TabsController extends Controller<HTMLElement> {
 
   selectNext(event: Event) {
     const tabIndex = (event.target as IndexedEventTarget).index;
-    const tab = this.labelTargets[tabIndex + 1];
+    const tab = this.tabTargets[tabIndex + 1];
 
     if (!tab) return;
 
@@ -303,13 +323,13 @@ export class TabsController extends Controller<HTMLElement> {
   }
 
   selectFirst(event?: Event) {
-    const tab = this.labelTargets[0];
+    const tab = this.tabTargets[0];
     this.selectedValue = tab.getAttribute('aria-controls') as string;
     if (event) tab.focus();
   }
 
   selectLast(event?: Event) {
-    const tab = this.labelTargets[this.labelTargets.length - 1];
+    const tab = this.tabTargets[this.tabTargets.length - 1];
     this.selectedValue = tab.getAttribute('aria-controls') as string;
     if (event) tab.focus();
   }
@@ -325,7 +345,7 @@ export class TabsController extends Controller<HTMLElement> {
   }
 
   validate() {
-    const labels = this.labelTargets;
+    const labels = this.tabTargets;
     const panels = this.panelTargets;
 
     labels.forEach((label, index) => {
