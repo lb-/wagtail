@@ -4,8 +4,9 @@ from urllib.parse import quote
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
+from django.contrib.messages import get_messages
 from django.db.models import Prefetch, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -476,9 +477,17 @@ class EditView(WagtailAdminTemplateMixin, HookResponseMixin, View):
         )
 
         if self.form.is_valid() and not self.locked_for_user:
-            return self.form_valid(self.form)
+            response = self.form_valid(self.form)
         else:
-            return self.form_invalid(self.form)
+            response = self.form_invalid(self.form)
+
+        if request.headers.get('Accept') == 'application/json':
+            list(get_messages(request))  # This will flush/clear the messages
+            if isinstance(response, HttpResponse):
+                return JsonResponse({'status': response.status_code, 'errors': self.form.errors,})
+            return JsonResponse({'status': 'success'})
+
+        return response
 
     def workflow_action_is_valid(self):
         self.workflow_action = self.request.POST["workflow-action-name"]

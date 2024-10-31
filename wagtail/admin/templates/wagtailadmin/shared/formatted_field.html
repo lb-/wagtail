@@ -13,7 +13,7 @@
     A unified template for both use cases is messy, but it guarantees we are keeping form field styles the same everywhere.
 {% endcomment %}
 
-<div class="w-field__wrapper {{ classname }}" data-field-wrapper>
+<div class="w-field__wrapper {{ classname }}" data-field-wrapper data-controller="w-messages" data-action="invalid->w-messages#add:capture:prevent" data-w-messages-clear-param="true">
 
     {# Render custom label attributes if provided, or the bound field’s label attributes otherwise. #}
     {% if show_label %}
@@ -28,7 +28,7 @@
     <div class="w-field {{ field_classname }}{% if has_errors %} w-field--error{% endif %}{% if show_add_comment_button %} w-field--commentable{% endif %}" data-field{% if contentpath %} data-contentpath="{{ contentpath }}"{% endif %}>
 
         {# Always associate a wrapping div with the field, so JS error rendering knows where to put error messages. #}
-        <div class="w-field__errors" data-field-errors {% if error_message_id %}id="{{ error_message_id }}"{% endif %}>
+        <div class="w-field__errors" {% if error_message_id %}id="{{ error_message_id }}"{% endif %} data-field-errors data-w-messages-target="container">
             {% if errors %}
                 {% icon name="warning" classname="w-field__errors-icon" %}
                 <p class="error-message">
@@ -36,6 +36,7 @@
                 </p>
             {% endif %}
         </div>
+        <template data-w-messages-target="template"><p class="error-message"><span></span></p></template>
 
         <div class="w-field__help" {% if help_text_id %}id="{{ help_text_id }}"{% endif %} data-field-help>
             {% if help_text %}

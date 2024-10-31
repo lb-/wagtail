@@ -121,6 +121,8 @@ export const initMinimap = (
 
   document.addEventListener('wagtail:tab-changed', updateMinimap);
   document.addEventListener('wagtail:panel-init', updateMinimap);
+  document.addEventListener('w-messages:cleared', updateMinimap);
+  document.addEventListener('w-messages:added', updateMinimap);
 
   // Make sure the positioning of the minimap is always correct.
   const setOffsetTop = () =>

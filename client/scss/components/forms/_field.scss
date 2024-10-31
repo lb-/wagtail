@@ -64,6 +64,10 @@
 .w-field__input {
   position: relative;
   margin-top: calc(theme('spacing.[2.5]') * var(--w-density-factor));
+
+  &:has(:invalid) {
+    border: 5px red solid;
+  }
 }
 
 .w-field__icon {

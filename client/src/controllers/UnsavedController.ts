@@ -164,7 +164,59 @@ export class UnsavedController extends Controller<HTMLFormElement> {
 
     this.runningCheck = debounce(
       () => {
-        this.hasEditsValue = this.initialFormData !== this.formData;
+        const hasEdits = this.initialFormData !== this.formData;
+        const formData = this.formData;
+        console.log('Checking form edits', {
+          formData,
+          hasEdits,
+          initialFormData: this.initialFormData,
+          element: this.element,
+        });
+
+        /**
+         * @todo - POC a basic auto-save
+         * if the data is different, we can rebuild the FormData (with comments for now) then submit async using fetch.
+         * We can then check for a response and parse any errors, patching them into the DOM using setCustomValidity.
+         */
+
+        if (hasEdits) {
+          fetch(this.element.action, {
+            body: new FormData(this.element), // TBC - remove comments, files maybe
+            headers: { Accept: 'application/json' },
+            method: this.element.method,
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              return response.json();
+            })
+            .then((data) => {
+              console.log(data);
+              Object.entries(data.errors).forEach(([key, value]) => {
+                const field = this.element.querySelector(`[name=${key}]`);
+                const messages = Array.isArray(value) ? value : [];
+
+                console.log('Setting custom validity', {
+                  key,
+                  value,
+                  field,
+                  messages,
+                });
+                if (field instanceof HTMLInputElement) {
+                  field.setCustomValidity(messages.join(', '));
+                  if (!field.validity.valid) {
+                    field.reportValidity();
+                  }
+                }
+
+                // invalid event
+                // reportValidity
+              });
+            });
+        }
+
+        this.hasEditsValue = hasEdits;
       },
       this.hasEditsValue ? longDuration : shortDuration,
     );

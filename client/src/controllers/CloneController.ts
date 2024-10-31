@@ -86,9 +86,21 @@ export class CloneController extends Controller<HTMLElement> {
       clear = false,
       text = '',
       type = null,
-    } = { ...event?.detail, ...event?.params };
+    } = {
+      // probably a nicer way to do this but it works for now
+      ...(event?.type === 'invalid'
+        ? {
+            text: (event?.target as HTMLInputElement)?.validationMessage,
+            type: 'invalid',
+          }
+        : {}),
+      ...event?.detail,
+      ...event?.params,
+    };
 
     this.element.classList.add(...this.addedClasses);
+
+    console.log('add message!', { event, clear, text, type });
 
     if (clear) this.clear();
 
