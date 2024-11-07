@@ -14,6 +14,8 @@ export const parameters = {
   },
 };
 
+export const tags = ['autodocs'];
+
 const cachedIcons = sessionStorage.getItem('WAGTAIL_ICONS');
 window.WAGTAIL_ICONS = cachedIcons ? JSON.parse(cachedIcons) : [];
 
