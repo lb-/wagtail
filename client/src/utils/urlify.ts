@@ -1,32 +1,60 @@
 import config from './urlify.config.json';
 
-const downcodeMapping = config.reduce((acc, downcodeMap) => {
-  Object.values(downcodeMap)
-    .flat()
-    .forEach(([char, replacedChar]) => {
-      acc[char] = replacedChar;
-    });
-  return acc;
-}, {});
+const cache = {};
 
-const regex = new RegExp(Object.keys(downcodeMapping).join('|'), 'g');
+const createTransliterateFn = (locale = '') => {
+  if (cache[locale]) return cache[locale];
+
+  // prepare the language part of the locale for comparison only
+  const [languageCode] = locale.toLowerCase().split('-');
+
+  const downcodeMapping = Object.fromEntries(
+    config
+      .map((item) => Object.entries(item))
+      .flat()
+      // with the key being split by :, removing the first item.
+      .map(([key, value]) => {
+        const [, ...languageCodes] = key.toLowerCase().split(':');
+        return [languageCodes, value];
+      })
+      // if the first item starts with the language code, then order LAST (so that it overrides values)
+      .sort(([languageCodes = []] = []) =>
+        (languageCodes as string[]).includes(languageCode) ? -1 : 0,
+      )
+      .flatMap(([, values]) => values), // todo check support for flatMap support in browsers
+  );
+
+  const regex = new RegExp(Object.keys(downcodeMapping).join('|'), 'g');
+
+  const fn = (str) => str.replace(regex, (item) => downcodeMapping[item]);
+  cache[languageCode] = fn;
+
+  return fn;
+};
 
 /**
- * IMPORTANT This util and the mapping is a direct port of Django's urlify.js util,
- * without the need for a full Regex polyfill implementation.
+ * This util and the mapping is a refined port Django's urlify.js util,
+ * without the need for a full Regex polyfill implementation and better handling of
+ * different source languages.
+ *
  * @see https://github.com/django/django/blob/main/django/contrib/admin/static/admin/js/urlify.js
  */
 export const urlify = (
   originalStr: string,
   {
-    numChars = 255,
     allowUnicode = false,
-  }: { numChars?: number; allowUnicode?: boolean } = {},
+    locale = 'en',
+    numChars = 255,
+  }: {
+    allowUnicode?: boolean;
+    locale?: string;
+    numChars?: number;
+  } = {},
 ) => {
   let str = originalStr;
   // changes, e.g., "Petty theft" to "petty-theft"
   if (!allowUnicode) {
-    str = str.replace(regex, (item) => downcodeMapping[item]);
+    str = createTransliterateFn(locale)(str);
   }
   str = str.toLowerCase(); // convert to lowercase
   // if downcode doesn't hit, the char will be stripped here
