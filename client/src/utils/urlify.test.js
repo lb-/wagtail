@@ -13,6 +13,32 @@ describe('urlify', () => {
     it('should keep leading spaces & convert to hyphens if supplied', () => {
       expect(urlify('  I like _ßpaces')).toBe('-i-like-_sspaces');
     });
+
+    it('should allow a supplied locale to re-order downcode mapping', () => {
+      // mix of characters that are transliterated differently across Russian/Ukrainian
+      const chars = 'Ц-йи-Ґ-Х-щ';
+      const ruTransliteration = 'c-ji-g-h-sh';
+      const ukTransliteration = 'ts-iy-g-kh-shch';
+      expect(urlify(chars)).toEqual(ruTransliteration); // by default the Russian values come through with priority
+      expect(urlify('Ц-йи-Ґ-Х-щ', { locale: 'ru' })).toEqual(ruTransliteration);
+      expect(urlify('Ц-йи-Ґ-Х-щ', { locale: 'uk' })).toEqual(ukTransliteration);
+
+      // another example
+      expect(urlify('Георгій', { locale: 'uk-UK' })).toEqual('heorhii');
+      expect(urlify('Георгій', { locale: 'en' })).toEqual('georgij');
+      expect(urlify('Георгій')).toEqual('georgij');
+      expect(urlify('Георгій', { locale: 'ru' })).toEqual('georgij');
+    });
+
+    it('should support locale with normal urlify whitespace handling', () => {
+      const title = 'жйи Проєкт   Герой Їжак Георгій ';
+      const ruTransliteration2 = 'zhji-proyekt-geroj-yizhak-georgij';
+      const ukTransliteration2 = 'zhiy-proyekt-heroi-yizhak-heorhii';
+      expect(urlify(title)).toEqual(ruTransliteration2); // default ordering
+      expect(urlify(title, { locale: 'en' })).toEqual(ruTransliteration2); // default ordering if no matches
+      expect(urlify(title, { locale: 'ru' })).toEqual(ruTransliteration2);
+      expect(urlify(title, { locale: 'uk' })).toEqual(ukTransliteration2);
+    });
   });
 
   describe('urlify with unicode slugs enabled', () => {
