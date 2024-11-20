@@ -134,6 +134,23 @@ function ModalWorkflow(opts) {
     if (responseType in responseCallbacks) {
       const args = Array.prototype.slice.call(arguments, 1); // eslint-disable-line prefer-rest-params
       responseCallbacks[responseType].apply(self, args);
+    } else if (responseType === 'dispatch') {
+      // NOTE: This is not working - just adding as a placeholder for now
+      // Could be an approach to make modal workflows a bit more generic, but depends on how much
+      // event dispatching would be useful
+      // need to assess usage of Python render_modal_workflow & JS ModalWorkflow
+      // eslint-disable-next-line prefer-rest-params
+      const args = Array.prototype.slice.call(arguments, 1);
+      const [detail = {}, eventName = 'w-modal-workflow:dispatch'] = args;
+      // would be better to have a consistent triggerElement for all modals maybe
+      (self.triggerElement || window.document).dispatchEvent(
+        new CustomEvent(eventName, {
+          bubbles: false,
+          cancelable: false,
+          detail,
+        }),
+      );
+      self.close();
     }
   };
 
