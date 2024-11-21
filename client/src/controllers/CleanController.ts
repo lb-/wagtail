@@ -199,8 +199,7 @@ export class CleanController extends Controller<HTMLInputElement> {
   /**
    * If the locale is not provided, attempt to find the most suitable target locale:
    * 1. Use the active content locale if available (for translations)
-   * 2. Use the current `lang` attribute of the document
-   * 3. Fall back to `und` (undetermined) as per ISO 639-2
+   * 2. Fall back to `und` (undetermined) as per ISO 639-2
    *
    * This only makes a difference when using the `urlify` method and where there are
    * overlapping characters that need to be downcoded but are not in the desired order by default.
@@ -208,9 +207,7 @@ export class CleanController extends Controller<HTMLInputElement> {
   localeValueChanged(currentValue: string) {
     if (currentValue) return;
     this.localeValue =
-      WAGTAIL_CONFIG.ACTIVE_CONTENT_LOCALE ||
-      document?.documentElement?.lang ||
-      this.undeterminedLocale;
+      WAGTAIL_CONFIG.ACTIVE_CONTENT_LOCALE || this.undeterminedLocale;
   }
 
   /**

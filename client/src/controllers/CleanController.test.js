@@ -690,7 +690,6 @@ describe('CleanController', () => {
 
       afterEach(() => {
         jest.clearAllMocks();
-        document.documentElement.lang = '';
       });
 
       afterAll(() => {
@@ -732,7 +731,6 @@ describe('CleanController', () => {
 
       it('should use the the override locale when provided', async () => {
         ACTIVE_CONTENT_LOCALE = 'uk-UK';
-        document.documentElement.lang = 'fr-FR'; // should not be used if ACTIVE_CONTENT_LOCALE is available
 
         await setup();
 
@@ -753,29 +751,6 @@ describe('CleanController', () => {
         expect(input.value).not.toBe(transliterationRu);
       });
 
-      it('should use the document lang if it cannot find a value from the ACTIVE_LOCALE', async () => {
-        ACTIVE_CONTENT_LOCALE = undefined;
-        document.documentElement.lang = 'ru-RU';
-
-        await setup();
-
-        const input = document.getElementById('slug');
-
-        input.value = 'Тестовий заголовок';
-
-        input.dispatchEvent(new Event('blur'));
-
-        await new Promise(process.nextTick);
-
-        expect(urlify.urlify).toHaveBeenCalledTimes(1);
-        expect(urlify.urlify).toHaveBeenCalledWith('Тестовий заголовок', {
-          allowUnicode: false,
-          locale: 'ru-RU', // from document
-        });
-
-        expect(input.value).not.toBe('testovyi-zaholovok'); // Ukrainian transliteration
-        expect(input.value).toBe('testovij-zagolovok'); // Russian transliteration
-      });
 
       it('should use an undetermined locale if no locale provided & not available from config or document', async () => {
         ACTIVE_CONTENT_LOCALE = undefined;
