@@ -704,7 +704,7 @@ describe('CleanController', () => {
       const transliterationTest = ' Тестовий  Георгій  цехщик   заголовок  '; // ~Test George [shop]worker title
       const transliterationTestTrimmed =
         'Тестовий  Георгій  цехщик   заголовок'; // trimmed version (passed to events)
-      const transliterationRu = 'testovij-georgij-cehshik-zagolovok'; // Russian transliteration
+      const transliterationRu = 'testovij-georgij-cexshhik-zagolovok'; // Russian transliteration
       const transliterationUk = 'testovyi-heorhii-tsekhshchyk-zaholovok'; // Ukrainian transliteration
 
       it('should use the default locale when no locale is provided', async () => {

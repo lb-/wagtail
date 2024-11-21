@@ -3,6 +3,10 @@ import config from './urlify.config.json';
 const cache = {};
 
 /**
+ * Create a transliterate function based on the locale.
+ *
+ * @see https://translit.cc/ (useful for testing)
+ * @see https://czo.gov.ua/en/translit (Ukrainian)
  * @see https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
  */
 const createTransliterateFn = (locale = '') => {

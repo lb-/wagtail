@@ -17,7 +17,7 @@ describe('urlify', () => {
     it('should allow a supplied locale to re-order downcode mapping', () => {
       // mix of characters that are transliterated differently across Russian/Ukrainian
       const chars = 'Ц-йи-Ґ-Х-щ';
-      const ruTransliteration = 'c-ji-g-h-sh';
+      const ruTransliteration = 'c-ji-g-x-shh';
       const ukTransliteration = 'ts-iy-g-kh-shch';
       expect(urlify(chars)).toEqual(ruTransliteration); // by default the Russian values come through with priority
       expect(urlify('Ц-йи-Ґ-Х-щ', { locale: 'ru' })).toEqual(ruTransliteration);
