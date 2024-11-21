@@ -110,6 +110,7 @@
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
     "@tippyjs/react": "^4.2.6",
+    "@yaireo/tagify": "^4.32.1",
     "a11y-dialog": "^8.1.1",
     "autosize": "^6.0.1",
     "axe-core": "^4.10.2",

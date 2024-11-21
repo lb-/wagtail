@@ -33,7 +33,6 @@ BEM: https://getbem.com/
 /* Legacy vendor styles. Do not add new styles here. */
 @use 'generic/normalize';
 @use 'vendor/jquery-ui-1.10.3.verdant';
-@use 'vendor/jquery.tagit' as tagit;
 @use 'vendor/jquery.Jcrop.min' as jcrop;
 
 /* SETTINGS
@@ -89,7 +88,6 @@ These are classes for components.
 @import 'components/forms/input-text';
 @import 'components/forms/radio-checkbox';
 @import 'components/forms/select';
-@import 'components/forms/tagit';
 @import 'components/forms/radio-checkbox-multiple';
 @import 'components/forms/error-message';
 @import 'components/forms/required-mark';
@@ -160,7 +158,7 @@ These are classes that provide overrides.
 // VENDOR: overrides of vendor styles.
 @import 'overrides/vendor.datetimepicker';
 @import 'overrides/vendor.handsontable';
-@import 'overrides/vendor.tagit';
+@import 'overrides/vendor.tagify';
 @import 'overrides/vendor.tippy';
 
 // UTILITIES: classes that do one simple thing.

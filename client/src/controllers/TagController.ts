@@ -1,18 +1,23 @@
-import $ from 'jquery';
+import Tagify from '@yaireo/tagify';
 
 import { Controller } from '@hotwired/stimulus';
 import { debounce } from '../utils/debounce';
 
-declare global {
-  interface JQuery {
-    tagit: (options: Record<string, any> | string) => void;
-  }
-}
+/**
+ * Settings for Tagify.
+ *
+ * @see https://github.com/yairEO/tagify
+ */
+type TagifySettings = {
+  /** @see https://github.com/yairEO/tagify/?tab=readme-ov-file#persisted-data */
+  id?: string;
+  // TODO .. add more settings
+};
 
 /**
- * Attach the jQuery tagit UI to the controlled element.
+ * Attach the Tagify UI to the controlled element.
  *
- * See https://github.com/aehlke/tag-it
+ * See https://github.com/yairEO/tagify
  *
  * @example
  * <input id="id_tags" type="text" name="tags" data-controller="w-tag" data-w-tag-url-value="/admin/tag-autocomplete/" />
@@ -20,15 +25,15 @@ declare global {
  * @example - with delay
  * <input id="id_tags" type="text" name="tags" data-controller="w-tag" data-w-tag-delay-value="300" data-w-tag-url-value="/admin/tag-autocomplete/" />
  */
-export class TagController extends Controller {
+export class TagController extends Controller<HTMLInputElement> {
   static values = {
     delay: { type: Number, default: 0 },
     options: { default: {}, type: Object },
     url: { default: '', type: String },
   };
 
-  /** Options for tagit, see https://github.com/aehlke/tag-it#options */
-  declare optionsValue: any;
+  /** Settings for Tagify, see https://github.com/yairEO/tagify */
+  declare optionsValue: TagifySettings;
   /** URL for async tag autocomplete. */
   declare urlValue: string;
   /** Delay to use when debouncing the async tag autocomplete. */
@@ -37,7 +42,7 @@ export class TagController extends Controller {
   private autocompleteAbort: AbortController | null = null;
   private autocompleteLazy;
 
-  tagit?: JQuery<HTMLElement>;
+  tagify: Tagify;
 
   initialize() {
     this.autocompleteLazy = debounce(
@@ -47,23 +52,44 @@ export class TagController extends Controller {
   }
 
   connect() {
-    const preprocessTag = this.cleanTag.bind(this);
+    const initialTags = (this.element.value || '')
+      .trim()
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
 
-    const autocomplete = {
-      source: (request, response) => {
-        this.autocompleteLazy.cancel();
-        this.autocompleteLazy(request).then(response);
-      },
-    };
+    this.element.value = initialTags.join(',');
 
-    $(this.element).tagit({
-      autocomplete,
-      preprocessTag,
+    this.tagify = new Tagify(this.element, {
       ...this.optionsValue,
+      whitelist: initialTags,
+      transformTag: (data) => {
+        // eslint-disable-next-line no-param-reassign
+        data.value = this.cleanTag(data.value);
+      },
+      /**
+       * Convert the array of objects to a string of comma-separated values.
+       * @see https://github.com/yairEO/tagify?tab=readme-ov-file#modify-original-input-value-format
+       */
+      originalInputValueFormat: (values: { value: string }[]) =>
+        values.map(({ value }) => (value || '').trim()).join(','),
+    });
+
+    this.tagify.on('input', ({ detail }) => {
+      this.autocompleteLazy.cancel();
+      this.tagify.loading(true);
+      this.autocompleteLazy(detail)
+        .then((whitelist) => {
+          this.tagify.whitelist = whitelist;
+          this.tagify.loading(false).dropdown.show(detail.value);
+        })
+        .finally(() => {
+          this.tagify.loading(false);
+        });
     });
   }
 
-  async autocomplete({ term }: { term: string }) {
+  async autocomplete({ value: term }: { value: string }) {
     if (this.autocompleteAbort) {
       this.autocompleteAbort.abort();
     }
@@ -102,15 +128,17 @@ export class TagController extends Controller {
    * Double quote a tag if it contains a space
    * and if it isn't already quoted.
    */
-  cleanTag(val: string) {
-    return val && val[0] !== '"' && val.indexOf(' ') > -1 ? `"${val}"` : val;
+  cleanTag(value: string) {
+    return value && value[0] !== '"' && value.indexOf(' ') > -1
+      ? `"${value}"`
+      : value;
   }
 
   /**
    * Method to clear all the tags that are set.
    */
   clear() {
-    $(this.element).tagit('removeAll');
+    this.tagify?.removeAllTags();
   }
 
   disconnect() {

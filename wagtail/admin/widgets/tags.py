@@ -26,6 +26,17 @@ class AdminTagWidget(TagWidget):
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
 
+        tag_spaces_allowed = getattr(settings, "TAG_SPACES_ALLOWED", True)
+
+        options = {
+            "delimiters": "|".join([","] if tag_spaces_allowed else [",", " "]),
+            "trim": not tag_spaces_allowed,
+        }
+
+        tag_limit = getattr(settings, "TAG_LIMIT", None)
+        if tag_limit:
+            options["maxTags"] = tag_limit
+
         if self.tag_model == Tag:
             autocomplete_url = reverse("wagtailadmin_tag_autocomplete")
         else:
@@ -39,7 +50,8 @@ class AdminTagWidget(TagWidget):
         else:
             free_tagging = self.free_tagging
 
-        tag_spaces_allowed = getattr(settings, "TAG_SPACES_ALLOWED", True)
+        options["enforceWhitelist"] = not free_tagging
+
         if tag_spaces_allowed:
             help_text = _(
                 'Multi-word tags with spaces will automatically be enclosed in double quotes (").'
@@ -48,14 +60,7 @@ class AdminTagWidget(TagWidget):
             help_text = _("Tags can only consist of a single word, no spaces allowed.")
 
         context["widget"]["help_text"] = help_text
-        context["widget"]["attrs"]["data-w-tag-delay-value"] = 200
         context["widget"]["attrs"]["data-w-tag-url-value"] = autocomplete_url
-        context["widget"]["attrs"]["data-w-tag-options-value"] = json.dumps(
-            {
-                "allowSpaces": getattr(settings, "TAG_SPACES_ALLOWED", True),
-                "tagLimit": getattr(settings, "TAG_LIMIT", None),
-                "autocompleteOnly": not free_tagging,
-            }
-        )
+        context["widget"]["attrs"]["data-w-tag-options-value"] = json.dumps(options)
 
         return context
