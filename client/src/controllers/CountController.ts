@@ -29,7 +29,7 @@ const DEFAULT_ERROR_SELECTOR = '.error-message,.help-critical';
  * ```
  */
 export class CountController extends Controller<HTMLFormElement> {
-  static classes = ['active'];
+  static classes = ['active', 'max', 'over'];
 
   static targets = ['label', 'total'];
 
@@ -37,7 +37,9 @@ export class CountController extends Controller<HTMLFormElement> {
     container: { default: '', type: String },
     find: { default: DEFAULT_ERROR_SELECTOR, type: String },
     labels: { default: [], type: Array },
+    max: { default: Infinity, type: Number },
     min: { default: 0, type: Number },
+    offset: { default: 0, type: Number },
     total: { default: 0, type: Number },
   };
 
@@ -45,32 +47,35 @@ export class CountController extends Controller<HTMLFormElement> {
   declare containerValue: string;
   /** Selector string, used to find the elements to count within the container. */
   declare findValue: string;
-  /** Override pluralisation strings, e.g. `data-w-count-labels-value='["One item","Many items"]'`. */
+  /** Override pluralization strings, e.g. `data-w-count-labels-value='["One item","Many items"]'`. */
   declare labelsValue: string[];
+  /** Maximum value, anything equal or over will trigger the 'max' class, anything over will also trigger the 'over' class. */
+  declare maxValue: number;
   /** Minimum value, anything equal or below will trigger blank labels in the UI. */
   declare minValue: number;
+  /** Offset value to add to the total count when doing calculations */
+  declare offsetValue: number;
   /** Total current count of found elements. */
   declare totalValue: number;
 
-  declare readonly activeClass: string;
-  declare readonly hasActiveClass: boolean;
+  declare readonly activeClasses: string[];
   declare readonly hasLabelTarget: boolean;
   declare readonly hasTotalTarget: boolean;
   declare readonly labelTarget: HTMLElement;
+  declare readonly maxClasses: string[];
+  declare readonly overClasses: string[];
   declare readonly totalTarget: HTMLElement;
 
-  connect() {
-    document.addEventListener('change', () => this.count());
-  }
-
   count() {
+    const offset = this.offsetValue;
+
     const containerSelector = this.containerValue;
 
     const containers = containerSelector
       ? [...document.querySelectorAll(containerSelector)]
       : [this.element];
 
-    this.totalValue = containers
+    this.totalValue = offset + containers
       .map((element) => element.querySelectorAll(this.findValue).length)
       .reduce((total, subTotal) => total + subTotal, 0);
 
@@ -95,9 +100,24 @@ export class CountController extends Controller<HTMLFormElement> {
 
   totalValueChanged(total: number) {
     const min = this.minValue;
-    if (this.hasActiveClass) {
-      this.element.classList.toggle(this.activeClass, total > min);
+    const max = this.maxValue;
+
+    if (total > min) {
+      this.element.classList.add(...this.activeClasses);
+    } else {
+      this.element.classList.remove(...this.activeClasses);
     }
+
+    if (total >= max) {
+      this.element.classList.add(...this.maxClasses);
+      if (total > max) {
+        this.element.classList.add(...this.overClasses);
+      }
+    } else {
+      this.element.classList.remove(...this.maxClasses);
+      this.element.classList.remove(...this.overClasses);
+    }
+
     if (this.hasLabelTarget) {
       this.labelTarget.textContent = total > min ? this.getLabel(total) : '';
     }

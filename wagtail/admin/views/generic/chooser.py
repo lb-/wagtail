@@ -297,6 +297,7 @@ class BaseChooseView(
                 "can_create": self.can_create(),
                 "max_forms": self.get_max_forms,
                 "max_forms_remainder": self.get_max_forms_remainder,
+                "max_forms_offset": self.get_max_forms - self.get_max_forms_remainder,
                 "selected_items": self.get_selected_items,
             }
         )

@@ -48,11 +48,18 @@
                 <form
                     action="{{ chosen_multiple_url }}"
                     method="GET"
-                    data-controller="w-count w-bulk" data-action="w-count#count" data-w-count-find-value="input:checked" data-w-count-container-value="[data-multiple-choice-form]"
+                    data-controller="w-count w-bulk"
+                    data-action="change->w-count#count"
                     data-multiple-choice-form
+                    data-w-count-active-class="active"
+                    data-w-count-find-value="input:checked"
+                    data-w-count-max-class="maxiumum"
+                    data-w-count-max-value="{{ max_forms }}"
+                    data-w-count-offset-value="{{ max_forms_offset }}"
+                    data-w-count-over-class="over-maximum"
                 >
                     {% if max_forms %}
-                        <div id ="max_forms_pass" style="display: block;" class="help-block help-info">
+                        <div class="help-block help-info">
                             {% icon name='help' %}
                             <p>
                                 {% blocktrans with max=max_forms %}This is <span id="max-forms-remainder"> {{ selected_items }} </span> by {{ max }}{% endblocktrans %}
@@ -62,8 +69,7 @@
                                 {% endblocktrans %}
                             </p>
                         </div>
-
-                        <div id ="max_forms_fail" style="display: none;" class="help-block help-warning">
+                        <div class="help-block help-warning">
                             {% icon name='warning' %}
                             <p>
                                 {% blocktrans trimmed %}
@@ -75,7 +81,10 @@
                     <div id="search-results" class="listing">
                         {% include view.results_template_name %}
                     </div>
-
+                    {% if max_forms %}
+                        <div>Total: <span data-w-count-target="total"></span></div>
+                        <div>Label: <span data-w-count-target="label"></span></div>
+                    {% endif %}
                     <input class="button" type="submit" data-multiple-choice-submit value="{% trans 'Confirm selection' %}" />
                     <button class="button button-secondary" type="button" data-action="w-bulk#toggleAll" data-w-bulk-force-param="false">{% trans 'Clear selection' %}</button>
                 </form>
@@ -92,28 +101,3 @@
     </div>
 </div>
 
-
-<script>
-    document.addEventListener("click", () => {
-        setTimeout(() => {
-            const maxForms = '{{ max_forms }}';
-            const remainder = '{{max_forms_remainder }}';
-            const maxFormsRemainder = document.getElementById('max-forms-remainder');
-            const countCheckboxes = document.querySelector('form[data-w-count-total-value]')?.getAttribute('data-w-count-total-value');
-            const remainingItems = document.getElementById("remaining-items");
-            const overMaximum = document.getElementById("over-maximum");
-
-            if (maxFormsRemainder && remainingItems && Number(remainder) >= Number(countCheckboxes)) {
-                document.getElementById('max_forms_pass').style.display = 'block';
-                document.getElementById('max_forms_fail').style.display = 'none';
-                maxFormsRemainder.innerHTML = Number(maxForms) - Number(remainder) + Number(countCheckboxes);
-                remainingItems.innerHTML = Number(remainder) - Number(countCheckboxes);
-            }
-            else if (overMaximum && Number(countCheckboxes) > Number(remainder)) {
-                document.getElementById('max_forms_pass').style.display = 'none';
-                document.getElementById('max_forms_fail').style.display = 'block';
-                overMaximum.innerHTML = Number(countCheckboxes) - Number(remainder);
-            }
-        });
-    });
-</script>
