@@ -220,6 +220,8 @@ class WagtailAdminPageForm(WagtailAdminModelForm):
 
     @property
     def media(self):
+        # MUST ADD A UNIT TEST THAT THIS WILL WORK
+        #  MUST CHECK DOCS TO ENSURE THAT `WagtailAdminPageForm` is recommended when customising form
         media = super().media
         if self.show_comments_toggle:
             media += forms.Media(

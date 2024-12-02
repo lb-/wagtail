@@ -386,6 +386,9 @@ class EventPageForm(WagtailAdminPageForm):
 
         return cleaned_data
 
+    class Media:
+        js = ('js/event_page_form.js',)
+
 
 class EventPage(Page):
     date_from = models.DateField("Start date", null=True)
