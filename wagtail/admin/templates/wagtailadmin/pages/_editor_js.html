@@ -1,9 +1,9 @@
 {% load wagtailadmin_tags %}
 
 {% comment %}
-    JavaScript declarations to be included on the 'create page' and 'edit page' views
+    JavaScript declarations to be included from the hook 'insert_editor_js'.
+    Do not add any other content to this template, use the admin hook or add global JS to `wagtail/admin/templates/wagtailadmin/admin_base.html`.
 {% endcomment %}
 
 <script src="{% versioned_static 'wagtailadmin/js/expanding-formset.js' %}"></script>
-<script src="{% versioned_static 'wagtailadmin/js/privacy-switch.js' %}"></script>
 {% hook_output 'insert_editor_js' %}
