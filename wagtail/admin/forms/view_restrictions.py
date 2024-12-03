@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext as _
@@ -38,6 +40,23 @@ class BaseViewRestrictionForm(forms.ModelForm):
                 _("Please select at least one group."), code="invalid"
             )
         return groups
+
+    def attrs(self):
+        """
+        See if there's a more Django-y way to do this.
+        """
+        return {
+            "groups": {
+                "hidden": True,
+                "data-w-rules-target": "show",
+                "data-w-rules": json.dumps({"restriction_type": "groups"}),
+            },
+            "password": {
+                "hidden": True,
+                "data-w-rules-target": "show",
+                "data-w-rules": json.dumps({"restriction_type": "password"}),
+            }
+        }
 
     class Meta:
         model = BaseViewRestriction
