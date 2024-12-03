@@ -11,6 +11,8 @@ enum Effect {
 enum Match {
   All = 'all', // Default
   Any = 'any',
+  Nil = 'nil',
+  One = 'one',
 }
 
 /**

@@ -1175,6 +1175,7 @@ def formattedfield(
     label_text=None,
     error_message_id=None,
     wrapper_id=None,
+    attrs=None,
 ):
     """
     Renders a form field in standard Wagtail admin layout.
@@ -1198,6 +1199,7 @@ def formattedfield(
 
     context = {
         "classname": classname,
+        "attrs": attrs or {},
         "show_label": show_label,
         "sr_only_label": sr_only_label,
         "icon": icon,
