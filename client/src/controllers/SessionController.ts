@@ -24,6 +24,7 @@ interface PingResponse {
  *
  * This controller defines the following behaviors:
  *
+ * @description
  * - Dispatching a ping event periodically, which can be utilized by other
  *   controllers to keep the session alive or indicate presence.
  * - Dispatching an event indicating the visibility state of the document.

@@ -22,7 +22,9 @@ const getEmailAddress = (mailto) => mailto.replace('mailto:', '').split('?')[0];
 const getPhoneNumber = (tel) => tel.replace('tel:', '').split('?')[0];
 const getDomainName = (url) => url.replace(/(^\w+:|^)\/\//, '').split('/')[0];
 
-// Determines how to display the link based on its type: page, mail, anchor or external.
+/**
+ * Determines how to display the link based on its type: page, mail, anchor or external.
+ */
 export const getLinkAttributes = (data) => {
   const url = data.url || null;
   let icon;

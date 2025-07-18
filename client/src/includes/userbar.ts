@@ -136,14 +136,18 @@ export class Userbar extends HTMLElement {
       shadowRoot.activeElement &&
       shadowRoot.activeElement.closest('.w-userbar-nav');
 
-    // Reset all focusable menu items to `tabIndex = -1`
+    /**
+     * Reset all focusable menu items to `tabIndex = -1`
+     */
     const resetItemsTabIndex = () => {
       listItems.forEach((listItem) => {
         (listItem.firstElementChild as HTMLElement).tabIndex = -1;
       });
     };
 
-    // Focus element using a roving tab index
+    /**
+     * Focus element using a roving tab index
+     */
     const focusElement = (el: HTMLElement) => {
       resetItemsTabIndex();
       el.tabIndex = 0;
@@ -332,8 +336,9 @@ export class Userbar extends HTMLElement {
 
   /**
    * Initialization code that must happen after the window has fully loaded.
-   * We want to make sure that the PreviewController:
    *
+   * @description
+   * We want to make sure that the PreviewController:
    * - has moved the id of the iframe (that is used by Axe) to the new iframe
    *   before we run Axe
    * - has set up the scroll restoration message event listener

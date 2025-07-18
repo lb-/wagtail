@@ -1,18 +1,15 @@
-/** @typedef {{
-    value: string;
-    bgUtility: string;
-    textUtility: string;
-    cssVariable: string;
-}} Token */
-
-/** @typedef {{
-    [token: string]: Token;
-}} CategoryTokens */
-
-/** @typedef {{
-    label: string;
-    tokens: CategoryTokens;
-}} ThemeCategory */
+/**
+ * @typedef {{
+ * value: string;
+ * bgUtility: string;
+ * textUtility: string;
+ * cssVariable: string;
+ * }} Token
+ *
+ * @typedef {{ [token: string]: Token; }} CategoryTokens
+ *
+ * @typedef {{ label: string; tokens: CategoryTokens; }} ThemeCategory
+ */
 
 // The focus outline color is defined without reusing a named color variable
 // because it shouldn’t be reused for anything else in the UI.

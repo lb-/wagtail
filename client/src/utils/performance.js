@@ -9,7 +9,9 @@ if (process.env.NODE_ENV !== 'production') {
    */
   perfMiddleware = () => {
     /* eslint-disable no-console */
-    // `next` is a function that takes an 'action' and sends it through to the 'reducers'.
+    /**
+     * `next` is a function that takes an 'action' and sends it through to the 'reducers'.
+     */
     const middleware = (next) => (action) => {
       let result;
 
