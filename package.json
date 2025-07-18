@@ -82,6 +82,7 @@
     "enzyme-adapter-react-16": "^1.15.8",
     "enzyme-to-json": "^3.6.2",
     "eslint": "^8.57.0",
+    "eslint-plugin-jsdoc": "^51.4.1",
     "eslint-plugin-storybook": "^0.6.15",
     "expose-loader": "^5.0.1",
     "gettext-extractor": "^3.8.0",

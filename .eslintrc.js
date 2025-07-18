@@ -5,7 +5,7 @@ module.exports = {
     'plugin:storybook/recommended',
   ],
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'jsdoc'],
   env: {
     jest: true,
     browser: true,
@@ -15,7 +15,7 @@ module.exports = {
     '@typescript-eslint/explicit-member-accessibility': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-use-before-define': ['error'],
+    '@typescript-eslint/no-use-before-define': 'error',
     // it is often helpful to pull out logic to class methods that may not use `this`
     'class-methods-use-this': 'off',
     'import/extensions': [
@@ -33,6 +33,26 @@ module.exports = {
     ],
     // does not align with the majority of legacy and newer code, some use named others use default exports
     'import/prefer-default-export': 'off',
+    'jsdoc/check-access': 'error',
+    'jsdoc/check-alignment': 'error',
+    'jsdoc/check-indentation': ['error', { excludeTags: ['description'] }],
+    'jsdoc/check-line-alignment': 'error',
+    'jsdoc/check-param-names': 'error',
+    'jsdoc/check-property-names': 'error',
+    'jsdoc/check-syntax': 'error',
+    'jsdoc/check-tag-names': 'error',
+    'jsdoc/check-types': 'error',
+    'jsdoc/check-values': 'error',
+    'jsdoc/empty-tags': 'error',
+    'jsdoc/multiline-blocks': 'error',
+    'jsdoc/no-bad-blocks': 'error',
+    'jsdoc/no-blank-block-descriptions': 'error',
+    'jsdoc/no-blank-blocks': 'error',
+    'jsdoc/no-defaults': 'error',
+    'jsdoc/no-multi-asterisks': 'error',
+    'jsdoc/require-jsdoc': ['warn', { publicOnly: true }],
+    'jsdoc/require-throws': 'error',
+    'jsdoc/valid-types': 'error',
     // allow no lines between single line members (e.g. static declarations)
     'lines-between-class-members': [
       'error',
@@ -67,6 +87,7 @@ module.exports = {
     {
       files: ['client/src/components/**'],
       rules: {
+        'jsdoc/require-jsdoc': 'off',
         'jsx-a11y/click-events-have-key-events': 'off',
         'jsx-a11y/interactive-supports-focus': 'off',
         'jsx-a11y/no-noninteractive-element-interactions': 'off',
@@ -115,6 +136,7 @@ module.exports = {
             },
           },
         ],
+        'jsdoc/require-example': ['warn', { contexts: ['ClassDeclaration'] }],
         'no-restricted-properties': [
           'error',
           {
@@ -148,6 +170,7 @@ module.exports = {
         'global-require': 'off',
         'import/first': 'off',
         'import/no-extraneous-dependencies': 'off',
+        'jsdoc/require-jsdoc': 'off',
         'jsx-a11y/control-has-associated-label': 'off',
         'no-new': 'off',
         'no-unused-expressions': 'off',

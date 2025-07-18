@@ -27,6 +27,7 @@ repos:
         additional_dependencies:
           # Keep in sync with package.json
           - eslint@8.57.0
+          - 'eslint-plugin-jsdoc@51.4.1'
           - '@typescript-eslint/eslint-plugin@6.21.0'
           - '@typescript-eslint/parser@6.21.0'
           - '@wagtail/eslint-config-wagtail@0.5.0'
