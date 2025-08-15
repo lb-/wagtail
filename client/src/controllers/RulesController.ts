@@ -111,8 +111,9 @@ export class RulesController extends Controller<HTMLFormElement | FormControlEle
   resolve() {
     if (!this.hasEnableTarget && !this.hasShowTarget) return;
 
-    this.enableTargets.forEach(this.createTargetHandler(Effect.Enable));
-    this.showTargets.forEach(this.createTargetHandler(Effect.Show));
+    // idea - we could use filter & forEach to handle the select field special case.
+    this.enableTargets.filter(this.createTargetHandler(Effect.Enable));
+    this.showTargets.filter(this.createTargetHandler(Effect.Show));
 
     this.dispatch('resolved', { bubbles: true, cancelable: false });
   }
@@ -124,6 +125,9 @@ export class RulesController extends Controller<HTMLFormElement | FormControlEle
    *
    * It will also dispatch an `effect` event that can be prevented
    * to stop it before the effect is applied.
+   *
+   * Finally, if the target is a <select> element, we will ensure
+   * that the selected value is not retained if the element is disabled/hidden.
    */
   createTargetHandler(
     effect: Effect,
@@ -162,6 +166,30 @@ export class RulesController extends Controller<HTMLFormElement | FormControlEle
       if (event.defaultPrevented) return;
 
       target[propertyKey] = !result;
+
+      // special handling of select fields to avoid selected values from being kept as selected
+      if (!result && target instanceof HTMLOptionElement && target.selected) {
+        const select = target.closest('select');
+        if (!select) return;
+
+        const resetValue =
+          Array.from(select.options).find((option) => option.defaultSelected)
+            ?.value || '';
+
+        const currentValue = select.value;
+
+        if (currentValue === resetValue) return;
+
+        select.value = resetValue;
+
+        // dispatch change event (on select)
+        this.dispatch('change', {
+          prefix: '',
+          target: select,
+          bubbles: true,
+          cancelable: false,
+        });
+      }
     };
   }
 
