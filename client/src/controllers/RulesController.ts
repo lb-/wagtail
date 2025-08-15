@@ -15,6 +15,19 @@ enum Match {
   One = 'one',
 }
 
+const EFFECT_KEYS = {
+  [Effect.Enable]: {
+    detailKey: 'enable',
+    propertyKey: 'disabled',
+  },
+  [Effect.Show]: {
+    detailKey: 'show',
+    propertyKey: 'hidden',
+  },
+};
+
+type RuleEntry = [string, string[]];
+
 /**
  * Form control elements that can support the `disabled` attribute.
  *
@@ -60,9 +73,7 @@ type FormControlElement =
  * </form>
  * ```
  */
-export class RulesController extends Controller<
-  HTMLFormElement | FormControlElement
-> {
+export class RulesController extends Controller<HTMLFormElement | FormControlElement> {
   static targets = ['enable', 'show'];
 
   /** Targets will be enabled if the target's rule matches the scoped form data, otherwise will be disabled. */
@@ -100,6 +111,24 @@ export class RulesController extends Controller<
   resolve() {
     if (!this.hasEnableTarget && !this.hasShowTarget) return;
 
+    this.enableTargets.forEach(this.createTargetHandler(Effect.Enable));
+    this.showTargets.forEach(this.createTargetHandler(Effect.Show));
+
+    this.dispatch('resolved', { bubbles: true, cancelable: false });
+  }
+
+  /**
+   * Creates a target handler for the specified effect that will
+   * apply the effect to the target element based on the current state
+   * of the form data and the target's rules.
+   *
+   * It will also dispatch an `effect` event that can be prevented
+   * to stop it before the effect is applied.
+   */
+  createTargetHandler(
+    effect: Effect,
+    { detailKey, propertyKey } = EFFECT_KEYS[effect],
+  ) {
     const formData = new FormData(this.form);
 
     const checkFn = ([fieldName, allowedValues]) => {
@@ -110,49 +139,30 @@ export class RulesController extends Controller<
       return allowedValues.some((validValue) => values.includes(validValue));
     };
 
-    this.enableTargets.forEach((target) => {
-      const effect = Effect.Enable;
+    const matcher: Record<Match, (rules: RuleEntry[]) => boolean> = {
+      [Match.Any]: (rules) => rules.some(checkFn),
+      [Match.All]: (rules) => rules.every(checkFn),
+      [Match.Nil]: (rules) => rules.length === 0 || !rules.some(checkFn),
+      [Match.One]: (rules) => rules.filter(checkFn).length === 1,
+    };
+
+    return (target: Element) => {
       const { match, rules } = this.parseRules(target, effect);
+      const result = matcher[match](rules);
 
-      const enable =
-        match === Match.Any ? rules.some(checkFn) : rules.every(checkFn);
-
-      if (enable === !target.disabled) return;
+      if (result === !target[propertyKey]) return;
 
       const event = this.dispatch('effect', {
         bubbles: true,
         cancelable: true,
-        detail: { effect, enable },
+        detail: { effect, [detailKey]: result },
         target,
       });
 
       if (event.defaultPrevented) return;
 
-      target.disabled = !enable;
-    });
-
-    this.showTargets.forEach((target) => {
-      const effect = Effect.Show;
-      const { match, rules } = this.parseRules(target, effect);
-
-      const show =
-        match === Match.Any ? rules.some(checkFn) : rules.every(checkFn);
-
-      if (show === !target.hidden) return;
-
-      const event = this.dispatch('effect', {
-        bubbles: true,
-        cancelable: true,
-        detail: { effect, show },
-        target,
-      });
-
-      if (event.defaultPrevented) return;
-
-      target.hidden = !show;
-    });
-
-    this.dispatch('resolved', { bubbles: true, cancelable: false });
+      target[propertyKey] = !result;
+    };
   }
 
   /**
@@ -207,7 +217,7 @@ export class RulesController extends Controller<
       .map(([fieldName = '', validValues = ''] = []) => [
         fieldName,
         castArray(validValues).map(String),
-      ]) as [string, string[]][];
+      ]) as RuleEntry[];
 
     const [, [match = Match.All] = []] =
       rules.find(([key]) => key === '') || [];
