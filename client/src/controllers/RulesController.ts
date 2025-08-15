@@ -15,16 +15,6 @@ enum Match {
   One = 'one',
 }
 
-const EFFECT_KEYS = {
-  [Effect.Enable]: {
-    detailKey: 'enable',
-    propertyKey: 'disabled',
-  },
-  [Effect.Show]: {
-    detailKey: 'show',
-    propertyKey: 'hidden',
-  },
-};
 
 type RuleEntry = [string, string[]];
 
@@ -111,28 +101,6 @@ export class RulesController extends Controller<HTMLFormElement | FormControlEle
   resolve() {
     if (!this.hasEnableTarget && !this.hasShowTarget) return;
 
-    // idea - we could use filter & forEach to handle the select field special case.
-    this.enableTargets.filter(this.createTargetHandler(Effect.Enable));
-    this.showTargets.filter(this.createTargetHandler(Effect.Show));
-
-    this.dispatch('resolved', { bubbles: true, cancelable: false });
-  }
-
-  /**
-   * Creates a target handler for the specified effect that will
-   * apply the effect to the target element based on the current state
-   * of the form data and the target's rules.
-   *
-   * It will also dispatch an `effect` event that can be prevented
-   * to stop it before the effect is applied.
-   *
-   * Finally, if the target is a <select> element, we will ensure
-   * that the selected value is not retained if the element is disabled/hidden.
-   */
-  createTargetHandler(
-    effect: Effect,
-    { detailKey, propertyKey } = EFFECT_KEYS[effect],
-  ) {
     const formData = new FormData(this.form);
 
     const checkFn = ([fieldName, allowedValues]) => {
@@ -150,47 +118,82 @@ export class RulesController extends Controller<HTMLFormElement | FormControlEle
       [Match.One]: (rules) => rules.filter(checkFn).length === 1,
     };
 
-    return (target: Element) => {
-      const { match, rules } = this.parseRules(target, effect);
-      const result = matcher[match](rules);
+    this.enableTargets.forEach(
+      this.processTarget.bind(this, Effect.Enable, matcher),
+    );
+    this.showTargets.forEach(
+      this.processTarget.bind(this, Effect.Show, matcher),
+    );
 
-      if (result === !target[propertyKey]) return;
+    this.dispatch('resolved', { bubbles: true, cancelable: false });
+  }
 
-      const event = this.dispatch('effect', {
+  /**
+   * Processes the target for the specified effect  that will apply the
+   * effect to the target element based on the provided matcher functions
+   * that use the current state of the form data and the target's rules.
+   *
+   * It will also dispatch an `effect` event that can be prevented to stop
+   * it before the effect is applied.
+   *
+   * Finally, if the target is a <select> element, we will ensure that
+   * the selected value is not retained if the element is disabled/hidden.
+   */
+  processTarget(
+    effect: Effect,
+    matcher: Record<Match, (rules: RuleEntry[]) => boolean>,
+    target: Element,
+  ) {
+    const { detailKey, propertyKey } = {
+      [Effect.Enable]: {
+        detailKey: 'enable',
+        propertyKey: 'disabled',
+      },
+      [Effect.Show]: {
+        detailKey: 'show',
+        propertyKey: 'hidden',
+      },
+    }[effect];
+
+    const { match, rules } = this.parseRules(target, effect);
+    const result = matcher[match](rules);
+
+    if (result === !target[propertyKey]) return;
+
+    const event = this.dispatch('effect', {
+      bubbles: true,
+      cancelable: true,
+      detail: { effect, [detailKey]: result },
+      target,
+    });
+
+    if (event.defaultPrevented) return;
+
+    target[propertyKey] = !result;
+
+    // special handling of select fields to avoid selected values from being kept as selected
+    if (!result && target instanceof HTMLOptionElement && target.selected) {
+      const select = target.closest('select');
+      if (!select) return;
+
+      const resetValue =
+        Array.from(select.options).find((option) => option.defaultSelected)
+          ?.value || '';
+
+      const currentValue = select.value;
+
+      if (currentValue === resetValue) return;
+
+      select.value = resetValue;
+
+      // dispatch change event (on select)
+      this.dispatch('change', {
+        prefix: '',
+        target: select,
         bubbles: true,
-        cancelable: true,
-        detail: { effect, [detailKey]: result },
-        target,
+        cancelable: false,
       });
-
-      if (event.defaultPrevented) return;
-
-      target[propertyKey] = !result;
-
-      // special handling of select fields to avoid selected values from being kept as selected
-      if (!result && target instanceof HTMLOptionElement && target.selected) {
-        const select = target.closest('select');
-        if (!select) return;
-
-        const resetValue =
-          Array.from(select.options).find((option) => option.defaultSelected)
-            ?.value || '';
-
-        const currentValue = select.value;
-
-        if (currentValue === resetValue) return;
-
-        select.value = resetValue;
-
-        // dispatch change event (on select)
-        this.dispatch('change', {
-          prefix: '',
-          target: select,
-          bubbles: true,
-          cancelable: false,
-        });
-      }
-    };
+    }
   }
 
   /**
