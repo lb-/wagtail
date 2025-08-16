@@ -109,7 +109,7 @@ describe('RulesController', () => {
       );
 
       expect(message).toEqual(
-        "Error Match value must be one of: 'all', 'any'.",
+        "Error Match value must be one of: 'all', 'any', 'one', 'not'.",
       );
     });
 
@@ -753,10 +753,118 @@ describe('RulesController', () => {
 
       expect(continueButton.disabled).toBe(true);
     });
+
+    it('should support the ability to match one field rule', async () => {
+      await setup(`
+      <form data-controller="w-rules" data-action="change->w-rules#resolve">
+        <fieldset>
+          <legend>Enter the registration number or opt to create a new number to continue.</legend>
+          <input id="number" name="number" type="text" />
+          <input id="create" name="create" type="checkbox" checked />
+        </fieldset>
+        <input
+          id="continue"
+          type="button"
+          name="continue"
+          data-w-rules-target="enable"
+          data-w-rules-enable="${_({ '': 'one', 'create': ['on'], 'number': ['1701', '74656', '74913'] })}" />
+      </form>`);
+
+      const numberField = document.getElementById('number');
+      const createField = document.getElementById('create');
+      const continueButton = document.getElementById('continue');
+
+      // it should have the input enabled by default as there is one passing match (checkbox checked)
+      expect(continueButton.disabled).toBe(false);
+
+      // set the number field value to something that matches, now two matches pass, input should be disabled
+      numberField.value = '1701';
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(true);
+
+      // update the number field to a number that's not in the rule, again one match is passing, input should be enabled
+      numberField.value = '99999';
+      createField.checked = true;
+
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(false);
+
+      // finally, set the checkbox field to unchecked, no matches should pass, input should be disabled
+      createField.checked = false;
+
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(true);
+    });
+
+    it('should support the ability to match that `not` rules match', async () => {
+      await setup(`
+      <form data-controller="w-rules" data-action="change->w-rules#resolve">
+        <fieldset>
+          <legend>Enter the registration number or opt to create a new number to continue.</legend>
+          <input id="number" name="number" type="text" />
+          <input id="create" name="create" type="checkbox" />
+        </fieldset>
+        <input
+          id="continue"
+          type="button"
+          name="continue"
+          data-w-rules-target="enable"
+          data-w-rules-enable="${_({ '': 'not', 'create': ['on'], 'number': ['1701', '74656', '74913'] })}" />
+      </form>`);
+
+      const numberField = document.getElementById('number');
+      const createField = document.getElementById('create');
+      const continueButton = document.getElementById('continue');
+
+      // enabled by default as there are not any matches
+      expect(continueButton.disabled).toBe(false);
+
+      // set the number field to a value that matches, there is now a match match, button should be disabled
+      numberField.value = '1701';
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(true);
+
+      // update the number field to a number that's not in the rule
+      // update the checkbox so it does pass the rule
+      // we will have one match is passing, input should be disabled
+      numberField.value = '99999';
+      createField.checked = true;
+
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(true);
+
+      // finally, set the checkbox back to a non-passing state, no matches so the button should be enabled
+
+      createField.checked = false;
+
+      numberField.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(continueButton.disabled).toBe(false);
+    });
   });
 
   describe('conditionally showing a target', () => {
     it('should provide a way to conditionally show a target', async () => {
+      const handleResolved = jest.fn();
+      document.addEventListener('w-rules:resolved', handleResolved);
+
       await setup(`
     <form id="form" data-controller="w-rules" data-action="change->w-rules#resolve">
       <div
@@ -791,6 +899,17 @@ describe('RulesController', () => {
       await jest.runAllTimersAsync();
 
       expect(alert.hidden).toBe(false);
+
+      // check the resolve event has been triggered
+      expect(handleResolved).toHaveBeenCalledTimes(3);
+
+      // remove the show target & check that the rules are not needing to be resolved
+      alert.remove();
+
+      emailField.dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
+
+      expect(handleResolved).toHaveBeenCalledTimes(3);
     });
 
     it('should support the ability to stop the effect from being applied by preventing the effect event', async () => {
@@ -865,6 +984,93 @@ describe('RulesController', () => {
       // The checkbox is not checked, #alert is also not set with hidden (in supplied DOM)
       // Should update once connected
       expect(document.getElementById('alert').hidden).toBe(true);
+    });
+
+    it('should support the ability to match one field rule', async () => {
+      await setup(`
+    <form id="form" data-controller="w-rules" data-action="change->w-rules#resolve">
+      <fieldset>
+        <input type="checkbox" name="alpha" id="alpha" />
+        <input type="checkbox" name="beta" id="beta" />
+      </fieldset>
+      <div
+        id="alert"
+        data-w-rules-target="show"
+        data-w-rules="${_({ '': 'one', 'alpha': 'on', 'beta': 'on' })}"
+      >
+        Both items must be checked.
+      </div>
+      <button type="button">Continue</button>
+    </form>`);
+
+      expect(document.getElementById('alert').hidden).toBe(true);
+
+      // check one input, so only one match passes, alert should be shown
+      document.getElementById('alpha').checked = true;
+      document
+        .getElementById('alpha')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
+
+      expect(document.getElementById('alert').hidden).toBe(false);
+
+      // check the other input, now two matches pass, alert should be hidden
+      document.getElementById('beta').checked = true;
+      document
+        .getElementById('beta')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
+
+      expect(document.getElementById('alert').hidden).toBe(true);
+
+      // uncheck the first input, so only one match passes, alert should be shown
+      document.getElementById('alpha').checked = false;
+      document
+        .getElementById('alpha')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
+
+      expect(document.getElementById('alert').hidden).toBe(false);
+    });
+
+    it('should support the ability to match that `not` rules match', async () => {
+      await setup(`
+    <form id="form" data-controller="w-rules" data-action="change->w-rules#resolve">
+      <fieldset>
+        <input type="password" name="password" id="password" />
+        <input type="email" name="email" id="email" />
+        <input type="checkbox" name="remember" id="remember" />
+      </fieldset>
+      <div
+        id="alert"
+        data-w-rules-target="show"
+        data-w-rules="${_({ '': 'not', 'password': '', 'email': '' })}"
+      >
+        Thank you for entering all inputs.
+      </div>
+      <button type="button">Continue</button>
+    </form>`);
+
+      expect(document.getElementById('alert').hidden).toBe(true);
+
+      // update one field - it should still be hidden
+      document.getElementById('password').value = 'password';
+      document
+        .getElementById('password')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+      await jest.runAllTimersAsync();
+
+      expect(document.getElementById('alert').hidden).toBe(true);
+
+      // update the other - both have a value, so the target should be shown
+      document.getElementById('email').value = 'email@example.com';
+      document
+        .getElementById('email')
+        .dispatchEvent(new Event('change', { bubbles: true }));
+
+      await jest.runAllTimersAsync();
+
+      expect(document.getElementById('alert').hidden).toBe(false);
     });
 
     describe('using as a filtered-select', () => {

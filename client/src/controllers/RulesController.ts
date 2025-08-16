@@ -15,10 +15,15 @@ enum Effect {
 /**
  * Enum for the different ways to match form data within the rules
  * to determine if the rule has been satisfied.
+ *
+ * Inspired by JSON Schema's `allOf`, `anyOf`, `oneOf`, and `not` keywords,
+ * @see https://json-schema.org/understanding-json-schema/reference/combining
  */
 enum Match {
   All = 'all', // Default
   Any = 'any',
+  One = 'one',
+  Not = 'not',
 }
 
 type RuleEntry = [string, string[]];
@@ -155,8 +160,10 @@ export class RulesController extends Controller<
     };
 
     return {
-      [Match.Any]: (rules) => rules.some(checkFn),
       [Match.All]: (rules) => rules.every(checkFn),
+      [Match.Any]: (rules) => rules.some(checkFn),
+      [Match.One]: (rules) => rules.filter(checkFn).length === 1,
+      [Match.Not]: (rules) => rules.filter(checkFn).length === 0,
     };
   }
 
