@@ -109,7 +109,6 @@ class ImageChooserModalOnloadHandlerFactory extends ChooserModalOnloadHandlerFac
 
 window.IMAGE_CHOOSER_MODAL_ONLOAD_HANDLERS =
   new ImageChooserModalOnloadHandlerFactory({
-    creationFormEventName: 'wagtail:images-upload',
     creationFormTabSelector: '#tab-upload',
   }).getOnLoadHandlers();
 

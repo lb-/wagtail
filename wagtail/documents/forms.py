@@ -39,6 +39,18 @@ class BaseDocumentForm(BaseCollectionMemberForm):
         super().__init__(*args, **kwargs)
         self.original_file = self.instance.file
 
+        # Goal here is to find the ID (for a selector) of the title field
+        # so that I can then update the widget attributes on the file field
+        # this is not a great way to do this, we should explore a better way
+        # when we have access to field the right way so we can use `id_for_label`
+        # We should also pull this out AND the 'base' attributes we set in Meta.Widgets to
+        # either an abstract class/mixin or some other shared capability between images & documents
+        if "title" in self.fields and "file" in self.fields:
+            bound_field = self.fields["title"].get_bound_field(self, "title")
+            self.fields["file"].widget.attrs["data-w-sync-target-value"] = (
+                f"#{bound_field.id_for_label}"
+            )
+
     def save(self, commit=True):
         if "file" in self.changed_data:
             self.instance._set_document_file_metadata()
@@ -65,12 +77,12 @@ class BaseDocumentForm(BaseCollectionMemberForm):
             "file": forms.FileInput(
                 attrs={
                     "data-controller": "w-sync",
-                    "data-w-sync-target-value": "#id_title",
-                    "data-w-sync-event-value": "wagtail:documents-upload",
-                    "data-action": "change->w-sync#prefillTitleFromFilename cut->w-sync#clear",
+                    "data-action": "change->w-sync#apply",
+                    "data-w-sync-bubbles-param": "true",
+                    "data-w-sync-name-value": "wagtail:documents-upload",
+                    "data-w-sync-normalize-value": "true",
                 }
             ),
-            "title": forms.TextInput(),
         }
 
     def clean_tags(self):

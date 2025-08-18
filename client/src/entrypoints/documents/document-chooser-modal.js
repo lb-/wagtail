@@ -24,7 +24,6 @@ window.DOCUMENT_CHOOSER_MODAL_ONLOAD_HANDLERS =
   new DocumentChooserModalOnloadHandlerFactory({
     searchInputDelay: 50,
     creationFormTabSelector: '#tab-upload',
-    creationFormEventName: 'wagtail:documents-upload',
   }).getOnLoadHandlers();
 
 class DocumentChooserModal extends ChooserModal {

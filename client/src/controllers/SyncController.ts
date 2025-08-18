@@ -1,5 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 
+import { gettext } from '../utils/gettext';
 import { debounce } from '../utils/debounce';
 
 /**
@@ -22,35 +23,36 @@ import { debounce } from '../utils/debounce';
  *   />
  * </section>
  * ```
+ *
+ * @example - @todo - add an example of using `w-sync` with a file input
  */
 export class SyncController extends Controller<HTMLInputElement> {
   static values = {
     debounce: { default: 100, type: Number },
     delay: { default: 0, type: Number },
     disabled: { default: false, type: Boolean },
-    quiet: { default: false, type: Boolean },
     event: String,
-    normalize: { default: true, type: Boolean },
-    keepExisting: { default: false, type: Boolean },
-    truncate: { default: false, type: Boolean },
-    target: String,
     name: { default: '', type: String },
+    normalize: { default: false, type: Boolean },
+    quiet: { default: false, type: Boolean },
+    target: String,
   };
 
-  declare debounceValue: number;
-  declare delayValue: number;
-  declare disabledValue: boolean;
-  /** If true, the `change` event will not be dispatched after applying a new value. */
-  declare quietValue: boolean;
-  declare readonly eventValue: string;
-  declare readonly targetValue: string;
+  /** The debounce delay in milliseconds, defaults to `100`. */
+  declare readonly debounceValue: number;
+  /** The delay before applying the value to the target(s), defaults to `0`. */
+  declare readonly delayValue: number;
+  /** A custom name provided, which is used when dispatching events, it will be in the event's detail object. */
   declare readonly nameValue: string;
-  /** If true, the value will be truncated (to the max length on the target input) before being applied to the target(s), when using `apply` */
-  declare truncateValue: boolean;
-  /** If true, the value will be normalized (e.g. file input will be converted to spaced words) before being applied to the target(s), when using `apply`. */
-  declare normalizeValue: boolean;
-  /** If true, the target's input.value(s) (user updated value) will be preserved and no update will be attempted when using `apply`. */
-  declare keepExistingValue: boolean;
+  /** If true, the value will be normalized (e.g. file input will have the extension & fakepath removed) before being applied to the target(s). */
+  declare readonly normalizeValue: boolean;
+  /** If true, the `change` event will not be dispatched after applying a new value. */
+  declare readonly quietValue: boolean;
+  /** The target element(s) to sync with, a CSS selector. */
+  declare readonly targetValue: string;
+
+  /** If true, the sync controller is disabled and will not apply changes. */
+  declare disabledValue: boolean;
 
   /**
    * Dispatches an event to all target elements so that they can be notified
@@ -60,29 +62,35 @@ export class SyncController extends Controller<HTMLInputElement> {
   connect() {
     this.processTargetElements('start', true);
     this.apply = debounce(this.apply.bind(this), this.debounceValue);
-
-    this.load();
   }
 
   /**
    * Allows for targeted elements to determine, via preventing the default event,
    * whether this sync controller should be disabled.
    */
-  check() {
-    this.processTargetElements('check', true);
+  check({
+    params: { bubbles = false } = {},
+  }: Event & {
+    params?: { bubbles?: boolean; name?: string };
+  }) {
+    this.processTargetElements('check', { bubbles }, true);
   }
 
+  /**
+   * Resolve the controlled element's value that will be used for applying
+   * and event dispatching, if configured it will also normalize this value.
+   */
   get value() {
     const element = this.element;
     const value = element.value || '';
 
     switch (this.normalizeValue && element?.getAttribute('type')) {
-      // example future - we would need to translate these values maybe though.
-      // case 'checkbox':
-      //   return element.checked ? 'on' : 'off';
+      case 'checkbox':
+        // Translators: When an input is a checkbox and we want to convert the value to text to apply to another field, it can be 'on' or 'off'.
+        return element.checked ? gettext('on') : gettext('off');
       case 'file':
         // Browser returns the value as `C:\fakepath\image.jpg`,
-        // convert to just the filename part
+        // Convert to just the filename part without the extension.
         return (element.value.split('\\').at(-1) || '').replace(/\.[^.]+$/, '');
       default:
         return value;
@@ -97,34 +105,19 @@ export class SyncController extends Controller<HTMLInputElement> {
    * Applying of the value to the targets can be done with a delay,
    * based on the controller's `delayValue`.
    */
-  apply() {
-    const keepExisting = this.keepExistingValue;
-
-    const name = this.nameValue || '';
-    const valueToApply = this.value;
-
-    const eventName = ['apply', name].filter(Boolean).join(':');
-
+  apply({
+    params: { bubbles = false } = {},
+  }: Event & {
+    params?: { bubbles?: boolean; name?: string };
+  }) {
     const applyValue = (target: HTMLInputElement) => {
-      // dispatch an event before applying to check if it should be prevented
-      if (
-        !this.dispatch(['before-apply', name].filter(Boolean).join(':'), {
-          bubbles: true,
-          cancelable: true,
-          // Allow sending of current and future items
-          detail: { element: this.element.value, updated: valueToApply },
-        }).defaultPrevented
-      )
-        /* use setter to correctly update value in non-inputs (e.g. select) */ // eslint-disable-next-line no-param-reassign
-        target.value = valueToApply;
-
+      /* use setter to correctly update value in non-inputs (e.g. select) */
+      target.value = this.value;
       if (this.quietValue) return;
-
       this.dispatch('change', { cancelable: false, prefix: '', target });
     };
 
-    this.processTargetElements(eventName).forEach((target) => {
-      if (keepExisting && (target as HTMLInputElement).value) return;
+    this.processTargetElements('apply', { bubbles }).forEach((target) => {
       if (this.delayValue) {
         setTimeout(() => {
           applyValue(target);
@@ -138,8 +131,12 @@ export class SyncController extends Controller<HTMLInputElement> {
   /**
    * Clears the value of the targeted elements.
    */
-  clear() {
-    this.processTargetElements('clear').forEach((target) => {
+  clear({
+    params: { bubbles = false } = {},
+  }: Event & {
+    params?: { bubbles?: boolean; name?: string };
+  }) {
+    this.processTargetElements('clear', { bubbles }).forEach((target) => {
       setTimeout(() => {
         target.setAttribute('value', '');
         if (this.quietValue) return;
@@ -154,9 +151,15 @@ export class SyncController extends Controller<HTMLInputElement> {
 
   /**
    * Simple method to dispatch a ping event to the targeted elements.
+   *
+   * This is the only method that will bubble by default.
    */
-  ping() {
-    this.processTargetElements('ping', false, { bubbles: true });
+  ping({
+    params: { bubbles = true } = {},
+  }: Event & {
+    params?: { bubbles?: boolean; name?: string };
+  }) {
+    this.processTargetElements('ping', { bubbles });
   }
 
   /**
@@ -166,12 +169,12 @@ export class SyncController extends Controller<HTMLInputElement> {
    */
   processTargetElements(
     eventName: string,
-    resetDisabledValue = false,
     options = {},
+    resetDisabledValue = false,
   ) {
-    if (!resetDisabledValue && this.disabledValue) {
-      return [];
-    }
+    if (!resetDisabledValue && this.disabledValue) return [];
+
+    const name = this.nameValue || '';
 
     const targetElements = [
       ...document.querySelectorAll<HTMLInputElement>(this.targetValue),
@@ -182,7 +185,7 @@ export class SyncController extends Controller<HTMLInputElement> {
         bubbles: false,
         cancelable: true,
         ...options, // allow overriding some options but not detail & target
-        detail: { element: this.element, value: this.element.value },
+        detail: { element: this.element, name, value: this.value },
         target: target as HTMLInputElement,
       });
 
@@ -196,24 +199,66 @@ export class SyncController extends Controller<HTMLInputElement> {
     return elements;
   }
 
-  load() {
-    const name = this.element.dataset.wSyncNameValue || '';
+  /**
+   * Add event listeners to adapt the SynController `apply` event to the documented
+   * `wagtail:images-upload` & `wagtail:documents-upload` events.
+   *
+   * This intentionally overrides the existing behavior that uses `delay` and `quiet`
+   * so that the existing event dispatching is preserved.
+   *
+   * In a future release we may revisit this and add a deprecation path for this
+   * mechanism of event dispatching.
+   */
+  static afterLoad(identifier: string) {
+    const NAMES = ['wagtail:images-upload', 'wagtail:documents-upload'];
 
-    this.element.addEventListener(
-      `w-sync:before-apply:${name}`,
-      (event: Event) => {
-        const custom = event as CustomEvent;
+    document.addEventListener(
+      `${identifier}:apply`,
+      (
+        event: Event &
+          CustomEventInit<{
+            element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+            name: string;
+            value: any;
+          }>,
+      ) => {
+        const { detail: { element, name = '', value } = {} } = event;
 
-        this.dispatch(`wagtail:${name}s-upload`, {
+        if (
+          !NAMES.includes(name) ||
+          !element ||
+          !event.target ||
+          !('value' in event.target)
+        ) {
+          return;
+        }
+        const form = element.closest('form');
+        if (!form) return;
+
+        // always prevent default on the original event so that we can change the approach
+        event.preventDefault();
+
+        const data = { title: value };
+
+        const adaptedEvent = new CustomEvent(name, {
           bubbles: true,
           cancelable: true,
           detail: {
-            original: custom.detail.element,
-            updated: custom.detail.updated,
-            name,
+            data,
+            // current, not normalized, field value
+            filename: element.value,
+            maxTitleLength:
+              parseInt(element.getAttribute('maxLength') || '0', 10) || null,
           },
-          target: this.element as HTMLInputElement,
         });
+
+        const formEvent = form.dispatchEvent(adaptedEvent);
+
+        // If a listener has cancelled this event, do not attempt to update the field
+        if (!formEvent) return;
+
+        // Update the target (e.g. title field) value with the scoped title
+        event.target.value = data.title;
       },
     );
   }
