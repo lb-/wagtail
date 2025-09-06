@@ -42,10 +42,3 @@
         {% endpanel %}
     </div>
 {% endblock %}
-
-{% block extra_js %}
-    {{ block.super }}
-
-    <script src="{% versioned_static 'wagtailadmin/js/vendor/jquery.ba-throttle-debounce.min.js' %}"></script>
-    <script src="{% versioned_static 'wagtailimages/js/image-url-generator.js' %}"></script>
-{% endblock %}
