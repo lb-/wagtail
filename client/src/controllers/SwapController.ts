@@ -62,6 +62,8 @@ export class SwapController extends Controller<
 > {
   static defaultClearParam = 'p';
 
+  static classes = ['loading'];
+
   static targets = ['input'];
 
   static values = {
@@ -86,6 +88,8 @@ export class SwapController extends Controller<
   declare readonly inputTarget: HTMLInputElement;
   /** A dotted path to the HTML string value to extract from the JSON response. */
   declare readonly jsonPathValue: string;
+  /** Classes to add to the target element when loading. */
+  declare readonly loadingClasses: string[];
   /** If true, the URL will be updated to reflect the search params, excluding those with `w_` prefix, no browser history entry will be created. */
   declare readonly reflectValue: boolean;
   /** A CSS selector for the target DOM element that should have it's inner HTML swapped with the response HTML. */
@@ -168,7 +172,7 @@ export class SwapController extends Controller<
 
   /**
    * Toggle the visual spinner icon if available and ensure content about
-   * to be replaced is flagged as busy.
+   * to be replaced is flagged as busy with a toggling of the loading class.
    */
   loadingValueChanged(isLoading: boolean, isLoadingPrevious) {
     // Don't bother marking as busy and adding the spinner icon if we defer writes
@@ -177,9 +181,11 @@ export class SwapController extends Controller<
     const target = isLoadingPrevious === undefined ? null : this.target; // ensure we avoid DOM interaction before connect
     if (isLoading) {
       target?.setAttribute('aria-busy', 'true');
+      target?.classList.add(...this.loadingClasses);
       this.iconElement?.setAttribute('href', '#icon-spinner');
     } else {
       target?.removeAttribute('aria-busy');
+      target?.classList.remove(...this.loadingClasses);
       this.iconElement?.setAttribute('href', this.iconValue);
     }
   }
