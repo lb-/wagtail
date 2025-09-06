@@ -3871,7 +3871,11 @@ class TestURLGeneratorView(AdminTemplateTestUtils, WagtailTestUtils, TestCase):
         self.assertRedirects(response, reverse("wagtailadmin_home"))
 
 
-class TestGenerateURLView(WagtailTestUtils, TestCase):
+class TestURLGeneratorViewOutput(WagtailTestUtils, TestCase):
+    """
+    Test the output partial HTML response for swapping into the image URL generator page.
+    """
+
     def setUp(self):
         # Create an image for running tests on
         self.image = Image.objects.create(
@@ -3888,17 +3892,20 @@ class TestGenerateURLView(WagtailTestUtils, TestCase):
         """
         # Get
         response = self.client.get(
-            reverse("wagtailimages:generate_url", args=(self.image.id, "fill-800x600"))
+            reverse(
+                "wagtailimages:url_generator_output",
+                args=(self.image.id,),
+            )
+            + "?filter_method=fill&width=800&height=600"
         )
 
         # Check response
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "application/json")
 
-        # Check JSON
-        content_json = json.loads(response.content.decode())
+        soup = self.get_soup(response.content)
 
-        self.assertEqual(set(content_json.keys()), {"url", "preview_url"})
+        result_url = soup.find("textarea", {"id": "result-url"}).getText()
+        preview_url = soup.find("img")["src"]
 
         expected_url = (
             "http://localhost/images/%(signature)s/%(image_id)d/fill-800x600/"
@@ -3910,12 +3917,12 @@ class TestGenerateURLView(WagtailTestUtils, TestCase):
                 "image_id": self.image.id,
             }
         )
-        self.assertEqual(content_json["url"], expected_url)
+        self.assertEqual(result_url, expected_url)
 
         expected_preview_url = reverse(
             "wagtailimages:preview", args=(self.image.id, "fill-800x600")
         )
-        self.assertEqual(content_json["preview_url"], expected_preview_url)
+        self.assertEqual(preview_url, expected_preview_url)
 
     def test_get_bad_permissions(self):
         """
@@ -3932,21 +3939,18 @@ class TestGenerateURLView(WagtailTestUtils, TestCase):
 
         # Get
         response = self.client.get(
-            reverse("wagtailimages:generate_url", args=(self.image.id, "fill-800x600"))
+            reverse(
+                "wagtailimages:url_generator_output",
+                args=(self.image.id,),
+            )
+            + "?filter_method=fill&width=800&height=600"
         )
 
         # Check response
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response["Content-Type"], "application/json")
-
-        # Check JSON
-        self.assertJSONEqual(
+        self.assertEqual(
             response.content.decode(),
-            json.dumps(
-                {
-                    "error": "You do not have permission to generate a URL for this image.",
-                }
-            ),
+            "You do not have permission to generate a URL for this image.",
         )
 
     def test_get_bad_image(self):
@@ -3956,23 +3960,14 @@ class TestGenerateURLView(WagtailTestUtils, TestCase):
         # Get
         response = self.client.get(
             reverse(
-                "wagtailimages:generate_url", args=(self.image.id + 1, "fill-800x600")
+                "wagtailimages:url_generator_output",
+                args=(self.image.id + 1,),
             )
+            + "?filter_method=fill&width=800&height=600"
         )
 
         # Check response
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response["Content-Type"], "application/json")
-
-        # Check JSON
-        self.assertJSONEqual(
-            response.content.decode(),
-            json.dumps(
-                {
-                    "error": "Cannot find image.",
-                }
-            ),
-        )
 
     def test_get_bad_filter_spec(self):
         """
@@ -3981,22 +3976,17 @@ class TestGenerateURLView(WagtailTestUtils, TestCase):
         # Get
         response = self.client.get(
             reverse(
-                "wagtailimages:generate_url", args=(self.image.id, "bad-filter-spec")
+                "wagtailimages:url_generator_output",
+                args=(self.image.id,),
             )
+            + "?filter_method=bad-filter-spec"
         )
 
         # Check response
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response["Content-Type"], "application/json")
-
-        # Check JSON
-        self.assertJSONEqual(
+        self.assertEqual(
             response.content.decode(),
-            json.dumps(
-                {
-                    "error": "Invalid filter spec.",
-                }
-            ),
+            "Invalid filter spec: `bad-filter-spec`. Unrecognised operation: bad.",
         )
 
 
