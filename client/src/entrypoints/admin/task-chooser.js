@@ -1,26 +1,34 @@
 /* global ModalWorkflow TASK_CHOOSER_MODAL_ONLOAD_HANDLERS */
 
-import $ from 'jquery';
-
 function createTaskChooser(id) {
-  const chooserElement = $('#' + id + '-chooser');
-  const taskName = chooserElement.find('[data-chooser-title]');
-  const input = $('#' + id);
-  const editAction = chooserElement.find('[data-chooser-edit-link]');
+  const chooserElement = document.getElementById(id + '-chooser');
+  if (!chooserElement) return;
+  const taskName = chooserElement.querySelector('[data-chooser-title]');
+  const input = document.getElementById(id);
+  const editAction = chooserElement.querySelector('[data-chooser-edit-link]');
 
-  $('[data-chooser-action-choose]', chooserElement).on('click', () => {
-    ModalWorkflow({
-      url: chooserElement.data('chooserUrl'),
-      onload: TASK_CHOOSER_MODAL_ONLOAD_HANDLERS,
-      responses: {
-        taskChosen(data) {
-          input.val(data.id);
-          taskName.text(data.name);
-          chooserElement.removeClass('blank');
-          editAction.attr('href', data.edit_url);
+  const chooseButtons = chooserElement.querySelectorAll(
+    '[data-chooser-action-choose]',
+  );
+
+  chooseButtons.forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      const chooserUrl = chooserElement.getAttribute('data-chooser-url');
+      ModalWorkflow({
+        url: chooserUrl,
+        onload: TASK_CHOOSER_MODAL_ONLOAD_HANDLERS,
+        responses: {
+          taskChosen(data) {
+            if (input) input.value = data.id;
+            if (taskName) taskName.textContent = data.name;
+            chooserElement.classList.remove('blank');
+            if (editAction) editAction.setAttribute('href', data.edit_url);
+          },
         },
-      },
+      });
     });
   });
 }
+
 window.createTaskChooser = createTaskChooser;
