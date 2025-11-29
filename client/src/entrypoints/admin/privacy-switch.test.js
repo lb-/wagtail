@@ -1,37 +1,51 @@
-// Mock ModalWorkflow before the module loads
+/**
+ * Mocks for the ModalWorkflow and related functions.
+ * Each test uses jest.isolateModules to ensure fresh module imports.
+ */
 const mockClose = jest.fn();
 const mockPostForm = jest.fn();
 
-let lastModalOptions;
-
-window.ModalWorkflow = jest.fn((options) => {
-  // Store options for assertions
-  lastModalOptions = options;
+/**
+ * Creates a ModalWorkflow mock that captures options for assertions.
+ * @returns {object} Object containing the mock function and captured options
+ */
+function createModalWorkflowMock() {
+  let capturedOptions;
+  const mockFn = jest.fn((options) => {
+    capturedOptions = options;
+    return {
+      close: mockClose,
+      postForm: mockPostForm,
+      body: {
+        querySelector: () => null,
+      },
+    };
+  });
   return {
-    close: mockClose,
-    postForm: mockPostForm,
-    body: {
-      querySelector: () => null,
-    },
+    mock: mockFn,
+    getOptions: () => capturedOptions,
   };
-});
+}
 
 describe('privacy-switch', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
     document.body.innerHTML = '';
-    lastModalOptions = undefined;
   });
 
   describe('click handler binding', () => {
     it('should bind click handler to privacy buttons', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      // Import the module after setting up the DOM
-      await import('./privacy-switch');
+      // Import the module in isolation
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
 
       // Wait for domReady promise to resolve
       await Promise.resolve();
@@ -39,15 +53,21 @@ describe('privacy-switch', () => {
       const button = document.getElementById('privacy-btn');
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-      expect(window.ModalWorkflow).toHaveBeenCalledTimes(1);
+      expect(mock).toHaveBeenCalledTimes(1);
+      expect(getOptions()).toBeDefined();
     });
 
     it('should prevent default on click event', async () => {
+      const { mock } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const button = document.getElementById('privacy-btn');
@@ -60,17 +80,22 @@ describe('privacy-switch', () => {
     });
 
     it('should pass correct options to ModalWorkflow', async () => {
+      const { mock } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/custom/privacy/url/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const button = document.getElementById('privacy-btn');
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-      expect(window.ModalWorkflow).toHaveBeenCalledWith(
+      expect(mock).toHaveBeenCalledWith(
         expect.objectContaining({
           dialogId: 'set-privacy',
           url: '/custom/privacy/url/',
@@ -83,34 +108,44 @@ describe('privacy-switch', () => {
     });
 
     it('should bind click handlers to multiple privacy buttons', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn-1" data-a11y-dialog-show="set-privacy" data-url="/privacy/1/"></button>
         <button id="privacy-btn-2" data-a11y-dialog-show="set-privacy" data-url="/privacy/2/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const button1 = document.getElementById('privacy-btn-1');
       const button2 = document.getElementById('privacy-btn-2');
 
       button1.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(window.ModalWorkflow).toHaveBeenCalledTimes(1);
-      expect(lastModalOptions.url).toBe('/privacy/1/');
+      expect(mock).toHaveBeenCalledTimes(1);
+      expect(getOptions().url).toBe('/privacy/1/');
 
       button2.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      expect(window.ModalWorkflow).toHaveBeenCalledTimes(2);
-      expect(lastModalOptions.url).toBe('/privacy/2/');
+      expect(mock).toHaveBeenCalledTimes(2);
+      expect(getOptions().url).toBe('/privacy/2/');
     });
   });
 
   describe('set_privacy onload handler', () => {
     it('should bind submit handler to form in modal body', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const mockForm = document.createElement('form');
@@ -129,7 +164,7 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy handler and call it
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       onload.set_privacy(mockModal);
 
       expect(mockModal.body.querySelector).toHaveBeenCalledWith('form');
@@ -140,11 +175,16 @@ describe('privacy-switch', () => {
     });
 
     it('should not throw if form is not found in modal body', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const mockModal = {
@@ -158,11 +198,14 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy handler and call it - should not throw
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       expect(() => onload.set_privacy(mockModal)).not.toThrow();
     });
 
     it('should call postForm with serialized form data on submit', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
         <form id="test-form" action="/submit/privacy/">
@@ -170,7 +213,9 @@ describe('privacy-switch', () => {
         </form>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const testForm = document.getElementById('test-form');
@@ -186,7 +231,7 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy handler and call it
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       onload.set_privacy(mockModal);
 
       // Dispatch submit event on the form
@@ -204,11 +249,16 @@ describe('privacy-switch', () => {
 
   describe('set_privacy_done onload handler', () => {
     it('should dispatch w-privacy:changed event with isPublic detail', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const mockModal = {
@@ -222,7 +272,7 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy_done handler and call it
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       onload.set_privacy_done(mockModal, { is_public: true });
 
       expect(eventListener).toHaveBeenCalled();
@@ -233,11 +283,16 @@ describe('privacy-switch', () => {
     });
 
     it('should call modal.close() after dispatching event', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const mockModal = {
@@ -248,18 +303,23 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy_done handler and call it
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       onload.set_privacy_done(mockModal, { is_public: false });
 
       expect(mockClose).toHaveBeenCalled();
     });
 
     it('should handle is_public being false', async () => {
+      const { mock, getOptions } = createModalWorkflowMock();
+      window.ModalWorkflow = mock;
+
       document.body.innerHTML = `
         <button id="privacy-btn" data-a11y-dialog-show="set-privacy" data-url="/privacy/"></button>
       `;
 
-      await import('./privacy-switch');
+      await jest.isolateModulesAsync(async () => {
+        await import('./privacy-switch');
+      });
       await Promise.resolve();
 
       const mockModal = {
@@ -273,7 +333,7 @@ describe('privacy-switch', () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
       // Get the set_privacy_done handler and call it
-      const { onload } = lastModalOptions;
+      const { onload } = getOptions();
       onload.set_privacy_done(mockModal, { is_public: false });
 
       expect(eventListener).toHaveBeenCalled();
