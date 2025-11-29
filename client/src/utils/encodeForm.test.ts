@@ -60,15 +60,20 @@ describe('encodeForm', () => {
     // Create a mock File object
     const file = new File(['content'], 'test-file.txt', { type: 'text/plain' });
 
-    // Set the files property
-    Object.defineProperty(fileInput, 'files', {
-      value: [file],
-      writable: false,
-    });
+    // Mock FormData to simulate file input behavior
+    const OriginalFormData = window.FormData;
+    window.FormData = jest.fn().mockImplementation(() => {
+      const mockFormData = new OriginalFormData();
+      mockFormData.append('attachment', file);
+      return mockFormData;
+    }) as any;
 
     const result = encodeForm(form);
 
     expect(result).toBe('attachment=test-file.txt');
+
+    // Restore original FormData
+    window.FormData = OriginalFormData;
   });
 
   it('should handle empty forms', () => {

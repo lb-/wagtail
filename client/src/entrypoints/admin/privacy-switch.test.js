@@ -110,14 +110,15 @@ describe('privacy-switch entrypoint', () => {
     expect(modal.postForm).not.toHaveBeenCalled();
   });
 
-  it('should handle multiple triggers on the same page', () => {
+  it('should handle multiple triggers on the same page', async () => {
     document.body.innerHTML = `
       <button data-a11y-dialog-show="set-privacy" data-url="/privacy-1/">Privacy 1</button>
       <button data-a11y-dialog-show="set-privacy" data-url="/privacy-2/">Privacy 2</button>
     `;
 
-    jest.isolateModules(() => {
-      require('./privacy-switch');
+    // Wait for domReady to complete
+    await jest.isolateModulesAsync(async () => {
+      await require('./privacy-switch');
     });
 
     const triggers = document.querySelectorAll(
