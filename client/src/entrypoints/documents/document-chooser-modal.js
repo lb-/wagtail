@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import {
   ChooserModalOnloadHandlerFactory,
   ChooserModal,
@@ -8,14 +7,26 @@ class DocumentChooserModalOnloadHandlerFactory extends ChooserModalOnloadHandler
   ajaxifyLinks(modal, context) {
     super.ajaxifyLinks(modal, context);
 
-    $('a.upload-one-now').on('click', (event) => {
-      // Set current collection ID at upload form tab
-      const collectionId = $('#id_collection_id').val();
-      if (collectionId) {
-        $('#id_document-chooser-upload-collection').val(collectionId);
-      }
+    const links = context.querySelectorAll('a.upload-one-now');
+    links.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        // Set current collection ID at upload form tab
+        const collectionInput =
+          modal.body.querySelector('#id_collection_id') ||
+          document.getElementById('id_collection_id');
+        const uploadTarget =
+          modal.body.querySelector('#id_document-chooser-upload-collection') ||
+          document.getElementById('id_document-chooser-upload-collection');
+        const collectionId =
+          collectionInput && 'value' in collectionInput
+            ? collectionInput.value
+            : '';
+        if (collectionId && uploadTarget) {
+          uploadTarget.value = collectionId;
+        }
 
-      event.preventDefault();
+        event.preventDefault();
+      });
     });
   }
 }
