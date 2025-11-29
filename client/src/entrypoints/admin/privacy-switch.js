@@ -1,18 +1,27 @@
 /* global ModalWorkflow */
 
-import $ from 'jquery';
+import { domReady } from '../../utils/domReady';
+import { encodeForm } from '../../utils/encodeForm';
 
-$(() => {
-  /* Interface to set permissions from the explorer / editor */
-  $('[data-a11y-dialog-show="set-privacy"]').on('click', function setPrivacy() {
+/**
+ * Initialize privacy modal triggers.
+ *
+ * Binds click handlers to elements with `data-a11y-dialog-show="set-privacy"` to
+ * open a ModalWorkflow and handle form submissions.
+ */
+domReady().then(() => {
+  const initModalWorkflow = (url) => {
     ModalWorkflow({
       dialogId: 'set-privacy',
-      url: this.getAttribute('data-url'),
+      url: url,
       onload: {
         set_privacy(modal) {
-          $('form', modal.body).on('submit', function handleSubmit() {
-            modal.postForm(this.action, $(this).serialize());
-            return false;
+          const form = modal.body.querySelector('form');
+          if (!form) return;
+          form.addEventListener('submit', (formSubmitEvent) => {
+            formSubmitEvent.preventDefault();
+            const action = form.getAttribute('action') || form.action;
+            modal.postForm(action, encodeForm(form));
           });
         },
         set_privacy_done(modal, { is_public: isPublic }) {
@@ -27,6 +36,18 @@ $(() => {
         },
       },
     });
-    return false;
-  });
+  };
+
+  document
+    .querySelectorAll('[data-a11y-dialog-show="set-privacy"]')
+    .forEach((trigger) => {
+      trigger.addEventListener(
+        'click',
+        (event) => {
+          event.preventDefault();
+          initModalWorkflow(trigger.getAttribute('data-url') || '');
+        },
+        { passive: false },
+      );
+    });
 });

@@ -198,7 +198,6 @@ module.exports = {
         'client/src/entrypoints/admin/filtered-select.js',
         'client/src/entrypoints/admin/modal-workflow.js',
         'client/src/entrypoints/admin/page-chooser-modal.js',
-        'client/src/entrypoints/admin/privacy-switch.js',
         'client/src/entrypoints/admin/task-chooser-modal.js',
         'client/src/entrypoints/admin/task-chooser.js',
         'client/src/entrypoints/admin/workflow-action.js',
