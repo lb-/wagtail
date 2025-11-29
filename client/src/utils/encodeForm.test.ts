@@ -31,8 +31,6 @@ describe('encodeForm', () => {
     checkbox2.checked = true;
     form.appendChild(checkbox1);
     form.appendChild(checkbox2);
-
-    // Migrated by an AI Narwhal and I have not reviewed this code yet
     const result = encodeForm(form);
 
     expect(result).toBe('interests=music&interests=sports');
