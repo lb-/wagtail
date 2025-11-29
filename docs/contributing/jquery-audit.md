@@ -7,44 +7,44 @@
 
 - Columns: `File` · `Lines` · `jQuery Usage Summary` · `Plugins` · `Effort` · `Notes`
 
-| File                                                                                                       | Lines | jQuery Usage Summary                                       | Plugins                         | Effort | Notes                                                                           |
-| ---------------------------------------------------------------------------------------------------------- | ----: | ---------------------------------------------------------- | ------------------------------- | :----: | ------------------------------------------------------------------------------- |
-| `client/src/entrypoints/admin/privacy-switch.js`                                                           |    32 | Simple event binding and DOM toggle                        | —                               |   S    | Straightforward swap to native.                                                 |
-| `client/src/entrypoints/admin/task-chooser.js`                                                             |    26 | Small DOM interactions                                     | —                               |   S    | Minimal rewrite.                                                                |
-| `client/src/entrypoints/documents/document-chooser-modal.js`                                               |    32 | Minimal chooser hooks                                      | —                               |   S    | Depends on modal workflow layer.                                                |
-| `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/includes/searchpromotions_formset.js` |     9 | Document-ready wrapper and simple jQuery usage             | —                               |   S    | Inline template JS; trivial swap.                                               |
-| `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/queries/chooser_field.js`             |    18 | Chooser field event binding                                | —                               |   S    | Minimal changes.                                                                |
-| `client/src/components/ExpandingFormset/index.js`                                                          |    61 | Simple DOM selection, class toggles, event handlers        | —                               |   M    | Replace with native `closest/querySelectorAll` and `addEventListener`.          |
-| `client/src/components/StreamField/blocks/FieldBlock.js`                                                   |   214 | Basic DOM+events around field widgets                      | —                               |   M    | Localized updates; straightforward migration.                                   |
-| `client/src/components/StreamField/blocks/ListBlock.js`                                                    |   324 | DOM manipulation of lists, event handling                  | —                               |   M    | Replace with native list ops and event delegation.                              |
-| `client/src/components/StreamField/blocks/StructBlock.js`                                                  |   278 | DOM manipulation within structured blocks                  | —                               |   M    | Moderate complexity.                                                            |
-| `client/src/entrypoints/admin/filtered-select.js`                                                          |    92 | DOM selection, event binding, possibly ajax                | —                               |   M    | Convert to native events; check any async behavior.                             |
-| `client/src/entrypoints/admin/task-chooser-modal.js`                                                       |    57 | jQuery event binding, pagination/links ajaxification       | —                               |   M    | Replace with `fetch`, native delegation.                                        |
-| `client/src/entrypoints/admin/workflow-action.js`                                                          |   174 | jQuery AJAX and form submission helpers                    | —                               |   M    | Replace with `fetch/FormData`.                                                  |
-| `client/src/entrypoints/contrib/table_block/table.js`                                                      |   312 | DOM sizing, selections, iterative measurements             | —                               |   M    | Replace with native layout measures; ensure accessibility.                      |
-| `client/src/entrypoints/images/image-chooser-modal.js`                                                     |   118 | Chooser hooks, AJAX, DOM updates                           | —                               |   M    | Ensure parity with upload/selection flows.                                      |
-| `client/src/includes/dateTimeChooser.js`                                                                   |   133 | Event binding, DOM manipulation                            | —                               |   M    | Replace with native events.                                                     |
-| `wagtail/contrib/search_promotions/static_src/wagtailsearchpromotions/js/query-chooser-modal.js`           |    74 | jQuery-driven chooser (`$.ajax`, event binding)            | —                               |   M    | Align with chooser modal refactor.                                              |
-| `wagtail/embeds/static_src/wagtailembeds/js/embed-chooser-modal.js`                                        |    23 | `$.ajax` form submission, basic events                     | —                               |   M    | Swap to native `fetch` + form handling.                                         |
-| `client/src/components/Draftail/sources/ModalWorkflowSource.js`                                            |   340 | Modal workflow integration, event binding, DOM updates     | —                               |   L    | Tightly coupled to legacy `ModalWorkflow` patterns using jQuery.                |
-| `client/src/components/InlinePanel/index.js`                                                               |   363 | Reordering, dynamic form rows, event delegation            | —                               |   L    | Likely interacts with orderable behaviors; requires careful state management.   |
-| `client/src/components/StreamField/blocks/BaseSequenceBlock.js`                                            |   702 | DOM manipulation for StreamField rows; delegated events    | —                               |   L    | Non-trivial due to StreamField structure and dynamic inserts/removals.          |
-| `client/src/components/StreamField/blocks/StreamBlock.js`                                                  |   467 | Complex DOM operations, dynamic block add/remove           | —                               |   L    | High coupling to editor UI; careful rewrite required.                           |
-| `client/src/entrypoints/admin/modal-workflow.js`                                                           |   153 | Legacy modal workflow interactions (`$.ajax`, DOM updates) | —                               |   L    | Central to admin modals; refactor alongside `chooserModal` layer.               |
-| `client/src/entrypoints/admin/page-chooser-modal.js`                                                       |   264 | jQuery in chooser onload handlers, events                  | —                               |   L    | Part of chooser system; coordinate refactor across chooser stack.               |
-| `client/src/entrypoints/contrib/typed_table_block/typed_table_block.js`                                    |   614 | DOM updates, event handlers for typed table                | —                               |   L    | Complex UI behavior.                                                            |
-| `client/src/includes/chooserModal.js`                                                                      |   394 | Heavy use of `$.ajax`, `serialize`, delegated events       | —                               |   L    | Core chooser infra; staged refactor to native APIs recommended.                 |
-| `client/src/controllers/TagController.ts`                                                                  |   126 | jQuery wrapper for tags UI                                 | tag-it                          |   XL   | Uses `tag-it` jQuery plugin; requires custom tags UI or non-jQuery alternative. |
-| `wagtail/documents/static_src/wagtaildocs/js/add-multiple.js`                                              |   191 | Blueimp jQuery File Upload integration, `$.ajax`, `$.post` | blueimp-fileupload              |   XL   | Plugin removal; rewrite multi-upload UI and progress.                           |
-| `wagtail/images/static_src/wagtailimages/js/add-multiple.js`                                               |   227 | Blueimp jQuery File Upload integration                     | blueimp-fileupload              |   XL   | Plugin removal; parity with documents uploader.                                 |
-| `wagtail/images/static_src/wagtailimages/js/focal-point-chooser.js`                                        |   124 | Jcrop focal point selection, `$.debounce`, events          | Jcrop, jquery-throttle-debounce |   XL   | Plugin removal; custom selection UI and resize handling needed.                 |
-| `client/src/components/StreamField/blocks/FieldBlock.test.js`                                              |   293 | Test-only: mocks jQuery behaviors                          | —                               |   T    | Update tests once implementation drops jQuery.                                  |
-| `client/src/components/StreamField/blocks/ListBlock.test.js`                                               |   815 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                   |
-| `client/src/components/StreamField/blocks/StaticBlock.test.js`                                             |    99 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                   |
-| `client/src/components/StreamField/blocks/StreamBlock.test.js`                                             |  1450 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                   |
-| `client/src/components/StreamField/blocks/StructBlock.test.js`                                             |   963 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                   |
-| `client/src/entrypoints/contrib/typed_table_block/typed_table_block.test.js`                               |   373 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                   |
-| `client/src/entrypoints/contrib/table_block/table.test.js`                                                 |   204 | Test-only                                                  | —                               |   T    | Update tests accordingly.                                                       |
+| #   | File                                                                                                       | Lines | jQuery Usage Summary                                       | Plugins                         | Effort | Notes                                                                                                                                                                    |
+| --- | ---------------------------------------------------------------------------------------------------------- | ----: | ---------------------------------------------------------- | ------------------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `client/src/entrypoints/admin/privacy-switch.js`                                                           |    32 | Simple event binding and DOM toggle                        | —                               |   S    | Straightforward swap to native.                                                                                                                                          |
+| 2   | `client/src/entrypoints/admin/task-chooser.js`                                                             |    26 | Chooser trigger; relies on modal onload handlers (ajaxify) | —                               |   M    | Indirect use of `ajaxifyLinks` via TASK chooser handlers; side-effects possible.                                                                                         |
+| 3   | `client/src/entrypoints/documents/document-chooser-modal.js`                                               |    32 | Overrides `ajaxifyLinks` to augment upload behavior        | —                               |   M    | Direct `ajaxifyLinks` override; hidden interactions with search/upload states.                                                                                           |
+| 4   | `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/includes/searchpromotions_formset.js` |     9 | Document-ready wrapper and simple jQuery usage             | —                               |   S    | Inline template JS; trivial swap.                                                                                                                                        |
+| 5   | `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/queries/chooser_field.js`             |    18 | Chooser launch; uses global onload handlers (ajaxify)      | —                               |   M    | Indirect `ajaxifyLinks` usage via QUERY chooser handlers.                                                                                                                |
+| 6   | `client/src/components/ExpandingFormset/index.js`                                                          |    61 | Simple DOM selection, class toggles, event handlers        | —                               |   M    | Replace with native `closest/querySelectorAll` and `addEventListener`.                                                                                                   |
+| 7   | `client/src/components/StreamField/blocks/FieldBlock.js`                                                   |   214 | Basic DOM+events around field widgets                      | —                               |   M    | Localized updates; straightforward migration.                                                                                                                            |
+| 8   | `client/src/components/StreamField/blocks/ListBlock.js`                                                    |   324 | DOM manipulation of lists, event handling                  | —                               |   M    | Replace with native list ops and event delegation.                                                                                                                       |
+| 9   | `client/src/components/StreamField/blocks/StructBlock.js`                                                  |   278 | DOM manipulation within structured blocks                  | —                               |   M    | Moderate complexity.                                                                                                                                                     |
+| 10  | `client/src/entrypoints/admin/filtered-select.js`                                                          |    92 | DOM selection, event binding, possibly ajax                | —                               |   M    | Convert to native events; check any async behavior. Will be fixed by https://github.com/wagtail/wagtail/pull/13380 - see https://github.com/wagtail/wagtail/issues/11045 |
+| 11  | `client/src/entrypoints/admin/task-chooser-modal.js`                                                       |    57 | jQuery event binding, pagination/links ajaxification       | —                               |   M    | Replace with `fetch`, native delegation.                                                                                                                                 |
+| 12  | `client/src/entrypoints/admin/workflow-action.js`                                                          |   174 | jQuery AJAX and form submission helpers                    | —                               |   M    | Replace with `fetch/FormData`.                                                                                                                                           |
+| 13  | `client/src/entrypoints/contrib/table_block/table.js`                                                      |   312 | DOM sizing, selections, iterative measurements             | —                               |   M    | Replace with native layout measures; ensure accessibility.                                                                                                               |
+| 14  | `client/src/entrypoints/images/image-chooser-modal.js`                                                     |   118 | Chooser hooks, AJAX, DOM updates                           | —                               |   M    | Ensure parity with upload/selection flows.                                                                                                                               |
+| 15  | `client/src/includes/dateTimeChooser.js`                                                                   |   133 | Event binding, DOM manipulation                            | —                               |   M    | Replace with native events.                                                                                                                                              |
+| 16  | `wagtail/contrib/search_promotions/static_src/wagtailsearchpromotions/js/query-chooser-modal.js`           |    74 | jQuery-driven chooser (`$.ajax`, event binding)            | —                               |   M    | Align with chooser modal refactor.                                                                                                                                       |
+| 17  | `wagtail/embeds/static_src/wagtailembeds/js/embed-chooser-modal.js`                                        |    23 | `$.ajax` form submission, basic events                     | —                               |   M    | Swap to native `fetch` + form handling.                                                                                                                                  |
+| 18  | `client/src/components/Draftail/sources/ModalWorkflowSource.js`                                            |   340 | Modal workflow integration, event binding, DOM updates     | —                               |   L    | Tightly coupled to legacy `ModalWorkflow` patterns using jQuery.                                                                                                         |
+| 19  | `client/src/components/InlinePanel/index.js`                                                               |   363 | Reordering, dynamic form rows, event delegation            | —                               |   L    | Likely interacts with orderable behaviors; requires careful state management.                                                                                            |
+| 20  | `client/src/components/StreamField/blocks/BaseSequenceBlock.js`                                            |   702 | DOM manipulation for StreamField rows; delegated events    | —                               |   L    | Non-trivial due to StreamField structure and dynamic inserts/removals.                                                                                                   |
+| 21  | `client/src/components/StreamField/blocks/StreamBlock.js`                                                  |   467 | Complex DOM operations, dynamic block add/remove           | —                               |   L    | High coupling to editor UI; careful rewrite required.                                                                                                                    |
+| 22  | `client/src/entrypoints/admin/modal-workflow.js`                                                           |   153 | Legacy modal workflow interactions (`$.ajax`, DOM updates) | —                               |   L    | Central to admin modals; refactor alongside `chooserModal` layer.                                                                                                        |
+| 23  | `client/src/entrypoints/admin/page-chooser-modal.js`                                                       |   264 | jQuery in chooser onload handlers, events                  | —                               |   L    | Part of chooser system; coordinate refactor across chooser stack.                                                                                                        |
+| 24  | `client/src/entrypoints/contrib/typed_table_block/typed_table_block.js`                                    |   614 | DOM updates, event handlers for typed table                | —                               |   L    | Complex UI behavior.                                                                                                                                                     |
+| 25  | `client/src/includes/chooserModal.js`                                                                      |   394 | Heavy use of `$.ajax`, `serialize`, delegated events       | —                               |   L    | Core chooser infra; staged refactor to native APIs recommended.                                                                                                          |
+| 26  | `client/src/controllers/TagController.ts`                                                                  |   126 | jQuery wrapper for tags UI                                 | tag-it                          |   XL   | Uses `tag-it` jQuery plugin; requires custom tags UI or non-jQuery alternative.                                                                                          |
+| 27  | `wagtail/documents/static_src/wagtaildocs/js/add-multiple.js`                                              |   191 | Blueimp jQuery File Upload integration, `$.ajax`, `$.post` | blueimp-fileupload              |   XL   | Plugin removal; rewrite multi-upload UI and progress.                                                                                                                    |
+| 28  | `wagtail/images/static_src/wagtailimages/js/add-multiple.js`                                               |   227 | Blueimp jQuery File Upload integration                     | blueimp-fileupload              |   XL   | Plugin removal; parity with documents uploader.                                                                                                                          |
+| 29  | `wagtail/images/static_src/wagtailimages/js/focal-point-chooser.js`                                        |   124 | Jcrop focal point selection, `$.debounce`, events          | Jcrop, jquery-throttle-debounce |   XL   | Plugin removal; custom selection UI and resize handling needed.                                                                                                          |
+| 30  | `client/src/components/StreamField/blocks/FieldBlock.test.js`                                              |   293 | Test-only: mocks jQuery behaviors                          | —                               |   T    | Update tests once implementation drops jQuery.                                                                                                                           |
+| 31  | `client/src/components/StreamField/blocks/ListBlock.test.js`                                               |   815 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                                                                                                            |
+| 32  | `client/src/components/StreamField/blocks/StaticBlock.test.js`                                             |    99 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                                                                                                            |
+| 33  | `client/src/components/StreamField/blocks/StreamBlock.test.js`                                             |  1450 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                                                                                                            |
+| 34  | `client/src/components/StreamField/blocks/StructBlock.test.js`                                             |   963 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                                                                                                            |
+| 35  | `client/src/entrypoints/contrib/typed_table_block/typed_table_block.test.js`                               |   373 | Test-only                                                  | —                               |   T    | Testing harness changes only.                                                                                                                                            |
+| 36  | `client/src/entrypoints/contrib/table_block/table.test.js`                                                 |   204 | Test-only                                                  | —                               |   T    | Update tests accordingly.                                                                                                                                                |
 
 ## Additional notes
 
@@ -66,3 +66,167 @@
 
 - Where a file primarily contains tests, effort reflects changes to test harnesses after implementation migrates away from jQuery.
 - Some files may include indirect jQuery reliance via shared chooser/modal infrastructure; effort reflects that coupling.
+
+## Simple migration plans (S-effort non-test files)
+
+Below are high-level, low-risk migration steps for the five smallest non-test files currently using jQuery. These can be tackled early to reduce overall jQuery surface area and establish patterns for larger refactors.
+
+### `client/src/entrypoints/admin/privacy-switch.js` (S)
+
+Current usage:
+
+- `$(...)` document ready wrapper.
+- Attribute selector with `.on('click')` to launch `ModalWorkflow`.
+- Inside modal onload handlers: jQuery form selection and `.serialize()` for submission.
+
+Migration steps:
+
+1. Replace `$(...)` ready with `document.addEventListener('DOMContentLoaded', ...)`.
+2. Replace selector `[$[data-a11y-dialog-show="set-privacy"]]` jQuery calls with `document.querySelectorAll` and `addEventListener('click', handler, { passive: true })`.
+3. In `set_privacy` handler, use `modal.body.querySelector('form')` and `form.addEventListener('submit', ...)`.
+4. Replace `$(this).serialize()` with `new URLSearchParams(new FormData(form)).toString()` (or adapt `modal.postForm` to accept FormData directly).
+5. Ensure `return false;` patterns are replaced by `event.preventDefault()`.
+6. Remove jQuery import once dependent modal code no longer requires jQuery in this file.
+
+### `client/src/entrypoints/admin/task-chooser.js` (S)
+
+Current usage:
+
+- ID concatenation with `$` selectors; `.find()` for descendants.
+- Click handler using jQuery to open `ModalWorkflow`.
+- DOM updates via jQuery (`val`, `text`, `removeClass`, `attr`).
+
+Migration steps:
+
+1. Replace `$('#' + id + '-chooser')` with `document.getElementById(`${id}-chooser`)`.
+2. Replace descendant queries (`chooserElement.find('[data-chooser-title]')`) with `chooserElement.querySelector(...)`.
+3. Replace `input.val(...)` with `input.value = ...` and `taskName.text(...)` with `taskName.textContent = ...`.
+4. Replace event binding with `querySelectorAll('[data-chooser-action-choose]')` and `addEventListener('click', ...)`.
+5. Replace `chooserElement.removeClass('blank')` with `chooserElement.classList.remove('blank')`.
+6. Remove jQuery import; keep global export `window.createTaskChooser = createTaskChooser;`.
+
+### `client/src/entrypoints/documents/document-chooser-modal.js` (S)
+
+Current usage:
+
+- jQuery in overridden `ajaxifyLinks`: selecting `a.upload-one-now` and retrieving/setting values via `$('#id_collection_id').val()`.
+
+Migration steps:
+
+1. Remove jQuery import; inside `ajaxifyLinks` use `context.querySelectorAll('a.upload-one-now')`.
+2. For each link, `addEventListener('click', handler)`; inside handler retrieve collection ID via `const collection = modal.body.querySelector('#id_collection_id')?.value` (falling back to `document.getElementById` if outside modal scope).
+3. Set upload form field with `const uploadCollection = modal.body.querySelector('#id_document-chooser-upload-collection'); if (uploadCollection) uploadCollection.value = collectionId;`.
+4. Replace `event.preventDefault()` only (omit `return false`).
+5. Confirm base `ChooserModalOnloadHandlerFactory` changes eventually allow removal of any indirect jQuery assumptions.
+
+### `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/includes/searchpromotions_formset.js` (S)
+
+Current usage:
+
+- jQuery document ready wrapper invoking `new InlinePanel({...})`.
+
+Migration steps:
+
+1. Replace `$(function(){ ... });` with `document.addEventListener('DOMContentLoaded', () => { ... });`.
+2. Ensure `InlinePanel` global availability (import if needed in future ES module conversion).
+3. Remove jQuery usage entirely; no other changes required.
+
+### `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/queries/chooser_field.js` (S)
+
+Current usage:
+
+- jQuery ID-based selectors; click handler launching `ModalWorkflow`; jQuery `.val()`.
+
+Migration steps:
+
+1. Convert to vanilla function: `const chooserElement = document.getElementById(id + '-chooser'); const input = document.getElementById(id);`.
+2. Replace `chooserElement.on('click', ...)` with `chooserElement.addEventListener('click', ...)`.
+3. Set input value via `input.value = queryData.querystring`.
+4. Remove jQuery dependency; ensure `ModalWorkflow` remains callable (may require earlier refactor in modal library for full removal).
+5. Optionally assign `window.createQueryChooser = createQueryChooser;` if global exposure is needed by server-rendered templates.
+
+### Shared micro-patterns to standardize
+
+| Pattern             | jQuery                                 | Vanilla replacement                                                              |
+| ------------------- | -------------------------------------- | -------------------------------------------------------------------------------- |
+| Document ready      | `$(fn)`                                | `document.addEventListener('DOMContentLoaded', fn)`                              |
+| Select single by ID | `$('#id')`                             | `document.getElementById('id')`                                                  |
+| Descendant query    | `parent.find(sel)`                     | `parent.querySelector(sel)`                                                      |
+| Multiple nodes      | `$(sel).on('event', fn)`               | `document.querySelectorAll(sel).forEach(el => el.addEventListener('event', fn))` |
+| Get/set value       | `el.val()` / `el.val(v)`               | `el.value` / `el.value = v`                                                      |
+| Text content        | `el.text()`                            | `el.textContent`                                                                 |
+| Add/remove class    | `el.addClass(c)` / `el.removeClass(c)` | `el.classList.add(c)` / `el.classList.remove(c)`                                 |
+| Prevent default     | `return false`                         | `event.preventDefault()`                                                         |
+| Serialize form      | `$(form).serialize()`                  | `new URLSearchParams(new FormData(form)).toString()`                             |
+
+### Sequencing recommendation
+
+1. Migrate `privacy-switch.js` first (introduces form serialization utility pattern).
+2. Migrate chooser micro-files (`task-chooser.js`, `chooser_field.js`).
+3. Migrate template initialization (`searchpromotions_formset.js`).
+4. Migrate document chooser modal override, keeping parity while awaiting core chooser refactor.
+5. After these, update lint config to remove them from the jQuery allowlist, enforcing no regression.
+
+### Risk & validation checklist (S files)
+
+## Medium migration plans (M-effort files)
+
+Focus: Files with moderate complexity (multiple event paths, AJAX calls, indirect chooser side-effects through `ajaxifyLinks`). Goals are to eliminate jQuery incrementally while maintaining behavioral parity.
+
+### Shared medium-tier risks
+
+- Hidden side-effects in chooser onload handlers (`ajaxifyLinks` attaches pagination, selection, multiple-choice states).
+- Reliance on jQuery's serialization (`form.serialize()`) and implicit abort handling in `$.ajax`.
+- Mixed synchronous + asynchronous DOM updates (e.g. enabling buttons after results load).
+- Potential race conditions when rapidly triggering searches / pagination.
+
+### Migration strategy (general)
+
+1. Introduce small utility layer: `dom.ts` with helpers (`qs`, `qsa`, `on`, `serializeForm`).
+2. Replace `$.ajax` with `fetch` wrappers supporting abort via `AbortController` where repeated calls occur (search, pagination).
+3. Move chooser-related logic toward a central, framework-agnostic module so each chooser file only wires UI specifics.
+4. Add lightweight integration tests (or Playwright smoke tests) for chooser open/select flows before refactor.
+5. Perform file-by-file conversion; run lint to ensure no jQuery reintroduction.
+
+### Per-file notes & steps
+
+| File                                                                                             | Current Patterns                         | Key Risks                                            | Migration Steps                                                                                              |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `client/src/components/ExpandingFormset/index.js`                                                | Show/hide form rows, class toggling      | Accidental focus loss on dynamic add/remove          | Replace selectors/events; ensure focus management with `focus()` after add.                                  |
+| `client/src/components/StreamField/blocks/FieldBlock.js`                                         | Field DOM wrappers, simple events        | Minor: ensures consistent block initialization order | Inline replace; create `initFieldBlock` without jQuery.                                                      |
+| `client/src/components/StreamField/blocks/ListBlock.js`                                          | Iterative list manipulation              | Order consistency, event delegation correctness      | Use event delegation via `container.addEventListener`; map jQuery height/width to `getBoundingClientRect()`. |
+| `client/src/components/StreamField/blocks/StructBlock.js`                                        | Structured field grouping                | Nested field discovery reliability                   | Replace `.find` with scoped `querySelector`; ensure attributes maintained.                                   |
+| `client/src/entrypoints/admin/filtered-select.js`                                                | Change listeners, filtering logic        | Performance with large option sets                   | Convert to native; consider `requestAnimationFrame` batching on large updates.                               |
+| `client/src/entrypoints/admin/task-chooser-modal.js`                                             | Modal onload, pagination links           | Pagination race conditions                           | Replace link handlers with delegated `click`; integrate `AbortController` on new requests.                   |
+| `client/src/entrypoints/admin/workflow-action.js`                                                | Form submissions via jQuery AJAX         | Error handling divergence                            | Wrap in `fetchWithForm`; maintain status messaging and CSRF token handling.                                  |
+| `client/src/entrypoints/contrib/table_block/table.js`                                            | Sizing calculations, dynamic table state | Layout thrash, performance                           | Batch measurements; replace `$(...).height()` calls with cached `clientHeight`.                              |
+| `client/src/entrypoints/images/image-chooser-modal.js`                                           | Chooser events, partial reloads          | Inconsistent state after reload                      | Use unified chooser utilities; ensure event rebind after dynamic HTML injection.                             |
+| `client/src/includes/dateTimeChooser.js`                                                         | Date/time widget init                    | Accessibility regressions                            | Replace with native or Stimulus controller; test keyboard navigation.                                        |
+| `wagtail/contrib/search_promotions/static_src/wagtailsearchpromotions/js/query-chooser-modal.js` | Chooser search & select                  | Race conditions on rapid search                      | Add abortable search; maintain focus after results load.                                                     |
+| `wagtail/embeds/static_src/wagtailembeds/js/embed-chooser-modal.js`                              | Single form AJAX submit                  | Error message formatting                             | Simplify to `fetch`, preserve error block injection.                                                         |
+| `client/src/entrypoints/admin/task-chooser.js`                                                   | Chooser launch & update                  | Side-effects inside global handlers                  | Vanilla event binding; rely on shared chooser utilities.                                                     |
+| `client/src/entrypoints/documents/document-chooser-modal.js`                                     | Overrides `ajaxifyLinks` (upload action) | Hidden coupling to collection selection              | Replace jQuery with vanilla; add explicit function docs for side-effects.                                    |
+| `wagtail/contrib/search_promotions/templates/wagtailsearchpromotions/queries/chooser_field.js`   | Launch chooser, set value                | Indirect `ajaxifyLinks` side-effects                 | Vanilla conversion; ensure global handler availability pre-click.                                            |
+
+### Implementation ordering (medium tier)
+
+1. Utility introduction (serialize, abortable fetch, query helpers).
+2. Chooser infrastructure adjustments (`chooserModal.js` first) to reduce per-file duplication.
+3. Convert simplest mediums: `filtered-select.js`, `dateTimeChooser.js`, `embed-chooser-modal.js`.
+4. Convert chooser trigger files (`task-chooser.js`, `chooser_field.js`).
+5. Convert modal overrides (`document-chooser-modal.js`, `query-chooser-modal.js`, `image-chooser-modal.js`).
+6. StreamField medium blocks (`FieldBlock.js`, `ListBlock.js`, `StructBlock.js`) before large blocks to validate patterns.
+7. Performance-sensitive tables (`table.js`).
+
+### Validation checklist (M files)
+
+- Add console warnings diff check (no new jQuery usage after migration).
+- Confirm accessibility (tab order, ARIA live regions intact if present).
+- Ensure cancellation logic prevents stale content rendering (search/pagination).
+- Snapshot test chooser HTML before/after (if feasible) to spot regressions.
+- Cross-browser smoke test (Chrome, Firefox, Safari) for dynamic sizing code.
+
+- Confirm no reliance on jQuery event delegation edge cases (all handlers are direct binding).
+- Ensure global functions remain exposed as needed for template inline usage.
+- Run existing tests (none of these have dedicated tests) plus smoke-test in the UI.
+- Verify `ModalWorkflow` still functions with vanilla-calling code (it can still be jQuery internally until refactored).
